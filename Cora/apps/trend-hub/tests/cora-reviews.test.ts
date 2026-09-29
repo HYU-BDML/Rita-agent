@@ -1,0 +1,10 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{CoraStore}from'../lib/cora/store';import{outline,ideasFor,sampleBrief}from'../lib/cora/model';
+test('Version review: sharing, immutable snapshot, reviewer-only decision, stale prevention, revocation and cascade',()=>{const s=new CoraStore(':memory:');try{
+const a=s.signup('owner@example.test','password-123'),b=s.signup('reviewer@example.test','password-123'),c=s.signup('outsider@example.test','password-123');const draft=outline(sampleBrief,ideasFor(sampleBrief)[0]);const p=s.save(a.id,draft)!;
+assert.throws(()=>s.requestReview(c.id,p.id,1,b.email),/NOT_FOUND/);assert.throws(()=>s.requestReview(a.id,p.id,2,b.email),/CONFLICT/);assert.throws(()=>s.requestReview(a.id,p.id,1,a.email));
+const r=s.requestReview(a.id,p.id,1,b.email)!;assert.equal(s.requestReview(a.id,p.id,1,b.email)?.id,r.id);assert.equal(s.reviews(b.id).length,1);assert.equal(s.review(c.id,String(r.id)),null);assert.equal(s.get(b.id,p.id),null);assert.throws(()=>s.decideReview(a.id,String(r.id),'approved',''),/NOT_FOUND/);assert.throws(()=>s.decideReview(b.id,String(r.id),'changes_requested',''));
+s.decideReview(b.id,String(r.id),'approved','확인했습니다');assert.equal(s.review(a.id,String(r.id))?.effectiveStatus,'approved');assert.throws(()=>s.decideReview(b.id,String(r.id),'approved','중복'),/CONFLICT/);
+s.save(a.id,{...draft,caption:'새 캡션'},p.id,1);assert.equal(s.review(b.id,String(r.id))?.effectiveStatus,'stale');assert.equal(s.review(b.id,String(r.id))?.snapshot.caption,draft.caption);
+const r2=s.requestReview(a.id,p.id,2,b.email)!;s.save(a.id,{...draft,caption:'다시 수정'},p.id,2);assert.throws(()=>s.decideReview(b.id,String(r2.id),'approved',''),/CONFLICT/);
+assert.equal(s.cancelReview(c.id,String(r.id)),false);assert.equal(s.cancelReview(a.id,String(r.id)),true);assert.equal(s.review(b.id,String(r.id)),null);assert.equal(s.review(a.id,String(r.id))?.effectiveStatus,'cancelled');s.delete(a.id,p.id,3);assert.equal(s.reviews(b.id).length,0);
+}finally{s.close();}});

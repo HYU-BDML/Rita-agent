@@ -64,10 +64,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/settings/workspace",
     "reuse": "현재 SQLite/auth 확장, 멤버/역할 분리",
-    "status": "미구현",
+    "status": "부분 구현",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 워크스페이스에 팀원을 추가하고 역할별 권한을 관리한다.",
     "external_condition": "초대 메일·권한 변경은 실행하지 않음.",
-    "evidence": ""
+    "evidence": "문서별 제작자/지정 검토자 권한 구현. 워크스페이스 팀 초대·관리자/편집자 역할 관리는 미완."
   },
   {
     "id": "F095",
@@ -386,10 +386,10 @@
     "source": "Planable",
     "source_url": "",
     "reuse": "기존 Cora/원장 연결",
-    "status": "미구현",
+    "status": "부분 검증",
     "acceptance": "사용자 경로→실제 저장/외부 결과→실패 복구까지 테스트",
     "external_condition": "실제 권한·자료·공급사 계약이 필요한 항목 별도",
-    "evidence": ""
+    "evidence": "가입한 검토자에게 저장 버전 공유, 실제 카드·캡션 검토, 승인/수정 의견, 새 버전 재검토, 공유 회수 브라우저 검수 통과. 댓글 스레드·외부 발행 승인 게이트는 미완."
   },
   {
     "id": "E206",

@@ -4,6 +4,7 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { Draft, Project, BrandProfile } from './model';
 
+type ReviewRow={id:string;project_id:string;owner_id:string;reviewer_id:string;version:number;current_version:number;snapshot:string;status:string;comment:string;created:string;decided:string|null;owner_email:string;reviewer_email:string};
 type ProjectRow = { id: string; version: number; body: string; created: string; updated: string };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 export class CoraStore {
@@ -17,6 +18,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL, version INTEGER NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS work_items(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), kind TEXT NOT NULL, title TEXT NOT NULL, data TEXT NOT NULL, created TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS brands(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS reviews(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, owner_id TEXT NOT NULL REFERENCES users(id), reviewer_id TEXT NOT NULL REFERENCES users(id), version INTEGER NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', comment TEXT NOT NULL DEFAULT '', created TEXT NOT NULL, decided TEXT, UNIQUE(project_id,version,reviewer_id));
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
   }
   signup(email: string, password: string) {
@@ -74,6 +76,36 @@ export class CoraStore {
   delete(userId:string,id:string,version:number):boolean {
     this.db.exec('BEGIN IMMEDIATE');try{const p=this.get(userId,id);if(!p){this.db.exec('ROLLBACK');return false;}if(p.version!==version)throw new Error('CONFLICT');this.db.prepare('DELETE FROM projects WHERE id=? AND user_id=?').run(id,userId);this.db.exec('COMMIT');return true;}catch(e){this.db.exec('ROLLBACK');throw e;}
   }
+  requestReview(ownerId:string,projectId:string,version:number,email:string){
+    this.db.exec('BEGIN IMMEDIATE');try{
+      const project=this.get(ownerId,projectId);if(!project)throw new Error('NOT_FOUND');if(project.version!==version)throw new Error('CONFLICT');
+      const reviewer=this.db.prepare('SELECT id FROM users WHERE email=?').get(email.trim().toLowerCase()) as {id:string}|undefined;
+      if(!reviewer||reviewer.id===ownerId)throw new Error('이미 가입한 다른 검토자의 이메일이 필요합니다.');
+      const existing=this.db.prepare('SELECT id FROM reviews WHERE project_id=? AND version=? AND reviewer_id=?').get(projectId,version,reviewer.id) as {id:string}|undefined;
+      if(existing){const prior=this.review(ownerId,existing.id);if(prior?.status==='cancelled')throw new Error('공유를 회수한 버전입니다. 새 버전을 저장한 뒤 다시 요청하세요.');this.db.exec('COMMIT');return prior;}
+      const id=randomUUID();this.db.prepare('INSERT INTO reviews(id,project_id,owner_id,reviewer_id,version,snapshot,created) VALUES (?,?,?,?,?,?,?)').run(id,projectId,ownerId,reviewer.id,version,JSON.stringify(project),new Date().toISOString());
+      this.db.exec('COMMIT');return this.review(ownerId,id);
+    }catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
+  reviews(userId:string){
+    const rows=this.db.prepare(`SELECT r.id,r.project_id,r.owner_id,r.reviewer_id,r.version,r.status,r.comment,r.created,r.decided,json_extract(r.snapshot,'$.brief.brand') as brand,json_extract(r.snapshot,'$.idea') as title,p.version as current_version,o.email as owner_email,u.email as reviewer_email FROM reviews r JOIN projects p ON p.id=r.project_id JOIN users o ON o.id=r.owner_id JOIN users u ON u.id=r.reviewer_id WHERE r.owner_id=? OR (r.reviewer_id=? AND r.status!='cancelled') ORDER BY r.created DESC LIMIT 200`).all(userId,userId) as Omit<ReviewRow,'snapshot'>[];
+    return rows.map(r=>({...r,effectiveStatus:r.status==='cancelled'?'cancelled':r.version!==r.current_version?'stale':r.status}));
+  }
+  review(userId:string,id:string){
+    const row=this.db.prepare(`SELECT r.*,p.version as current_version,o.email as owner_email,u.email as reviewer_email FROM reviews r JOIN projects p ON p.id=r.project_id JOIN users o ON o.id=r.owner_id JOIN users u ON u.id=r.reviewer_id WHERE r.id=? AND (r.owner_id=? OR (r.reviewer_id=? AND r.status!='cancelled'))`).get(id,userId,userId) as ReviewRow|undefined;
+    return row?{...row,snapshot:JSON.parse(String(row.snapshot)) as Project,effectiveStatus:row.status==='cancelled'?'cancelled':row.version!==row.current_version?'stale':row.status}:null;
+  }
+  decideReview(userId:string,id:string,status:string,comment:string){
+    if(!['approved','changes_requested'].includes(status)||typeof comment!=='string'||comment.length>3000)throw new Error('검토 결과 형식을 확인해 주세요.');
+    if(status==='changes_requested'&&!comment.trim())throw new Error('수정할 내용을 적어 주세요.');
+    this.db.exec('BEGIN IMMEDIATE');try{
+      const r=this.review(userId,id);if(!r||r.reviewer_id!==userId)throw new Error('NOT_FOUND');
+      if(r.status!=='pending'||r.effectiveStatus==='stale')throw new Error('CONFLICT');
+      this.db.prepare('UPDATE reviews SET status=?,comment=?,decided=? WHERE id=?').run(status,comment.trim(),new Date().toISOString(),id);
+      this.db.exec('COMMIT');return this.review(userId,id);
+    }catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
+  cancelReview(userId:string,id:string){return this.db.prepare("UPDATE reviews SET status='cancelled' WHERE id=? AND owner_id=? AND status!='cancelled'").run(id,userId).changes>0;}
   close() { this.db.close(); }
 }
 const globalStore = globalThis as typeof globalThis & { coraStore?: CoraStore };
