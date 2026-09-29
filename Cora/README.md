@@ -7,6 +7,7 @@ Cora 전용 개발 공간이다. 본인과 조유경 학생이 AI와 12주 동�
 ## 폴더
 
 - `apps/trend-hub/`: 기존 Trend ZIP에서 복사한 수정 가능한 앱 기반. 아직 Cora UI로 전환하거나 실행 검증하지 않았다.
+- `integrations/publishing/`: Sabrina의 n8n+Blotato 계정 연결·즉시/예약 게시 통합 계획.
 - `integrations/cardnews/`: 배포 링크와 코드 입수 후 통합할 자리.
 - `docs/제품개발_마스터플랜_2026-09-29/00_여기부터.md`: 현재 사업·제품·12주 개발계획.
 - `docs/`: Mirr 분석, 국내외 벤치마크, 연구 및 사업계획. 과거 전략 문서는 당시 기록이며 현재12주·90% 구현 원칙이 우선한다.
