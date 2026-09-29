@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "CSV UI exposes duplicate exclusion, missingness and corrected weighted rate",
+    "Quality metadata persists after reload",
+    "Malformed column counts rejected by server API"
+  ],
+  "passed": true
+}
