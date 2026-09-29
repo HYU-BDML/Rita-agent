@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "UI signup",
+    "UI edit, photo resize, reorder and server save",
+    "UI reload and reopen preserved edit",
+    "UI PNG ZIP export",
+    "Stale UI save rejected without overwriting newer version",
+    "Account B cannot list/read/write Account A projects; cross-origin mutation blocked",
+    "UI logout, revoked session and login",
+    "390px mobile page fits viewport",
+    "No browser page errors"
+  ],
+  "screenshots": [
+    "01-workspace.png",
+    "02-editor.png",
+    "03-account-isolation.png",
+    "04-mobile.png"
+  ],
+  "passed": true,
+  "pageErrors": [],
+  "artifactChecks": [
+    "ZIP CRC verified",
+    "Six PNG files at 1080x1350",
+    "Edited third-slide title and order verified"
+  ]
+}

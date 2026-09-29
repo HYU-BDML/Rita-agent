@@ -1,0 +1,97 @@
+Instagram 플랫폼 인사이트 | Meta for Developers Build with us Docs Blog Resources Developer centers Login Instagram 플랫폼 Instagram 플랫폼 Instagram 플랫폼 개요 앱 만들기 Instagram 로그인을 통한 Instagram API Instagram 로그인을 통한 Instagram API 마이그레이션 가이드 Instagram용 비즈니스 로그인 시작하기 메시지 메시지 사용자 프로필 API 빠른 답장 일반 템플릿 버튼 템플릿 보낸 사람 액션 고정 메뉴 아이스 브레이커 ig.me 환영 메시지 광고 대화 API 언급 Facebook 로그인을 통한 Instagram API Facebook 로그인을 통한 Instagram API 시작하기 비즈니스용 Facebook 로그인 비즈니스 검색 크리에이터 마켓플레이스 검색 API 크리에이터 마켓플레이스 메시지 API 저작권 감지 해시태그 검색 언급 제품 태그 다가오는 이벤트 협업 Webhooks 개요 Webhooks 설정 Webhook 필드 예시 콘텐츠 게시 콘텐츠 게시 재개 가능한 업로드 오디오 API 댓글 관리 비공개 답장 인사이트 피드에 공유하기 스토리에 공유하기 oEmbed 퍼가기 버튼 자체 메시지 API 참고 자료 API 참고 자료 오류 코드 액세스 토큰 IG 댓글 IG 댓글 답글 IG 컨테이너 IG 해시태그 검색 IG 해시태그 IG 해시태그 최근 미디어 인기 미디어 Instagram 미디어 Instagram 미디어 하위 요소 공동 작업자 댓글 인사이트 제품 태그 IG 사용자 IG 사용자 사용 가능한 카탈로그 비즈니스 검색 카탈로그 제품 검색 연결된 Threads 사용자 콘텐츠 게시 제한 인사이트 Instagram에서 지원하는 Threads 사용자 라이브 미디어 미디어 미디어 게시 언급 언급된 댓글 언급된 미디어 제품 재고 요청 최근 검색된 해시태그 스토리 태그 /me Oauth 인증 페이지 액세스 토큰 새로 고침 앱 검수 지원 변경 사항 리소스 변경 사항 문서 개요 Instagram 플랫폼 인사이트 Instagram 플랫폼 인사이트 Updated : 2025. 1. 21. LLM용 복사 마크다운으로 보기 이 가이드는 Instagram 플랫폼을 사용하여 앱 사용자의 Instagram 미디어와 프로페셔널 계정에 대한 인사이트를 얻는 방법을 보여줍니다. 이 가이드에서는 Instagram 사용자 와 Instagram 프로페셔널 계정 을 동의어로 사용합니다. Instagram 사용자 개체는 앱 사용자의 Instagram 프로페셔널 계정을 나타냅니다. 이제 Instagram 로그인을 통해 Instagram API에 Instagram 인사이트를 사용할 수 있습니다. 더 알아보기. 시작하기 전에 다음 항목이 필요합니다. 요구 사항 이 가이드는 Instagram Platform 개요 를 읽고 알림을 받기 위해 Meta 로그인 플로와 webhooks 서버 등 이 API 사용에 필요한 구성 요소를 구현한 것으로 추정합니다. Instagram 로그인을 통한 Instagram API Facebook 로그인을 통한 Instagram API 액세스 토큰 Instagram 사용자 액세스 토큰 Facebook 사용자 액세스 토큰 호스트 URL graph.instagram.com graph.facebook.com 로그인 유형 Instagram용 비즈니스 로그인 비즈니스용 Facebook 로그인 권한 instagram_business_basic instagram_business_manage_insights instagram_basic instagram_manage_insights pages_read_engagement 앱 사용자에게 비즈니스 관리자를 통해 앱 사용자의 Instagram 프로페셔널 계정에 연결된 페이지 에 대한 역할을 부여받았다면 앱도 다음이 필요합니다: ads_management ads_read 액세스 수준 회원님이 소유하거나 관리하지 않는 Instagram 프로페셔널 계정을 앱에서 서비스하는 경우 고급 액세스 앱이 회원님이 소유하거나 관리하는 Instagram 프로페셔널 계정을 서비스하며 앱 대시보드에서 앱에 추가한 경우 표준 액세스 엔드포인트 GET /<INSTAGRAM_MEDIA_ID>/insights — 미디어 개체에 대한 지표 가져오기 GET /<INSTAGRAM_ACCOUNT_ID>/insights — Instagram 비즈니스 계정 또는 Instagram 크리에이터 계정에 대한 지표를 가져옵니다. 추가 지표, 매개변수 및 권한 요구 사항은 각 엔드포인트의 참조 문서를 참조하세요. UTC API 응답의 타임스탬프는 오프셋이 0인 상태로 UTC를 사용하고 ISO-8601로 형식이 지정됩니다. 예: 2019-04-05T07:56:32+0000 Webhook 이벤트 구독 story_insights – Facebook 로그인을 통한 Instagram API에만 제공됩니다. 제한 사항 미디어 인사이트 comments , likes , views 와 같은 지표는 대상 Instagram 미디어에 대한 참여만 반환하며 다른 위치의 데이터는 포함하지 않습니다. 예를 들어 comments 은 사진에 달린 댓글 수를 반환하지만 해당 사진이 포함된 광고에 달린 댓글 수는 포함하지 않습니다. 인사이트 엔드포인트에서 total_comments , total_likes , total_views 을 사용하여 홍보/광고 미디어의 참여를 포함한 집계된 개수를 가져옵니다. 이 총 지표는 Facebook 로그인을 사용한 Instagram API에만 사용할 수 있습니다. 라이브 방송 Instagram 미디어는 방송 중일 때만 읽을 수 있습니다. 이 API는 Instagram 프로페셔널 계정에서 소유한 미디어에 대한 데이터만 반환합니다. 개인 Instagram 계정으로 소유한 미디어의 데이터를 얻는 데 사용할 수 없습니다. 계정 인사이트 팔로워가 100명 미만인 Instagram 계정에서는 일부 지표를 이용할 수 없습니다. 사용자 지표 데이터는 최대 90일간 저장됩니다. 한 번에 1명의 사용자에 대한 인사이트만 가져올 수 있습니다. Facebook 페이지에 대한 인사이트는 가져올 수 없습니다. 요청한 인사이트 데이터가 존재하지 않거나 현재 사용할 수 없는 경우 API가 각 지표에 0 대신 빈 데이터 세트를 반환합니다. 예시 Instagram 계정 요청 Facebook 로그인을 통한 다음 Instagram API 예시는 24시간 동안 앱 사용자의 Instagram 프로페셔널 계정에 대한 impressions , profile_views , reach 수를 가져옵니다. Instagram 비즈니스 또는 크리에이터 계정에 대한 지표를 가져오려면 metrics 매개변수를 쉼표로 구분된 지표 리스트( impressions , profile_views , reach )로 설정하고 period 를 day 으로 설정하여 GET /<INSTAGRAM_USER_ID>/insights 엔드포인트를 쿼리합니다. GET graph.facebook.com/17841405822304914/insights
+    ?metric=impressions,reach,profile_views
+    &period=day 응답 샘플 요청에 성공하면 앱이 지표 설명, 지표 ID, 이름과 제목, 지표가 측정된 기간, 지표 값이 포함된 각 지표의 배열을 받게 됩니다. {
+  "data": [
+    {
+      "name": "impressions",
+      "period": "day",
+      "values": [
+        {
+          "value": 32,
+          "end_time": "2018-01-11T08:00:00+0000"
+        },
+        {
+          "value": 32,
+          "end_time": "2018-01-12T08:00:00+0000"
+        }
+      ],
+      "title": "Impressions",
+      "description": "Total number of times the Business Account's media objects have been viewed",
+      "id": "instagram_business_account_id/insights/impressions/day"
+    },
+    {
+      "name": "reach",
+      "period": "day",
+      "values": [
+        {
+          "value": 12,
+          "end_time": "2018-01-11T08:00:00+0000"
+        },
+        {
+          "value": 12,
+          "end_time": "2018-01-12T08:00:00+0000"
+        }
+      ],
+      "title": "Reach",
+      "description": "Total number of times the Business Account's media objects have been uniquely viewed",
+      "id": "instagram_business_account_id/insights/reach/day"
+    },
+    {
+      "name": "profile_views",
+      "period": "day",
+      "values": [
+        {
+          "value": 15,
+          "end_time": "2018-01-11T08:00:00+0000"
+        },
+        {
+          "value": 15,
+          "end_time": "2018-01-12T08:00:00+0000"
+        }
+      ],
+      "title": "Profile Views",
+      "description": "Total number of users who have viewed the Business Account's profile within the specified period",
+      "id": "instagram_business_account_id/insights/profile_views/day"
+    }
+  ]
+} Instagram 미디어 요청 다음의 Instagram 로그인을 통한 Instagram API 예시는 24시간 동안 앱 사용자의 Instagram 미디어에 대한 engagement , impressions , reach 수를 가져옵니다. Instagram 비즈니스 또는 크리에이터 계정의 미디어에 대한 지표를 가져오려면 metrics 매개변수를 쉼표로 구분된 지표 리스트( engagement , impressions , reach )로 설정하고 period 를 day 으로 설정하여 GET /<INSTAGRAM_MEDIA_ID>/insights 엔드포인트를 쿼리합니다. GET graph.instagram.com/17841491440582230/insights
+    ?metric=engagement,impressions,reach 응답 샘플 요청에 성공하면 앱이 지표 설명, 지표 ID, 이름과 제목, 지표가 측정된 기간, 지표 값이 포함된 각 지표의 배열을 받게 됩니다. {
+  "data": [
+    {
+      "name": "engagement",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 8
+        }
+      ],
+      "title": "Engagement",
+      "description": "Total number of likes and comments on the media object",
+      "id": "media_id/insights/engagement/lifetime"
+    },
+    {
+      "name": "impressions",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 13
+        }
+      ],
+      "title": "Impressions",
+      "description": "Total number of times the media object has been seen",
+      "id": "media_id/insights/impressions/lifetime"
+    },
+    {
+      "name": "reach",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 13
+        }
+      ],
+      "title": "Reach",
+      "description": "Total number of unique accounts that have seen the media object",
+      "id": "media_id/insights/reach/lifetime"
+    }
+  ]
+} 다음 단계 Instagram 비즈니스 및 크리에이터 계정 과 Instagram 미디어 개체에 사용 가능한 모든 지표를 확인하려면 API 참고 자료를 참조하세요. Build with Meta AI Meta Horizon Social technologies Wearables News Meta for Developers Blog Success stories Support Developer Support Bug tool Platform status Developer community forum Report an incident Terms and policies Responsible platform initiatives Platform terms Developer policies Privacy policy Cookies About us About Careers Build with Meta AI Meta Horizon Social technologies Wearables News Meta for Developers Blog Success stories Support Developer Support Bug tool Platform status Developer community forum Report an incident About us About Careers Terms and policies Responsible platform initiatives Platform terms Developer policies Privacy policy Cookies Build with Meta AI Meta Horizon Social technologies Wearables News Meta for Developers Blog Success stories Support Developer Support Bug tool Platform status Developer community forum Report an incident About us About Careers Terms and policies Responsible platform initiatives Platform terms Developer policies Privacy policy Cookies Build with Meta AI Meta Horizon Social technologies Wearables News Meta for Developers Blog Success stories Support Developer Support Bug tool Platform status Developer community forum Report an incident About us About Careers Terms and policies Responsible platform initiatives Platform terms Developer policies Privacy policy Cookies English (US)

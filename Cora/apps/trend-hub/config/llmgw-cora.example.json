@@ -1,0 +1,6 @@
+{
+  "routes": {
+    "cora_test": ["deepseek", "deepseek-flash"],
+    "cora_quality": ["deepseek", "deepseek-v4-pro"]
+  }
+}

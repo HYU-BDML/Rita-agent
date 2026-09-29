@@ -1,0 +1,375 @@
+{
+  "scope": [
+    "meme"
+  ],
+  "query": {
+    "field": "meme",
+    "sources": [
+      "youtube",
+      "tiktok",
+      "news"
+    ]
+  },
+  "generatedAt": "2026-09-18T18:45:10.745Z",
+  "topics": [
+    {
+      "id": "meme:bad챌린지",
+      "scope": "meme",
+      "title": "BAD 챌린지",
+      "summary": "에이티즈 'BAD' 음원에 맞춰 춤을 추는 챌린지 영상들이 틱톡에 올라오고 있다. 최유정 팬사인회 커버, 리센느 미나미의 라디오스타(260916) 방송 장면, SBS 런닝맨 819회 클립, 장윤정 버전 등 아이돌·방송·트로트 가수 영상이 섞여 있다. 일반 이용자 커버, AI로 만든 버전, '30분 동안 BAD 챌린지로 살 빼기' 같은 다이어트용 영상도 있다. 조회수는 김광연(@light_kite_0110) 105만, 런닝맨(@sbs_runningman) 94만 등이다.",
+      "verdict": "11개 계정이 따라 함",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oo8WRzGXqIcAEABsaCqF9FXEQVDAl7AOugfNeh~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=8dabc4da&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=NwzKzA7n3wx%2FA8zlm6kVhCIexCg%3D",
+          "source_url": "https://www.tiktok.com/@hc1229/video/7686296468185042194",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/o8AfAfTzDBFqFATC3VEqtXIuqCQQUEog07VnVA~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=a527603a&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=hIqY2ZudcDl0%2BLLK7crf%2F1caX3M%3D",
+          "source_url": "https://www.tiktok.com/@justmixing/video/7686190415279688981",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/o8owEeLWAASLGDaqDAGAIUVarfVAuFCEAXI9ep~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=4bd39d85&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=vyVDkd4j6r1RJ0ZmaBWx5BSa3sU%3D",
+          "source_url": "https://www.tiktok.com/@livetvshow_/video/7686160779027942663",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oceVguC9AAAaAjmuAELrTi4GRefT3ERIDIECmI~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=8581ec87&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=BF7VO%2Bm7UbwSX5ycdAd%2FcpWVLZw%3D",
+          "source_url": "https://www.tiktok.com/@challenjaro_30/video/7684979645267102996",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/okTNkAy2lKAvsiI1CUifABwbUs7AhvE9IAB6Ct~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=1fef0ec7&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=OrxJ%2B%2BbeBxvAjfkqOTi%2Fe%2FHSTLQ%3D",
+          "source_url": "https://www.tiktok.com/@user8203857819843/video/7684461468728806663",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p19-common-sign.tiktokcdn.com/tos-alisg-p-0037/o8NmICFnAjcZpZJeBADAQTnvVMqgVCECAlEwfC~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my&ps=13740610&refresh_token=c56926e7&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=lOGaPNpCihqX100rfUYdThgr710%3D",
+          "source_url": "https://www.tiktok.com/@mushroomboy1/video/7682671377123511572",
+          "platform": "tiktok"
+        }
+      ],
+      "sources": [
+        {
+          "source": "tiktok",
+          "title": "IOI fanmeet CHOIYOOJUNG cover BAD 챌린지 #IOI #최유정 260827 fansign 팬싸인회 #아이오아이 #CHOI",
+          "url": "https://www.tiktok.com/@justmixing/video/7686190415279688981",
+          "excerpt": "IOI fanmeet CHOIYOOJUNG cover BAD 챌린지 #IOI #최유정 260827 fansign 팬싸인회 #아이오아이 #CHOIYOOJUNG",
+          "metric": "조회 168,728"
+        },
+        {
+          "source": "tiktok",
+          "title": "춤은 노력이아닌 재능이다 #bad챌린지",
+          "url": "https://www.tiktok.com/@girlmoa.1/video/7677817998547127559",
+          "metric": "조회 246,070"
+        },
+        {
+          "source": "tiktok",
+          "title": "AI로 'BAD 챌린지' 만들어 봤습니다. 즐감바랍니다. ^^ #AI #Dance #Bad챌린지 #ATEEZ #BAD",
+          "url": "https://www.tiktok.com/@tonkiman/video/7677491370369600788",
+          "metric": "조회 3,931"
+        },
+        {
+          "source": "tiktok",
+          "title": "이 조합 실화인가? 😳ㅋㅋㅋ BAD 챌린지",
+          "url": "https://www.tiktok.com/@mushroomboy1/video/7682671377123511572",
+          "metric": "조회 466,538"
+        },
+        {
+          "source": "tiktok",
+          "title": "어딘가 이상한 BAD 챌린지 #RunningMan #E819 #SBSRunningMan #RunningManClip",
+          "url": "https://www.tiktok.com/@sbs_runningman/video/7682614320781348117",
+          "metric": "조회 942,245"
+        },
+        {
+          "source": "tiktok",
+          "title": "미나미 Love Attack ~ BAD 챌린지 (리센느 Rescene) @ 라디오스타 (260916) 방송",
+          "url": "https://www.tiktok.com/@livetvshow_/video/7686160779027942663",
+          "metric": "조회 855"
+        },
+        {
+          "source": "tiktok",
+          "title": "BAD 챌린지 여자 최강자 모음#BAD #shorts #댄스챌린지 #정국챌린지 #BTS",
+          "url": "https://www.tiktok.com/@hc1229/video/7686296468185042194",
+          "metric": "조회 366"
+        },
+        {
+          "source": "tiktok",
+          "title": "뒤늦게 선보이는 장윤정의 BAD 챌린지",
+          "url": "https://www.tiktok.com/@user8203857819843/video/7684461468728806663",
+          "metric": "조회 42,577"
+        }
+      ],
+      "metrics": {
+        "views": 2945038,
+        "accounts": 11,
+        "trend": [
+          {
+            "at": "2026-08-01",
+            "value": 3,
+            "estimated": true
+          },
+          {
+            "at": "2026-09-01",
+            "value": 8,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-19"
+      },
+      "rights": {
+        "ownership": "unknown",
+        "reference_required": false
+      }
+    },
+    {
+      "id": "meme:권루트챌린지",
+      "scope": "meme",
+      "title": "권루트 챌린지",
+      "summary": "로블록스 콘텐츠 제작자 권루트 로블록스(@keonrootwo)가 올린 'L을 가져가' 음원·춤 영상을 따라 하는 챌린지다. 원본 영상은 조회 195만이며, 다른 이용자들은 '측면 대 측면', 'L를 가져가 중독' 등의 문구와 함께 #L을가져가챌린지 #권루트챌린지 해시태그를 달아 올린다. 행복한피자빵(@happypizzabread)의 'L을 가져가 리믹스' 편집본 등 리믹스 버전도 있다.",
+      "verdict": "11개 계정이 따라 함",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/ocQzgAMANfwZAuGVLLKVeWxPMfxiXIAAg7feSm~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=95ffd45b&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=TBx5hHKfhd0n8oBX2ceFzJAzg4Y%3D",
+          "source_url": "https://www.tiktok.com/@happypizzabread/video/7686800059022724372",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oMBin9tBisA6a8qEBvPsRRBALYEIzqt0qXi0r~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=c47d7835&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=tpOfZKubYlgG9ln3uzzZxVISsAk%3D",
+          "source_url": "https://www.tiktok.com/@a959526/video/7686750872872799505",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/ocqZfADrudeBvFRuqvJJZMUEgQCsBiPQkLvHEi~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=7eda619e&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=yNbT3f3feaxPBRY%2B9D00xi61ZRg%3D",
+          "source_url": "https://www.tiktok.com/@h9_eun/video/7686649413028138261",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/o8YABuIaAbEAqEirRDOm4PJCAAikYBhAull6G~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=f4d3e9d7&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=jcq2CHl2hMuvZDVjQ7azepI3E7Y%3D",
+          "source_url": "https://www.tiktok.com/@shin_sajang93/video/7686439889268739335",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/ocfqYMRmEDDqIrKEZVFb0I7zBdNLIgBe1FFUKA~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=8feab566&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=JB6YlceYLwiTYPWQdtL%2FZ7CIv88%3D",
+          "source_url": "https://www.tiktok.com/@_ei.nv/video/7686333033946844424",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/ooIi39I8EiGSAuX2AuDi1YlwiUBY2kUaoqBvb~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=02a2701f&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=n%2FewAfU2mjOj%2B2RVWkzhts2aKHs%3D",
+          "source_url": "https://www.tiktok.com/@gusals__4/video/7685595223451372816",
+          "platform": "tiktok"
+        }
+      ],
+      "sources": [
+        {
+          "source": "tiktok",
+          "title": "권루트 챌린지 #L을가져가 #roblox #로블록스 #현실 #라이벌 #춤",
+          "url": "https://www.tiktok.com/@keonrootwo/video/7683898701013732615",
+          "metric": "조회 1,958,420"
+        },
+        {
+          "source": "tiktok",
+          "title": "#L을가져가챌린지 #권루트챌린지 #fyp",
+          "url": "https://www.tiktok.com/@_ei.nv/video/7686333033946844424",
+          "metric": "조회 85,005"
+        },
+        {
+          "source": "tiktok",
+          "title": "L를 가져가 중독 #권루트챌린지 #fyp #추천",
+          "url": "https://www.tiktok.com/@fsfhbbc/video/7685258809312414997",
+          "metric": "조회 204,509"
+        },
+        {
+          "source": "tiktok",
+          "title": "권루트 챌린지 || L을 가져가 리믹스 @권루트 로블록스 #쇼츠 #shorts #추천 #fyp #meme",
+          "url": "https://www.tiktok.com/@happypizzabread/video/7684570932693781780",
+          "metric": "조회 157,662"
+        },
+        {
+          "source": "tiktok",
+          "title": "권루트 챌린지 || L을 가져가 리믹스 @권루트 로블록스 #쇼츠 #shorts #추천 #fyp #meme",
+          "url": "https://www.tiktok.com/@happypizzabread/video/7686800059022724372",
+          "metric": "조회 9,935"
+        },
+        {
+          "source": "tiktok",
+          "title": "측면 대 측면~ #L을가져가 #권루트챌린지",
+          "url": "https://www.tiktok.com/@shin_sajang93/video/7686439889268739335",
+          "metric": "조회 142,984"
+        },
+        {
+          "source": "tiktok",
+          "title": "권루트 챌린지 #L을가져가 #roblox #fyp #라이벌 #춤 @권루트 로블록스",
+          "url": "https://www.tiktok.com/@h9_eun/video/7686649413028138261",
+          "metric": "조회 1,404"
+        },
+        {
+          "source": "tiktok",
+          "title": "#권루트챌린지 #충렬중의수치 #3학년대표왕따#3학년대표왕따서 충렬중이라고 하지마라",
+          "url": "https://www.tiktok.com/@gusals__4/video/7685595223451372816",
+          "metric": "조회 21,952"
+        }
+      ],
+      "metrics": {
+        "views": 3001306,
+        "accounts": 11,
+        "trend": [
+          {
+            "at": "2026-09-01",
+            "value": 12,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-19"
+      },
+      "rights": {
+        "ownership": "unknown",
+        "reference_required": false
+      }
+    },
+    {
+      "id": "meme:버스밈",
+      "scope": "meme",
+      "title": "버스밈",
+      "summary": "여러 캐릭터를 버스에 태우는 형식의 '버스밈' 영상들이다. 귀멸의 칼날, 포세이큰, 사이키 쿠스오, 디지털 서커스, 타코피의 원죄, 네이버웹툰 호텔생존기 등 각자 좋아하는 작품·캐릭터를 넣어 만든다. Team.챠밍(@team.charming0), team.치즈스틱🧀(@team82144) 등 더빙팀이 캐릭터별 담당자를 적어 올린 버전도 있다.",
+      "verdict": "7개 계정이 따라 함",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/okMkATGAAQVALFYP5oeEjbh3fMfAkJInAIDKiI~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=30a1a2cc&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=8nUKN4JsRswTB8Tpk7p11Liet24%3D",
+          "source_url": "https://www.tiktok.com/@team.charming0/video/7684911081860500756",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oMnpaYG6aa8cqiVGxcCAAamHEa4ciPBIBA1iI~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=c64de727&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=kfcBOMfxsMve7DqzmZcFO7ti0Yw%3D",
+          "source_url": "https://www.tiktok.com/@imsohappy970/video/7681624048274558228",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p19-common-sign.tiktokcdn.com/tos-alisg-p-0037/o4ZaQmBqBgfQmKRG1En9fCdAWRRDlFxcuUO5rE~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=832ccb60&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=XBaIuOvCs%2FpUBCvHfRxWpvsKZdA%3D",
+          "source_url": "https://www.tiktok.com/@user67084261119542/video/7680581099713547528",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/osuCpaoxIIEskPDZNYaiBWBXPBisA1ps0suA3~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=a0057252&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=LSZ84i3otxXuTmJF7c4gUr6iNV8%3D",
+          "source_url": "https://www.tiktok.com/@team82144/video/7680529518393609492",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oUdRulECiAqCGUUZEhGREYgEDfAiFBAQfCAqBI~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=bfe7203d&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=YsOxhOd%2F6wsBI9N9n3NUTWMO%2FsE%3D",
+          "source_url": "https://www.tiktok.com/@_tomatoes51/video/7679782566882184469",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/owAIwizBIesI1A3POcRRi2xlDsnBCAiVqq4AKx~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=14577&idc=my2&ps=13740610&refresh_token=858650fd&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789776000&x-signature=HQZQCmH0%2FgwRgwJgPyBDfjMDPow%3D",
+          "source_url": "https://www.tiktok.com/@homes5550/video/7678319701453311252",
+          "platform": "tiktok"
+        }
+      ],
+      "sources": [
+        {
+          "source": "tiktok",
+          "title": "[버스 마감] 버스밈 귀칼 더빙팀 챠밍 #버스밈 #귀칼 #병맛 #더빙 #더빙팀",
+          "url": "https://www.tiktok.com/@team.charming0/video/7684911081860500756",
+          "metric": "조회 76,804"
+        },
+        {
+          "source": "tiktok",
+          "title": "#버스밈 #사이키쿠스오 #디지털서커스 #타코피의원죄 #추천",
+          "url": "https://www.tiktok.com/@_tomatoes51/video/7679782566882184469",
+          "metric": "조회 1,294"
+        },
+        {
+          "source": "tiktok",
+          "title": "무임승차요!! 블루듀드:@하카 듀세카:K 프리티프린세스:@핑노 베로니카:@P 셰들레츠키:@🎉{레빈}🍭 브라이트아이즈:@샬롯 아이트랩:@CK ",
+          "url": "https://www.tiktok.com/@team82144/video/7680529518393609492",
+          "excerpt": "무임승차요!! 블루듀드:@하카 듀세카:K 프리티프린세스:@핑노 베로니카:@P 셰들레츠키:@🎉{레빈}🍭 브라이트아이즈:@샬롯 아이트랩:@CK 007n7:@1x,쉐들(8~10코) 엘리엇:먀 일러:모티래 편집:@바나나크림브륄레똥 #포세이큰 #버스밈 #더빙모집중",
+          "metric": "조회 1,131"
+        },
+        {
+          "source": "tiktok",
+          "title": "버스 밈 맹꽁님 감사합니다ㅠ!!!!#호텔생존기 #그린아이 #네이버웹툰 #최애 #웹툰",
+          "url": "https://www.tiktok.com/@user67084261119542/video/7680581099713547528",
+          "metric": "조회 8,960"
+        },
+        {
+          "source": "tiktok",
+          "title": "버스밈",
+          "url": "https://www.tiktok.com/@user495460033588/video/7676864967857163540",
+          "metric": "조회 282"
+        },
+        {
+          "source": "tiktok",
+          "title": "내가 파는 장르중 최애들만 넣어서 만드는중#밈이름뭐더라 #버스밈 #장르×최애캐",
+          "url": "https://www.tiktok.com/@imsohappy970/video/7681624048274558228",
+          "metric": "조회 604"
+        },
+        {
+          "source": "tiktok",
+          "title": "버스밈 반모자나 좋아하는 분#CapCut @안녕하세요나뽀입니다 @왈륨가스(구륨이) @린-틱톡 @이선 .♥︎ @불주먹조토리 @하르 @갓기사 @노아",
+          "url": "https://www.tiktok.com/@homes5550/video/7678319701453311252",
+          "excerpt": "버스밈 반모자나 좋아하는 분#CapCut @안녕하세요나뽀입니다 @왈륨가스(구륨이) @린-틱톡 @이선 .♥︎ @불주먹조토리 @하르 @갓기사 @노아🎀(마피아 게임 휴우증) @삼밀리 @쌈@뽕한 언니🥵 @햄운 @yumi_u5k3v @𝐒𝐞𝐯𝐞𝐧𝐄𝐥𝐞𝐯𝐞𝐧 @{𝓭𝓮𝓯𝓻𝓮𝓼𝓼𝓮𝓭💌}사백_0110 @Uki💫",
+          "metric": "조회 3,377"
+        }
+      ],
+      "metrics": {
+        "views": 92452,
+        "accounts": 7,
+        "trend": [
+          {
+            "at": "2026-08-01",
+            "value": 3,
+            "estimated": true
+          },
+          {
+            "at": "2026-09-01",
+            "value": 4,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-19"
+      },
+      "rights": {
+        "ownership": "unknown",
+        "reference_required": false
+      }
+    }
+  ],
+  "note": "생성 이미지(role=material)는 키를 넣기 전까지 만들지 않습니다(P4-3). 키가 들어오면 images 에 항목이 추가될 뿐 다른 칸은 바뀌지 않습니다. why_now 는 근거가 얇은 후보에서 빠집니다. 판정기가 \"독립 출처가 부족함\" 같은 메모를 쓴 자리인데 그건 까닭이 아니라 메모라 내보내지 않습니다. 빠진 것은 \"아직 안 온 것\"이 아니라 \"댈 말이 없는 것\"입니다. metrics 에서 scale·direction 을 뺐습니다. 이 판정기들이 만들지 않는 칸이라 늘 null 이었습니다. 규모·방향 대신 rights 와 sources 수를 보세요. metrics.trend 는 월별 게시 편수입니다. 한 점이 한 달이고 at 은 그 달의 첫날, value 는 그 달에 올라온 편수(조회수 아님)입니다. estimated:true 인 점은 저희가 보기 전 구간이라 검색이 건져 준 표본이고 그 달의 실제 게시량이 아닙니다 — 그래프로 그리실 때 점선으로 두세요. 점선과 실선이 갈리는 날짜는 metrics.observed_from 에 있습니다 — 경계가 달 한가운데 떨어질 수 있어 월별 점만으로는 그 자리를 찍을 수 없습니다."
+}

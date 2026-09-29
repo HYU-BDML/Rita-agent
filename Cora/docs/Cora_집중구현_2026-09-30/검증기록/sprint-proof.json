@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "Material saved through UI",
+    "CSV quoted field, missing reach and weighted save rate rendered",
+    "Editorial calendar plan persisted without pretending to publish",
+    "Reusable prompt recipe persisted",
+    "Live public HTTPS extraction succeeded",
+    "Live RSS returned 80 deduplicated articles (0 feeds failed)",
+    "Real gateway AI blog generated, editable and saved",
+    "Real AI JSON cards returned into editor",
+    "MP4 rendered on server and downloaded through authenticated browser",
+    "All six work item types survive reload",
+    "Anonymous video access rejected"
+  ],
+  "errors": [],
+  "passed": true
+}

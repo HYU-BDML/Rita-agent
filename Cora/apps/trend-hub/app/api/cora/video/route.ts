@@ -1,0 +1,5 @@
+import{NextRequest}from'next/server';import{json,user,sameOrigin,body}from'@/lib/cora/http';import{store}from'@/lib/cora/store';import{renderVideo}from'@/lib/cora/video';
+export const runtime='nodejs';export const maxDuration=150;const active=new Set<string>();
+export async function POST(req:NextRequest){if(!sameOrigin(req))return json({error:'허용되지 않은 요청입니다.'},403);const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);if(active.has(u.id))return json({error:'이미 렌더 중입니다.'},409);active.add(u.id);let id:string|undefined;
+ try{const b=await body(req);if(!Array.isArray(b.frames))throw new Error('장면이 필요합니다.');const item=store().addItem(u.id,'video','카드뉴스 영상',{status:'rendering'});id=item.id;const data=await renderVideo(u.id,id,b.frames,b.seconds);store().updateItem(u.id,id,data);return json({id,...data,url:`/api/cora/video/${id}`});}catch(e){if(id)store().updateItem(u.id,id,{status:'failed'});return json({error:e instanceof Error?e.message:'렌더 실패'},400);}finally{active.delete(u.id);}
+}

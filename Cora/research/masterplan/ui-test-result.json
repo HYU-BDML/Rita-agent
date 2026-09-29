@@ -1,0 +1,5 @@
+{
+  "checks": 10,
+  "passed": 10,
+  "scope": "Node VM DOM stubs; browser visual rendering not tested"
+}

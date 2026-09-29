@@ -1,0 +1,50 @@
+# 트렌드 허브
+
+Next.js 15 App Router. 수집한 소재에서 **지금 작동하는 콘텐츠 방식**을 뽑아 근거·권리와 함께 보여준다.
+
+## 읽을 파일 — 이 목록이 전부다
+
+```
+docs/PROMPT.md      작업 지시서. 유일한 기준. 세션 시작 때 이것만 읽는다
+docs/WORDS.md       화면 문구 확정본. 화면을 만지는 세션(3~6)에서 반드시 읽는다
+docs/grammars.md    방식 12개 데이터. PROMPT.md 13절 세션 2에서만 읽는다
+docs/ui/*.html      화면 마크업. 세션 4·5·6에서만 읽는다
+```
+
+**그 외 `docs/` 의 어떤 파일도 열지 마라.** `docs/_superseded/` 는 폐기된 옛 지시서다.
+`사용설명서.md` `실패-체크리스트.md` `계약-예시*.json` 은 사람이 보는 자료다.
+지시가 겹치면 항상 `docs/PROMPT.md` 가 이긴다.
+
+## 읽지 마라 — 컨텍스트가 날아간다
+
+```
+data/*.json          db.json 11.6MB + .bak 5개 18.6MB
+public/gen/          생성된 이미지
+.next/  node_modules/  tsconfig.tsbuildinfo  docs/_superseded/
+```
+
+db.json 을 봐야 하면 통째로 읽지 말고:
+```bash
+node -e "const d=require('./data/db.json'); console.log(Object.keys(d), d.candidates.length)"
+```
+
+## 파일 지도
+
+```
+app/page.tsx            브리프 (§18). 목록은 /explore, 방식은 /grammars 에 있다
+app/candidates/[id]/    소재 상세
+app/{issues,characters,memes,library,runs,settings}/   기존 화면. 유지한다
+lib/core/store.ts       db.json 읽기·쓰기
+lib/core/series.ts      게시 시점 분포·최초 관측일. 신선도는 여기 추가
+lib/core/trend.ts       allTrends() 관측일·등급
+lib/core/brief.ts       TrendBrief — 첫 3초·장면 흐름
+lib/collect/*           수집·판정. 이번 작업에서 건드리지 않는다
+lib/discoveries/*       판정기. 이번 작업에서 건드리지 않는다
+components/pick.tsx     localStorage 담기. 화면에 안 붙어 있다
+```
+
+## 규칙
+
+- 세션당 변경 하나. `docs/PROMPT.md` 13절의 단위를 하나씩
+- 계획을 먼저 내고 승인받은 뒤 파일을 고친다
+- 기존 화면·기능을 삭제하지 않는다 (PROMPT.md 0절)

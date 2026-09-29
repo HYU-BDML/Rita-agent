@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Direct AI creation returned exactly 3 editable cards",
+    "PNG export 1:1 = 1080x1080",
+    "PNG export 9:16 = 1080x1920",
+    "PNG export 4:5 = 1080x1350",
+    "Design saved on server"
+  ],
+  "passed": true
+}

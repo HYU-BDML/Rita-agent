@@ -1,0 +1,336 @@
+{
+  "scope": [
+    "character"
+  ],
+  "query": {
+    "field": "character",
+    "sources": [
+      "youtube",
+      "tiktok",
+      "news"
+    ]
+  },
+  "generatedAt": "2026-09-18T10:29:07.442Z",
+  "topics": [
+    {
+      "id": "character:헬로키티",
+      "scope": "character",
+      "title": "헬로키티",
+      "summary": "아모스(@amoskorea_official)가 아모스X산리오캐릭터즈 글라스데코 '겨울이야기' 신제품을 소개하며, 필러블 스티커·썬데코 등 라인업과 헬로키티·한교동 글라스데코 썬데코 DUO를 공개했다. 만든 뒤 키링으로 달거나 스탠드로 세워 데스크테리어로 쓸 수 있다고 설명한다. 얼음별(@byeol_ice)은 성훈이 산리오 캐릭터 이름을 쿠로미→쿠루미, 시나모롤→시나몬으로 말한 일화를 올렸다. nubi.zip.zip은 남대문시장 키디파크·대전상회·라팜·중앙사·나무·대도상가 2층·J마켓·와와 등에서 산리오·키티 소품을 둘러본 후기를 정리했다.",
+      "why_now": "아모스 공식 계정의 산리오캐릭터즈 문구 콜라보 신상(tiktok)과 인형뽑기·소품샵 정품 입고 후기(키티 컬렉터, 일락)가 서로 다른 게시자·플랫폼에서 동시에 나오고 있다",
+      "verdict": "기업 IP — 라이선스 필요",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://pbs.twimg.com/amplify_video_thumb/2097261750559326208/img/23wQtMrn4l_epK6H.jpg",
+          "source_url": "https://x.com/byeol_ice/status/2097262215019544988",
+          "platform": "x"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/osAAfF3imnWaD24ARf4C9LEjgUEDBEAQ7qzNIw~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=9638&idc=useast5&ps=13740610&refresh_token=ef79f5ad&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789747200&x-signature=7Mb704rpRmy4qXDYeRu32T6NkY0%3D",
+          "source_url": "https://www.tiktok.com/@nubi.zip.zip/video/7683098759026248978",
+          "platform": "tiktok"
+        }
+      ],
+      "sources": [
+        {
+          "source": "tiktok",
+          "title": "조금씩 쌀쌀해지는 날씨, 아모스X산리오캐릭터즈 글라스데코 겨울이야기가 새롭게 찾아왔어요! ❄️💕 필러블 스티커부터 썬데코까지✨ 알록달록 만들며",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686416856600661256",
+          "excerpt": "조금씩 쌀쌀해지는 날씨, 아모스X산리오캐릭터즈 글라스데코 겨울이야기가 새롭게 찾아왔어요! ❄️💕 필러블 스티커부터 썬데코까지✨ 알록달록 만들며 다가오는 겨울을 미리 만나보세요! ☃️🎀 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티 #마이멜로디 #쿠로미 #시나모롤 #폼폼푸린 #포차코 #한교동 #배드바츠마루 #리틀트윈스타 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 291"
+        },
+        {
+          "source": "tiktok",
+          "title": "헬로키티와 한교동이 한 번에! 아모스 X 산리오캐릭터즈 글라스데코 썬데코 듀오 등장✨ 직접 만들어 키링으로 달고, 스탠드로 세워 데스크테리어까지",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686414237224258834",
+          "excerpt": "헬로키티와 한교동이 한 번에! 아모스 X 산리오캐릭터즈 글라스데코 썬데코 듀오 등장✨ 직접 만들어 키링으로 달고, 스탠드로 세워 데스크테리어까지! 👀💗 귀여움도 활용도도 두 배! 💫 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티 #마이멜로디 #쿠로미 #시나모롤 #폼폼푸린 #포차코 #한교동 #배드바츠마루 #리틀트윈스타 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 268"
+        },
+        {
+          "source": "tiktok",
+          "title": "둘이 같이 있으니까 더 탐난다…👀💗 ⠀ 헬로키티와 한교동이 글라스데코 썬데코 DUO로 만났어요💗💙 ⠀ 둘이라서 더 특별한 NEW ITEM",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686700961909329170",
+          "excerpt": "둘이 같이 있으니까 더 탐난다…👀💗 ⠀ 헬로키티와 한교동이 글라스데코 썬데코 DUO로 만났어요💗💙 ⠀ 둘이라서 더 특별한 NEW ITEM✨ 과연 또렷한 실물은 어떤 모습일까요? ⠀ 두 배로 귀여운 DUO, 지금 바로 만나보세요! 👀💘 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티#한교동 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 79"
+        },
+        {
+          "source": "x",
+          "title": "🗣 저번에 그 토끼 인형 이름 기억해? 🍙 그 캐릭터? 🍙 음.. 쿠루미???? 🗣 아니🥲 🍙 아 마아..!! 헬로 키티😁 🗣 아",
+          "url": "https://x.com/byeol_ice/status/2097262215019544988",
+          "excerpt": "🗣 저번에 그 토끼 인형 이름 기억해? 🍙 그 캐릭터? 🍙 음.. 쿠루미???? 🗣 아니🥲 🍙 아 마아..!! 헬로 키티😁 🗣 아니🥲 마이멜로디 성훈이 산리오 캐릭터들을 기억하고는 있는데 조금씩 다른게 너무 웃기고 귀여움 \"쿠로미 ➝ 쿠루미\" \"시나모롤 ➝ 시나몬\" https://t.co/Tu4FdtQAI3",
+          "metric": "조회 36,972"
+        },
+        {
+          "source": "tiktok",
+          "title": "요즘 사우나템 많이 보러 가는 남대문시장에 저는 숨은 귀여운 템들을 찾아보고 왔어요 🎀👀 📍 키디파크 — 몬치치·산리오 소품 📍 대전상회",
+          "url": "https://www.tiktok.com/@nubi.zip.zip/video/7683098759026248978",
+          "excerpt": "요즘 사우나템 많이 보러 가는 남대문시장에 저는 숨은 귀여운 템들을 찾아보고 왔어요 🎀👀 📍 키디파크 — 몬치치·산리오 소품 📍 대전상회 — 일본 간식 📍 라팜 — 캐릭터 소품·사우나템 📍 중앙사 — 사우나템·빗 📍 나무 — 지브리·희귀 산리오 인형 📍 대도상가 2층 — 캐릭터 소품 천국 📍 J마켓 — 키티 가방 📍 와와 — 키티·몬치치 소품 눈 크게 뜨고 돌아다니면 숨은 꿀템이 왕많아요 💗 ※ 재고는 방문 시점에 따라 달라질 수 있어요! #남대문시장 #키디파크#키디파ᄏ소품 #산리오 #헬로키티",
+          "metric": "조회 8,527"
+        }
+      ],
+      "metrics": {
+        "views": 46137,
+        "accounts": 3,
+        "trend": [
+          {
+            "at": "2026-09-01",
+            "value": 2,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-18"
+      },
+      "rights": {
+        "ownership": "corporate",
+        "reference_required": true,
+        "note": "기업 권리자와 정식 라이선스·사용 범위 확인이 필요합니다. 시각 근거가 자료에 없어 외형을 지어내지 않았습니다."
+      }
+    },
+    {
+      "id": "character:한교동",
+      "scope": "character",
+      "title": "한교동",
+      "summary": "아모스(@amoskorea_official)가 아모스X산리오캐릭터즈 글라스데코 겨울이야기와 함께 헬로키티·한교동 글라스데코 썬데코 DUO 신제품을 공개했다. 직접 만들어 키링으로 달거나 스탠드로 세울 수 있는 형태로 소개된다. 삶의정돈(@lifeorder.wisdom)은 치이카와·젤리캣·마루는강쥐·가나디·망그러진곰·최고심·조구만·한교동 8개 캐릭터의 이름 맞히기 게시물을 올렸다.",
+      "why_now": "아모스 공식 계정의 산리오 콜라보 신상(tiktok), 송리단길 소품샵 소개(잠실리즘), 인기 캐릭터 정리 콘텐츠(삶의정돈) 등 서로 다른 게시자·플랫폼에서 언급된다",
+      "verdict": "기업 IP — 라이선스 필요",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oIAsVCblpEhkiAIlkA92qaYi0AyABALvusA0r~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=9638&idc=useast8&ps=13740610&refresh_token=f1e8fbe7&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789747200&x-signature=xj%2BCrIwrV%2FH4vBNiJ4EYKKg4eIQ%3D",
+          "source_url": "https://www.tiktok.com/@amoskorea_official/video/7686700961909329170",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/ociwImLfAfovPMCXDAGAQYVVrJVAREFEA0ITec~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=9638&idc=useast8&ps=13740610&refresh_token=9a73bc3f&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789747200&x-signature=6PO%2BNO1TUtwLYqppMzMw5uh%2FGzs%3D",
+          "source_url": "https://www.tiktok.com/@amoskorea_official/video/7686416856600661256",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oAgsIkF7AvUHebGXBADAQEq6VsqgQCFCA6EKfK~tplv-tiktokx-cropcenter:500:800.jpeg?biz_tag=musically_video.video_cover&dr=9638&idc=useast8&ps=13740610&refresh_token=9093592a&shcp=9b759fb9&shp=c1333099&t=4d5b0474&x-expires=1789747200&x-signature=nZZmHJN5%2BKDkR1UQn3HL7QEItmo%3D",
+          "source_url": "https://www.tiktok.com/@amoskorea_official/video/7686414237224258834",
+          "platform": "tiktok"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/j7NURFhYDpI/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=j7NURFhYDpI",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/8xDtaH3QUdY/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=8xDtaH3QUdY",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/KRyJBFdm4NM/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=KRyJBFdm4NM",
+          "platform": "youtube"
+        }
+      ],
+      "sources": [
+        {
+          "source": "tiktok",
+          "title": "조금씩 쌀쌀해지는 날씨, 아모스X산리오캐릭터즈 글라스데코 겨울이야기가 새롭게 찾아왔어요! ❄️💕 필러블 스티커부터 썬데코까지✨ 알록달록 만들며",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686416856600661256",
+          "excerpt": "조금씩 쌀쌀해지는 날씨, 아모스X산리오캐릭터즈 글라스데코 겨울이야기가 새롭게 찾아왔어요! ❄️💕 필러블 스티커부터 썬데코까지✨ 알록달록 만들며 다가오는 겨울을 미리 만나보세요! ☃️🎀 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티 #마이멜로디 #쿠로미 #시나모롤 #폼폼푸린 #포차코 #한교동 #배드바츠마루 #리틀트윈스타 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 291"
+        },
+        {
+          "source": "tiktok",
+          "title": "헬로키티와 한교동이 한 번에! 아모스 X 산리오캐릭터즈 글라스데코 썬데코 듀오 등장✨ 직접 만들어 키링으로 달고, 스탠드로 세워 데스크테리어까지",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686414237224258834",
+          "excerpt": "헬로키티와 한교동이 한 번에! 아모스 X 산리오캐릭터즈 글라스데코 썬데코 듀오 등장✨ 직접 만들어 키링으로 달고, 스탠드로 세워 데스크테리어까지! 👀💗 귀여움도 활용도도 두 배! 💫 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티 #마이멜로디 #쿠로미 #시나모롤 #폼폼푸린 #포차코 #한교동 #배드바츠마루 #리틀트윈스타 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 268"
+        },
+        {
+          "source": "tiktok",
+          "title": "둘이 같이 있으니까 더 탐난다…👀💗 ⠀ 헬로키티와 한교동이 글라스데코 썬데코 DUO로 만났어요💗💙 ⠀ 둘이라서 더 특별한 NEW ITEM",
+          "url": "https://www.tiktok.com/@amoskorea_official/video/7686700961909329170",
+          "excerpt": "둘이 같이 있으니까 더 탐난다…👀💗 ⠀ 헬로키티와 한교동이 글라스데코 썬데코 DUO로 만났어요💗💙 ⠀ 둘이라서 더 특별한 NEW ITEM✨ 과연 또렷한 실물은 어떤 모습일까요? ⠀ 두 배로 귀여운 DUO, 지금 바로 만나보세요! 👀💘 #아모스 #산리오 #SANRIO #산리오캐릭터즈 #산리오러버 #신상문구 #문구템 #문구추천 #문구덕후 #문구하울 #캐릭터문구 #산리오클레이 #산리오글라스데코 #산리오썬데코 #글라스데코 #썬데코 #헬로키티#한교동 #초등선물 #키링만들기 #육아놀이 #추억템 #취미 #취미스타그램 #만들기그램 #키덜트 #산리오굿즈 #HelloKitty #Hangyodon #데스크테리어",
+          "metric": "조회 79"
+        },
+        {
+          "source": "instagram",
+          "title": "얼굴은 아는데 이름은 몰랐다? 요즘 인기 캐릭터 분명 어디선가 봤는데 이름은 몰랐던 캐릭터, 하나쯤 있지 않나요? 👀 치이카와, 젤리캣, 마루",
+          "url": "https://www.instagram.com/reel/Dcz4WCTvuUT/",
+          "excerpt": "얼굴은 아는데 이름은 몰랐다? 요즘 인기 캐릭터 분명 어디선가 봤는데 이름은 몰랐던 캐릭터, 하나쯤 있지 않나요? 👀 치이카와, 젤리캣, 마루는 강쥐, 가나디부터 망그러진곰·최고심·조구만·한교동까지. SNS 이모티콘부터 인형, 문구, 팝업스토어와 각종 컬래버 상품까지 다양한 곳에서 자주 만나는 캐릭터들입니다. 각자 그림체와 성격은 다르지만 귀여움뿐 아니라 공감되는 감정과 이야기가 인기의 큰 매력이 되기도 합니다. 📌 8개 중 이름까지 정확히 알고 있던 캐릭터는 몇 개인가요? #캐릭터 #치이카와 #젤리캣 #마루는강쥐 #인기캐릭터",
+          "metric": "조회 4,722"
+        }
+      ],
+      "metrics": {
+        "views": 5360,
+        "accounts": 2,
+        "trend": [
+          {
+            "at": "2026-04-01",
+            "value": 4,
+            "estimated": true
+          },
+          {
+            "at": "2026-05-01",
+            "value": 7,
+            "estimated": true
+          },
+          {
+            "at": "2026-06-01",
+            "value": 6,
+            "estimated": true
+          },
+          {
+            "at": "2026-07-01",
+            "value": 4,
+            "estimated": true
+          },
+          {
+            "at": "2026-08-01",
+            "value": 13,
+            "estimated": true
+          },
+          {
+            "at": "2026-09-01",
+            "value": 10,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-14"
+      },
+      "rights": {
+        "ownership": "corporate",
+        "reference_required": true,
+        "note": "기업 권리자와 정식 라이선스·사용 범위 확인이 필요합니다. 시각 근거가 자료에 없어 외형을 지어내지 않았습니다."
+      }
+    },
+    {
+      "id": "character:치이카와",
+      "scope": "character",
+      "title": "치이카와",
+      "summary": "미국 미니소 치이카와 팝업 굿즈를 세금 포함 달러 원가로 양도한다는 글이 올라왔다. 품목은 치이카와·하치와레·우사기·모몽가 키링, 증사홀더, 부적 키링, 누이 인형, 콜렉트북, 냉장고 자석, 마스코트, 스티커 등이며 미개봉 미사용, 소액 네고 가능이라고 적혀 있다. 다른 게시물에서는 2주 전과 달리 굿즈를 구하기 어려워졌다는 언급, 하찮고 뚠뚠한 캐릭터로 야돈·마자용·잠만보·메타몽·뚱이·커비·도라에몽·미니언즈와 함께 치이카와를 꼽는 글이 있었다.",
+      "why_now": "극장판 개봉·굿즈 전개가 여러 게시자에서 동시에 확인된다. 인스타그램(@nunukkang)은 \"치이카와 극장판 굿즈 언박싱\"과 영화 마스코트 증정, 틱톡(@catch.speed)은 \"롯데시네마에서 먼작귀 우산 피규어\" 5종 랜덤, X(@buyandsell_sr)는 \"미국 치이카와 미니소 팝업 굿즈 양도\"를 언급하며, X(@haaaaaamster1)는 \"이젠 돈 줘도 못사는 수준\"이라며 품절 체감을 적고 있다.",
+      "verdict": "기업 IP — 라이선스 필요",
+      "images": [
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://pbs.twimg.com/media/HSZd7QmbUAAM8fa.jpg",
+          "source_url": "https://x.com/haaaaaamster1/status/2100469555835621401",
+          "platform": "x"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/HsuKDh1n8Y8/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=HsuKDh1n8Y8",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/f6Kph2mvfWU/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=f6Kph2mvfWU",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/8v5lnJrQZ3s/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=8v5lnJrQZ3s",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://i.ytimg.com/vi/52lIz07faVM/maxresdefault.jpg",
+          "source_url": "https://www.youtube.com/watch?v=52lIz07faVM",
+          "platform": "youtube"
+        },
+        {
+          "role": "evidence",
+          "type": "thumbnail",
+          "url": "https://pbs.twimg.com/media/HSQ0C4JbkAA8GtI.jpg",
+          "source_url": "https://x.com/heukseol0/status/2099860554861232612",
+          "platform": "x"
+        }
+      ],
+      "sources": [
+        {
+          "source": "x",
+          "title": "아니 치이카와 굿즈 2주쯤 전만 해도 돈주면 살수있는 정도의 크기였는데 이젠 돈 줘도 못사는 수준까지 커져버렸어 보이면 일단 사야되 이게 무슨일",
+          "url": "https://x.com/haaaaaamster1/status/2100469555835621401",
+          "excerpt": "아니 치이카와 굿즈 2주쯤 전만 해도 돈주면 살수있는 정도의 크기였는데 이젠 돈 줘도 못사는 수준까지 커져버렸어 보이면 일단 사야되 이게 무슨일이람.... https://t.co/7ttKjrAJFL",
+          "metric": "조회 26"
+        },
+        {
+          "source": "x",
+          "title": "미국 치이카와 미니소 팝업 굿즈 양도 (세금 포함한 달러 원가 양도) 네고 소액 가능 미개봉 미사용입니다 ㅅㅊㅇ 치이카와 하치와레 우사기 미니소",
+          "url": "https://x.com/buyandsell_sr/status/2100469471806939614",
+          "excerpt": "미국 치이카와 미니소 팝업 굿즈 양도 (세금 포함한 달러 원가 양도) 네고 소액 가능 미개봉 미사용입니다 ㅅㅊㅇ 치이카와 하치와레 우사기 미니소 모몽가 키링 증사홀더 부적 키링 누이 인형 콜북 콜렉트북 냉장고 자석 마그네틱 열쇠고리 마스코트 스티커 먼작귀",
+          "metric": "조회 66"
+        },
+        {
+          "source": "x",
+          "title": "빙구같고 하찮고 뚠뚠한게 너무 귀엽다 그런 캐릭터 생각나는 거 야돈, 치이카와, 마자용, 잠만보, 메타몽, 뚱이,커비,도라에몽,미니언즈 http",
+          "url": "https://x.com/heukseol0/status/2099860554861232612",
+          "excerpt": "빙구같고 하찮고 뚠뚠한게 너무 귀엽다 그런 캐릭터 생각나는 거 야돈, 치이카와, 마자용, 잠만보, 메타몽, 뚱이,커비,도라에몽,미니언즈 https://t.co/17fYUIv8PN",
+          "metric": "조회 176"
+        }
+      ],
+      "metrics": {
+        "views": 268,
+        "accounts": 3,
+        "trend": [
+          {
+            "at": "2026-04-01",
+            "value": 1,
+            "estimated": true
+          },
+          {
+            "at": "2026-05-01",
+            "value": 0,
+            "estimated": true
+          },
+          {
+            "at": "2026-06-01",
+            "value": 2,
+            "estimated": true
+          },
+          {
+            "at": "2026-07-01",
+            "value": 1,
+            "estimated": true
+          },
+          {
+            "at": "2026-08-01",
+            "value": 9,
+            "estimated": true
+          },
+          {
+            "at": "2026-09-01",
+            "value": 12,
+            "estimated": true
+          }
+        ],
+        "observed_from": "2026-09-14"
+      },
+      "rights": {
+        "ownership": "corporate",
+        "reference_required": true,
+        "note": "기업 권리자와 정식 라이선스·사용 범위 확인이 필요합니다. 시각 근거가 자료에 없어 외형을 지어내지 않았습니다."
+      }
+    }
+  ],
+  "note": "생성 이미지(role=material)는 키를 넣기 전까지 만들지 않습니다(P4-3). 키가 들어오면 images 에 항목이 추가될 뿐 다른 칸은 바뀌지 않습니다. why_now 는 근거가 얇은 후보에서 빠집니다. 판정기가 \"독립 출처가 부족함\" 같은 메모를 쓴 자리인데 그건 까닭이 아니라 메모라 내보내지 않습니다. 빠진 것은 \"아직 안 온 것\"이 아니라 \"댈 말이 없는 것\"입니다. metrics 에서 scale·direction 을 뺐습니다. 이 판정기들이 만들지 않는 칸이라 늘 null 이었습니다. 규모·방향 대신 rights 와 sources 수를 보세요. metrics.trend 는 월별 게시 편수입니다. 한 점이 한 달이고 at 은 그 달의 첫날, value 는 그 달에 올라온 편수(조회수 아님)입니다. estimated:true 인 점은 저희가 보기 전 구간이라 검색이 건져 준 표본이고 그 달의 실제 게시량이 아닙니다 — 그래프로 그리실 때 점선으로 두세요."
+}
