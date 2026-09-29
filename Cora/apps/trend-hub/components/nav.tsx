@@ -17,6 +17,7 @@ import { usePathname } from 'next/navigation';
  * 의 어휘가 모두 이 낱말을 쓴다. 사람이 읽는 것은 메뉴 글씨지 주소가 아니다.
  */
 const TABS: { href: string; label: string; match: string[] }[] = [
+  { href: '/studio', label: 'Cora 제작실', match: ['/studio'] },
   { href: '/', label: '브리프', match: ['/'] },
   // 축별 화면은 탐색 아래다. 주소는 그대로 살아 있다 — 나간 링크와 북마크가 그 낱말을 쓴다.
   { href: '/explore', label: '탐색', match: ['/explore', '/issues', '/characters', '/memes', '/candidates'] },

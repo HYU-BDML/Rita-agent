@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { LegacyShell } from '@/components/cora/legacy-shell';
 import { Nav } from '@/components/nav';
 import { PickProvider } from '@/components/pick';
 import { PickBar } from '@/components/pick-bar';
 
 export const metadata: Metadata = {
-  title: '트렌드 허브',
+  title: 'Cora · 콘텐츠 제작실',
   description: '지금 작동하는 콘텐츠 방식을 근거와 함께 보여드립니다',
 };
 
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           대상을 서버가 아는 자리라서 운영자 쪽으로 남는다. 두 축이 따로 산다.
         */}
         <PickProvider>
+        <LegacyShell legacy={<>
         {/* 상단 바는 RITA 잉크. 아래 2px 그라데이션 선이 그라데이션을 쓰는 네 자리 중 하나다. */}
         <header className="sticky top-0 z-10" style={{ background: 'var(--rita-ink)' }}>
           <div className="mx-auto flex min-w-0 items-center gap-1 px-4 py-3 sm:px-8" style={{ maxWidth: 1140 }}>
@@ -60,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="mx-auto px-4 py-5 sm:px-8 sm:py-7" style={{ maxWidth: 1140 }}>{children}</main>
         {/* 담은 것이 어디로 갔는지 말해 주는 줄. 0 건이면 통째로 숨는다. */}
         <PickBar />
+        </>}>{children}</LegacyShell>
         </PickProvider>
       </body>
     </html>

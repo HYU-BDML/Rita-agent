@@ -928,5 +928,16 @@
       "upstream_sha256": "4b8a6d34b80da84392d3dd6cef0f639b66c8626c6d29813a8b8aff9c47ab2ffe",
       "imported_sha256": "4b8a6d34b80da84392d3dd6cef0f639b66c8626c6d29813a8b8aff9c47ab2ffe"
     }
-  }
+  },
+  "cora_changes": [
+    {
+      "date": "2026-09-29",
+      "scope": "apps/trend-hub",
+      "description": "New Cora studio, own auth/storage API, local artwork and export, tests and local runner; legacy layout/nav wrapped, Node minimum updated; original data-dependent test explicitly skipped when fixture absent. Original hashes above describe initial import, not current edited files.",
+      "reused_unchanged": [
+        "lib/producers/deck.ts: deckFromCards (renderer contract only)"
+      ],
+      "external_calls": "No paid model, render service, or social posting executed."
+    }
+  ]
 }

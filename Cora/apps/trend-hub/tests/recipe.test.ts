@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 
 import { GRAMMARS } from '../lib/core/grammar';
 import { RECIPES, SCOPE, type RecipeFrame, frameOf } from '../lib/core/recipe';
@@ -60,7 +61,7 @@ test('만드는 순서: 인용이 캡션·숫자·해시태그 중 하나를 담
   }
 });
 
-test('만드는 순서: 근거 이름이 그 방식의 실제 근거에 있는 이름이다', async () => {
+test('만드는 순서: 근거 이름이 그 방식의 실제 근거에 있는 이름이다', { skip: existsSync('data/db.json') ? false : '원본 관측 DB가 필요합니다. Cora의 독립 단위 시험과 구분합니다.' }, async () => {
   // 번호가 아니라 이름으로 적는다. 이름이 틀리면 화면에서 번호가 조용히 사라진다.
   const fs = await import('node:fs');
   const { grammarsWithEvidence } = await import('../lib/core/grammar');
