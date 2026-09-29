@@ -1,0 +1,83 @@
+/* Pretendard (지시서 1장). App Router 에서 raw <head> 를 쓰면 CSS 순서가 흔들려
+   여기서 받는다. 변수 폰트 한 벌이라 굵기별로 더 받지 않는다. */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * 색은 dataviz 규격에서 가져왔고 검증기를 통과했다.
+ * 검색 급등은 1.0(평소)을 기준으로 위아래가 갈리는 값이라 diverging 이다 —
+ * 파랑(오름) ↔ 회색(평소) ↔ 빨강(식음). 두 극이 CVD 분리 ΔE 21.6 으로 통과했다.
+ */
+:root {
+  color-scheme: light dark;
+
+  --surface: #ffffff;
+  --plane: #f6f6fa;      /* 페이지 배경 (--body) */
+  --ink: #15163a;
+  --ink-2: #4a4b6a;
+  --ink-muted: #84839a;  /* --mute */
+  --hairline: #e7e6ef;   /* --line */
+  --ring: rgba(11, 11, 11, 0.1);
+
+  /*
+   * RITA 색 (docs/UI-지시서.md 1장). 로고에서 뽑은 값이라 한 곳에 상수로 둔다.
+   * **그라데이션은 네 군데만 쓴다** — 상단 바 아래 2px 선 · 확정 배지 ·
+   * 브랜드 마크 · 주 버튼. 더 늘리면 데이터가 안 보인다.
+   */
+  --rita-ink: #15163a;
+  --rita-blue: #3340dc;
+  --grad: linear-gradient(135deg, #4a4ee8 0%, #7b52e0 55%, #a94fd6 100%);
+  --sel: #eef0fd;      /* 담긴 카드 배경 */
+  --selbd: #cfd5f6;    /* 담긴 카드 테두리 */
+  --line: #e7e6ef;     /* 기본 테두리 */
+  --line2: #f0eff5;    /* 카드 안쪽 구분선 */
+  --mute: #84839a;     /* 보조 텍스트 */
+  --dim: #a9a7bc;      /* 흐린 텍스트 */
+
+  --up: #2a78d6;      /* 오름 */
+  --down: #e34948;    /* 식음 */
+  --flat: #f0efec;    /* 평소 (중립 미드포인트) */
+  --track: #efeeea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+    --line: #2c2c2a;
+    --ring: rgba(255, 255, 255, 0.1);
+
+    --up: #3987e5;
+    --down: #e66767;
+    --flat: #383835;
+    --track: #262625;
+  }
+}
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  /* 숫자 폭 고정 — 안 주면 자릿수가 어긋나 지저분해 보인다 (지시서 1장). */
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, '맑은 고딕', 'Malgun Gothic', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* 수치는 항상 등폭 숫자로. 배수를 눈으로 비교할 수 있어야 한다. */
+.num { font-variant-numeric: tabular-nums; }

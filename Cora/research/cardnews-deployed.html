@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 글씨가 뜨기 전에 브라우저가 이것부터 보여 준다. 스크립트가 뜨자마자
+     고른 언어로 갈아끼운다(lib/chat.js 새대화그리기). -->
+<title>카드뉴스 에이전트</title>
+
+<!-- **링크 미리보기**(사람 지시 2026-09-20: 「밋밋해 … 이미지가 없어」).
+     여태 이 셋이 없어서 메신저가 제목만 긁어 가고 「여기를 눌러 링크를
+     확인하세요」라는 제 기본 문구를 붙였다. 크롤러는 스크립트를 안 돌리니
+     `chat.js` 가 갈아끼우는 제목은 안 보인다 — **여기 적힌 것만 보인다.**
+     그림 주소는 반드시 절대 주소라야 한다(상대 주소는 안 읽는 데가 있다).
+     `og.jpg` 1200x630 은 어디서나 안 잘리고, `og-square.jpg` 는 정사각을
+     크게 보여 주는 곳(카카오톡 따위)이 고르라고 같이 둔다. -->
+<meta name="description" content="기획부터 이미지 생성까지 한 번에. 복잡한 카드뉴스 제작, 이제 맡겨 주세요.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="카드뉴스 에이전트">
+<meta property="og:title" content="카드뉴스 에이전트">
+<meta property="og:description" content="기획부터 이미지 생성까지 한 번에. 복잡한 카드뉴스 제작, 이제 맡겨 주세요.">
+<meta property="og:url" content="https://cardnews.david112702.workers.dev/">
+<meta property="og:image" content="https://cardnews.david112702.workers.dev/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="선글라스 낀 고양이가 노트북 앞에서 카드뉴스를 소개하는 표지">
+<meta property="og:image" content="https://cardnews.david112702.workers.dev/og-square.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="카드뉴스 에이전트">
+<meta name="twitter:description" content="기획부터 이미지 생성까지 한 번에. 복잡한 카드뉴스 제작, 이제 맡겨 주세요.">
+<meta name="twitter:image" content="https://cardnews.david112702.workers.dev/og.jpg">
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#e3e3e3; --accent:#2563eb; --accent-weak:#eef3ff; }
+  * { box-sizing: border-box; }
+  html, body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font-family: system-ui, 'Malgun Gothic', sans-serif; font-size:14px; }
+  #app { display:flex; height:100vh; }
+  /* 채팅 칸 기본 너비. **420px 은 좁았다**(사람 지적 2026-09-19: 「왼쪽 채팅창
+     기본이 너무 가로가 짧다 1.3배 늘려주고」) — 선택창 단추가 「제목 — 설명」
+     꼴이라 한 줄이 서너 줄로 접혔다.
+     실물을 보고 두 번 늘렸다 — 1.3배(420→546) 뒤에 다시 1.2배(546→655).
+     vw 도 같이 따라간다(45→58→70). 끌어서 바꾼 값은 저장되지 않으므로
+     (`lib/chat.js` 의 split) 여기가 곧 모두가 보는 기본이다. */
+  #chat { width:min(655px, 70vw); min-width:280px; display:flex; flex-direction:column; border-right:1px solid var(--line); }
+  #msgs { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { display:flex; flex-direction:column; gap:8px; }
+  .msg.사람 { align-items:flex-end; }
+  .bubble { max-width:92%; padding:9px 12px; border-radius:12px; background:#f2f2f4; white-space:pre-wrap; word-break:break-word; }
+  .msg.사람 .bubble { background:var(--accent); color:#fff; }
+  .bubble a { color:inherit; }
+  #ask { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); }
+  /* 올린 사진 띠 — 입력줄 «위» 에 눕는다. 한 장도 없으면 안 보인다. */
+  #shots { display:flex; align-items:center; gap:8px; padding:8px 12px 0;
+    flex-wrap:wrap; }
+  #shots[hidden] { display:none; }
+  .샷 { position:relative; width:52px; height:65px; border-radius:6px;
+    overflow:hidden; border:1px solid var(--line); background:#f4f4f6; }
+  .샷 img { width:100%; height:100%; object-fit:cover; display:block; }
+  /* 빼는 단추. 작아도 누를 수 있게 모서리를 꽉 채운다. */
+  .샷 button { position:absolute; top:0; right:0; width:18px; height:18px;
+    padding:0; line-height:1; font-size:11px; border:0; border-radius:0 0 0 6px;
+    background:rgba(0,0,0,.55); color:#fff; cursor:pointer; }
+  .샷 button:hover { background:rgba(0,0,0,.8); }
+  .샷수 { font-size:12px; color:var(--muted); }
+  /* 기다리는 동안 «어디까지 왔는지». 말풍선이 아니라 줄 하나를 갈아 끼운다. */
+  .진행줄 { max-width:none; background:transparent; border:0; padding:4px 0; }
+  .진행바 { height:6px; border-radius:3px; background:var(--line); overflow:hidden; }
+  .진행바 i { display:block; height:100%; background:var(--accent,#4f7cff);
+    transition:width .4s ease; }
+  .진행글 { margin-top:4px; font-size:12px; color:var(--muted); }
+  /* 「그만두기」 (2026-09-24). 진행 글 오른쪽에 조용히 둔다 — 눌러야 할 단추가
+     아니라 «누를 수 있다» 는 표시다. 그래서 색을 안 쓰고 글자만 낸다. */
+  .진행줄 .진행아래 { display:flex; align-items:center; gap:10px; }
+  .진행줄 .진행아래 .진행글 { flex:1 1 auto; }
+  .진행그만 { flex:0 0 auto; padding:2px 9px; font-size:12px; border-radius:6px;
+    border:1px solid var(--line); background:transparent; color:var(--muted);
+    cursor:pointer; }
+  .진행그만:hover:not(:disabled) { color:var(--fg); border-color:var(--fg); }
+  .진행그만:disabled { opacity:.5; cursor:default; }
+  /* 봇이 생각하는 동안. 글자가 옅어졌다 진해진다(사람 결정 2026-09-22) — 여태는
+     보내기 단추가 회색이 되는 것이 전부라 멈춘 줄 알았다. */
+  .숨쉬는글 { color:var(--muted); animation:숨쉬기 1.5s ease-in-out infinite; }
+  @keyframes 숨쉬기 { 0%,100% { opacity:.35; } 50% { opacity:1; } }
+  /* 아직 안 올린 사진. **점선과 흐림으로 «대기» 를 보인다** — 올라간 것과
+     같은 띠에 있으니 눈으로 갈려야 한다(사람 지시 2026-09-20). */
+  .샷.대기 { border:1px dashed var(--muted); }
+  .샷.대기 img { opacity:.55; }
+  /* 끌어다 놓는 동안 채팅 칸 전체가 받는 자리임을 보인다. */
+  #chat.끌기중 { outline:2px dashed var(--accent); outline-offset:-6px; }
+  #say { flex:1; resize:none; font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px; }
+  button { font:inherit; padding:8px 14px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer; }
+  button:disabled { color:var(--muted); cursor:default; }
+  /* 언어 스위치 — 「보내기」 옆에서 눈에 띄되 그보다 작게. */
+  #ask .lang { padding:8px 10px; font-size:12px; color:var(--muted); min-width:72px; }
+  /* 사진 단추는 글자가 짧다. 단추가 넷이 되면서 넣는 칸이 좁아져, 이것만 줄인다. */
+  #ask #photoBtn { min-width:auto; }
+  #ask .lang:hover { color:var(--fg); border-color:var(--accent); }
+  #split { width:6px; cursor:col-resize; background:var(--line); touch-action:none; }
+  #right { flex:1; display:flex; flex-direction:column; min-width:320px; }
+  #paneBar { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid var(--line); font-size:12px; }
+  #paneBar button { padding:4px 10px; font-size:12px; }
+  /* **띠 오른쪽 끝에 붙인다.** 이 띠는 `space-between` 이라, 왼쪽 둘이 숨는
+     화면(틀 목록)에서는 건의가 왼쪽으로 끌려간다 — 그때도 자리가 안 움직이게
+     남는 자리를 전부 왼쪽에 준다.
+     **이 띠는 지금까지 비어 있었다**(사람 지적 2026-09-21: 「여기 위에가 너무
+     없어」). 「← 틀 목록」과 「크게 열기」가 둘 다 숨는 화면이 있어서다. */
+  /* 고르는 단추는 눈에 띄게. 이미 고른 것을 보고 있으면 눌리지 않고 「✓ 고른 템플릿」
+     으로 남는다 — 회색으로 죽이지 않고 파랗게 둔다(골랐다는 표시라서). */
+  #paneUse { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  #paneUse:disabled { background:var(--accent-weak); color:var(--accent); }
+  #paneSuggest { margin-left:auto; color:var(--muted); }
+  #paneSuggest:hover { color:var(--fg); border-color:var(--accent); }
+  /* 건의 쪽지창. 화면 한가운데 뜨고 좁은 화면에서도 안 넘친다. */
+  #건의창 { border:1px solid var(--line); border-radius:12px; padding:16px;
+            width:min(420px, 92vw); font:inherit; color:var(--fg); }
+  #건의창::backdrop { background:rgba(0,0,0,.35); }
+  #건의창 h2 { margin:0 0 10px; font-size:15px; }
+  #건의글 { width:100%; font:inherit; padding:8px 10px; resize:vertical;
+            border:1px solid var(--line); border-radius:8px; }
+  #건의줄 { display:flex; justify-content:flex-end; gap:8px; margin:10px 0 0; padding:0; }
+  #건의말 { margin:8px 0 0; font-size:12px; min-height:1.4em; }
+  #pane { flex:1; overflow:auto; padding:12px; }
+  /* 고른 뒤에도 목록이 보이게 위에 남는 띠. 가로로만 넘긴다 — 세로를 먹으면
+     상세가 눌린다. */
+  #paneStrip { flex:0 0 auto; overflow-x:auto; overflow-y:hidden;
+               padding:8px 12px; border-bottom:1px solid var(--line); }
+  #paneStrip .tpl-strip { display:flex; gap:8px; width:max-content; }
+  #paneStrip .tpl-pick { width:74px; flex:0 0 74px; padding:4px; gap:4px; }
+  #paneStrip .tpl-pick .tpl-name { font-size:11px; font-weight:500;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* 지금 보고 있는 것이 어느 것인지 띠에서 바로 보여야 한다. */
+  #paneStrip .tpl-pick.고름 { border-color:var(--accent); background:var(--accent-weak); }
+  #pane iframe { width:100%; height:100%; border:0; }
+  .muted { color:var(--muted); }
+  /* 틀 카드 — 채팅 말 밑에도, 오른쪽 칸에도 같은 모양 */
+  .tpl-strip { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; width:100%; }
+  .tpl-pick { padding:6px; display:flex; flex-direction:column; gap:6px; text-align:left; }
+  .tpl-pick:hover { border-color:var(--accent); }
+  .tpl-face { display:block; aspect-ratio:4/5; overflow:hidden; border-radius:6px; background:#f4f4f6; }
+  .tpl-face img { width:100%; height:100%; object-fit:cover; display:block; }
+  .tpl-noface { display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:12px; }
+  /* 받아오는 동안 깔아 두는 뼈대 (2026-09-24). 빈 화면은 「고장인가」로 읽히고,
+     같은 크기 회색 네모는 「오는 중」으로 읽힌다. 누를 수 없게 둔다. */
+  .tpl-pick.뼈대 { cursor:default; border-color:var(--line); background:transparent;
+    animation:숨쉬기 1.4s ease-in-out infinite; }
+  .tpl-pick.뼈대 .tpl-face { background:var(--line); }
+  .tpl-pick.뼈대 .tpl-name { height:13px; border-radius:3px; background:var(--line); }
+  @keyframes 숨쉬기 { 0%,100% { opacity:1 } 50% { opacity:.45 } }
+  @media (prefers-reduced-motion: reduce) { .tpl-pick.뼈대 { animation:none; opacity:.7; } }
+  /* 화풍 카드(2026-09-29) — 틀 카드와 같은 결, 더 작게. 예시 그림은 세로 2:3. */
+  .hwa-strip { display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; margin:6px 0 12px; }
+  .hwa-pick { padding:4px; display:flex; flex-direction:column; gap:4px; text-align:left; }
+  .hwa-pick:hover { border-color:var(--accent); }
+  .hwa-pick.고름 { border-color:var(--accent); background:var(--accent-weak); }
+  .hwa-face { display:block; aspect-ratio:2/3; overflow:hidden; border-radius:6px; background:#f4f4f6; }
+  .hwa-face img { width:100%; height:100%; object-fit:cover; display:block; }
+  .hwa-face.hwa-ai { display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--accent); }
+  .hwa-name { font-size:11px; font-weight:600; overflow-wrap:anywhere; }
+  /* 선택창 — 말풍선 밑에 깔리는 고르기 단추. 봇 말과 같은 쪽(왼쪽)에 붙는다. */
+  /* 고를 것은 **한 줄에 하나씩** 세로로 쌓는다 — 글이 길어 옆으로 흘리면
+     어디서 끊기는지 눈이 못 따라간다. */
+  .picks { display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+           margin:-4px 0 10px; max-width:80%; }
+  /* 「다시」·「직접 입력」은 고를 것이 아니라 곁다리라 가로로 붙인다. */
+  .picks-곁 { flex-direction:row; flex-wrap:wrap; margin-top:-8px; }
+  .pick { padding:7px 12px; font-size:13px; text-align:left; border-radius:14px; line-height:1.4; }
+  .pick:hover { border-color:var(--accent); }
+  /* 고른 것. **지우지 않고 표를 단다** — 선택창이 그대로 남으므로 무엇을
+     골랐는지가 눈에 보여야 한다(사람 지시 2026-09-19). */
+  .pick.고름 { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  /* 「직접 입력」·「다시」는 고를 것이 아니라 «빠져나가는 길» 이라 흐리게 둔다. */
+  .pick-own, .pick-again { color:var(--muted); border-style:dashed; }
+  /* 라벨 예시 — 담기가 끝났을 때 말풍선 밑에 깔린다(사람 결정 2026-09-22).
+     선택창과 같은 자리·같은 폭이다. */
+  .라벨예시 { display:flex; flex-direction:column; gap:10px;
+              margin:-4px 0 10px; max-width:92%; }
+  .라벨예시 .예시 { margin:0; }
+  .라벨예시 figcaption { font-size:12px; color:var(--muted); margin-bottom:4px; }
+  /* 장을 가로 한 줄로 이은 그림이라 아주 넓적하다. 폭에 맞춰 통째로 줄인다 —
+     **자르지 않는다.** 자르면 끝 장들이 사라진다. */
+  .예시그림 { display:block; width:100%; height:auto; cursor:zoom-in;
+              border:1px solid var(--line); border-radius:6px; background:#fff; }
+  .라벨예시 .사용법 { border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .라벨예시 .사용법 h4 { margin:0 0 8px; font-size:13px; }
+  .라벨예시 .사용법 ul { list-style:none; margin:0; padding:0;
+                        display:flex; flex-direction:column; gap:6px; }
+  /* 이름은 폭을 고정해 설명이 한 줄에서 시작하게 맞춘다 — 들쭉날쭉하면 훑기 힘들다. */
+  .라벨예시 .사용법 li { display:flex; gap:8px; font-size:12px; line-height:1.5; }
+  .라벨예시 .사용법 b { flex:0 0 48px; color:var(--accent); }
+  /* 크게 보기 — 화면을 덮는다. 아무 데나 누르거나 Esc 로 닫는다. */
+  .예시크게창 { position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.82);
+                display:flex; align-items:center; justify-content:center;
+                padding:24px; cursor:zoom-out; overflow:auto; }
+  .예시크게창[hidden] { display:none; }
+  /* 원본 크기로 보여 준다(2580px). 화면보다 넓으면 좌우로 밀어 본다 — 폭에
+     맞춰 줄이면 작게 보려고 연 창이 다시 작아진다. */
+  .예시크게창 img { max-width:none; height:auto; border-radius:6px; background:#fff; }
+  .예시닫기 { position:fixed; top:16px; right:16px; padding:8px 14px; font-size:13px; }
+  /* 미리보기 — 굽기 «전» 에 보는 장별 목록(사람 결정 2026-09-19 「항상 거친다」).
+     썸네일 격자가 아니라 **세로 목록**이다. 다음 차례에 여기서 대본을 고치게
+     되는데, 격자로는 못 고친다(설계 §7). */
+  .미리-아직 { margin:0 0 10px; font-size:12px; }
+  ol.미리보기 { list-style:none; margin:0; padding:0; display:flex;
+    flex-direction:column; gap:10px; }
+  .미리-장 { border:1px solid var(--line); border-radius:8px; padding:10px;
+    display:flex; flex-direction:column; gap:8px; }
+  .미리-머리 { display:flex; align-items:baseline; gap:8px; font-size:12px; }
+  .미리-글 p { margin:0 0 6px; font-size:13px; line-height:1.5;
+    overflow-wrap:anywhere; }
+  /* 자수는 곁다리다 — 글을 읽는 눈을 안 끌게 작고 흐리게 둔다. */
+  .미리-자수 { margin-left:6px; font-size:11px; color:var(--muted);
+    white-space:nowrap; }
+  /* 고치는 칸. **한 칸에 상자 하나** — 줄마다 두면 줄을 합치거나 나눌 수가 없다. */
+  .미리-줄 { display:flex; align-items:flex-start; gap:6px; margin-bottom:6px; }
+  .미리-글칸 { flex:1; min-width:0; font:inherit; font-size:13px; line-height:1.5;
+    padding:6px 8px; border:1px solid var(--line); border-radius:6px;
+    background:var(--bg); color:var(--fg); resize:vertical; }
+  .미리-글칸:focus { outline:none; border-color:var(--accent); }
+  /* **넘쳐도 빨갛게 안 한다**(사람 지적 2026-09-20: 「글자 아웃되어도
+     빨간색 안뜨게 하고싶어 보기 흉흉해」). 「넘침」 글자는 남긴다 —
+     색을 뺐으니 그 글자가 유일한 알림이다. */
+  .미리-자수.넘침 { font-weight:600; }
+  .미리-안내 { margin:-6px 0 10px; font-size:12px; }
+  .미리-사진들 { display:flex; flex-wrap:wrap; gap:8px; }
+  .미리-사진 { position:relative; width:96px; border:1px solid var(--line);
+    border-radius:6px; overflow:hidden; background:#f4f4f6; }
+  .미리-사진 img { width:100%; display:block; aspect-ratio:4/5; object-fit:cover; }
+  /* 아직 없는 사진 — 점선으로 「여기가 사진 자리」임을 보인다.
+     **그림보다 넓게 둔다** — 여기 들어가는 것은 글이라 96px 안에서는 두세
+     글자마다 끊긴다(실물 2026-09-19: 「막대그래프, 파 / 란 톤, 글자 없 / 음」). */
+  .미리-사진빔 { border-style:dashed; padding:8px; display:flex;
+    flex-direction:column; gap:4px; font-size:11px;
+    width:auto; flex:1 1 150px; max-width:240px; }
+  /* 굽는 동안 사진이 오는 대로 꽂힌다 (2026-09-24). 방금 온 것만 한 번
+     번쩍여서 «뭐가 바뀌었나» 를 눈으로 잡게 한다 — 여태는 3분을 빈 자리만
+     보고 기다렸다. 애니메이션을 끄고 쓰는 사람에게는 안 번쩍인다. */
+  .미리-갓온것 { animation:갓온것 .9s ease-out; }
+  @keyframes 갓온것 {
+    from { box-shadow:0 0 0 3px var(--accent); opacity:.45; }
+    to   { box-shadow:0 0 0 0 transparent; opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .미리-갓온것 { animation:none; } }
+  /* 아직 안 온 자리 — 「만들고 있다」를 돌아가는 동그라미로 보인다.
+     `만들것` 딱지는 굽기를 시작할 때 화면이 붙인다. */
+  .미리-사진빔.만들것 .미리-꼬리::before {
+    content:''; display:inline-block; width:9px; height:9px; margin-right:5px;
+    vertical-align:-1px; border:2px solid var(--accent); border-right-color:transparent;
+    border-radius:50%; animation:돌기 .8s linear infinite;
+  }
+  @keyframes 돌기 { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .미리-사진빔.만들것 .미리-꼬리::before { animation:none; }
+  }
+  .미리-설명 { color:var(--fg); line-height:1.4; overflow-wrap:anywhere; }
+  .미리-꼬리 { color:var(--muted); }
+  /* 사진 설명 적기 (사람 지시 2026-09-22). 한 장에 자리가 여럿일 수 있어
+     번호를 달고, 비우면 기본이 간다는 말은 칸 안(placeholder)에 둔다. */
+  .미리-사진번호 { align-self:flex-start; padding:1px 7px; border-radius:9px;
+    background:var(--accent-weak); color:var(--accent); font-weight:600; font-size:11px; }
+  /* 「제목」·「본문」 딱지 — 자리 판의 청록 딱지와 같은 낱말이다(사람 지시
+     2026-09-22). 글 위에 얹지 않고 앞에 세워 둔다 — 글이 두 줄이어도 안 밀린다. */
+  .미리-위계 { flex:0 0 auto; margin-right:2px; padding:1px 7px; border-radius:9px;
+    background:#e6f6f5; color:#1d7f7b; font-weight:600; font-size:11px; line-height:1.7; }
+  /* 적는 칸이라 글씨를 본문 크기로 키운다 — 11px 로는 제 글을 못 읽는다. */
+  .미리-설명칸 { width:100%; font:inherit; font-size:12px; line-height:1.45;
+    padding:6px 7px; border:1px solid var(--line); border-radius:5px;
+    background:#fff; color:var(--fg); resize:vertical; }
+  .미리-설명칸:focus { outline:none; border-color:var(--accent); }
+  /* 판 전체의 사진 결(2026-09-28) — 설명 칸과 같은 생김새, 자리 설명 위에 한 줄. */
+  .미리-결 { display:block; margin:0 0 10px; }
+  .미리-결 > span { display:block; margin-bottom:3px; font-size:11px; }
+  .미리-결칸 { width:100%; font:inherit; font-size:12px; line-height:1.45;
+    padding:6px 7px; border:1px solid var(--line); border-radius:5px;
+    background:#fff; color:var(--fg); resize:vertical; }
+  .미리-결칸:focus { outline:none; border-color:var(--accent); }
+  .미리-화풍 { display:flex; align-items:center; gap:8px; margin:0 0 10px; }
+  .미리-화풍그림 { width:40px; height:60px; object-fit:cover; border-radius:4px; background:#f4f4f6; }
+  .미리-화풍칸 { font:inherit; font-size:12px; padding:4px 6px; border:1px solid var(--line); border-radius:6px; }
+  /* 참조 사진 — 「이 사진으로 만든다」 를 설명 칸 옆에 작게 보인다. */
+  .미리-참조 { width:44px; height:44px; object-fit:cover; border-radius:6px;
+    margin:0 6px 4px 0; vertical-align:middle; }
+  /* 사진 자리 판 — 장을 가로로 이어 붙인 것이라 아주 넓적하다. 폭에 맞춰
+     통째로 줄이고(자르지 않는다), 작아진 만큼 눌러서 키운다. */
+  .미리-자리판 { margin:0 0 12px; display:flex; flex-direction:column; gap:4px; }
+  .미리-자리판 img { width:100%; display:block; cursor:zoom-in;
+    border:1px solid var(--line); border-radius:6px; background:#fff; }
+  .미리-자리판 span { font-size:12px; }
+  /* 끌어다 놓기 — 사진을 뺄 수도, 다른 자리와 바꿀 수도 있다. */
+  .미리-끌것 { cursor:grab; }
+  .미리-끌것:active { cursor:grabbing; }
+  .미리-끌것.끄는중 { opacity:.4; }
+  .미리-사진.받는중, .미리-안쓴.받는중 { outline:2px solid var(--accent);
+    outline-offset:2px; }
+  /* 빼는 단추. 사진 위 모서리를 꽉 채워 작아도 누를 수 있게. */
+  .미리-빼기 { position:absolute; top:0; right:0; width:18px; height:18px;
+    padding:0; line-height:1; font-size:11px; border:0; border-radius:0 0 0 6px;
+    background:rgba(0,0,0,.55); color:#fff; cursor:pointer; }
+  .미리-빼기:hover { background:rgba(0,0,0,.85); }
+  /* 안 쓴 사진 — 어느 자리에도 안 맞은 것. 빈 칸이면 아예 안 그린다. */
+  .미리-안쓴 { margin-top:12px; padding:10px; border:1px dashed var(--line);
+    border-radius:8px; display:flex; flex-direction:column; gap:8px; }
+  .미리-안쓴 .미리-머리 { font-size:12px; }
+  /* 「이대로 만들기」 — 여기서 처음으로 돈이 나간다. 눈에 띄어야 한다. */
+  .미리-바닥 { position:sticky; bottom:0; padding:10px 0 0;
+    background:linear-gradient(to bottom, transparent, var(--bg) 40%); }
+  #bakeGo { width:100%; text-align:center; font-weight:600;
+    border-color:var(--accent); color:var(--accent); }
+  #bakeGo[disabled] { opacity:.6; }
+  /* 낱말 한가운데서 자르지 않는다 — 위 수집기 화면과 같은 까닭이다. */
+  .tpl-pick .tpl-name { font-weight:600; font-size:12px; overflow-wrap:anywhere; }
+  /* 틀 들여다보기 — templates.틀그림 이 내놓는 class 들. 그 함수는 도형·글자 자리를
+     inline style 의 % 로만 찍기 때문에, 그 %가 뜻을 가지게 해 주는 position 규칙이
+     여기 없으면 높이 0 짜리 빈 칸만 세로로 쌓인다. 수집기 화면의 규칙과 늘 같게 둔다. */
+  .peek-box { border:1px solid var(--line); border-radius:8px; padding:14px;
+    margin-top:14px; background:#fff; }
+  .tpl-meta { color:var(--muted); font-size:12px; margin-top:2px; }
+  .tpl-row { display:flex; gap:8px; align-items:center; margin-top:8px; font-size:12px; }
+  .tpl-empty { color:var(--muted); margin-top:16px; }
+  /* 원본 게시물 — 설계도와 같은 줄 모양으로 가로로 넘긴다(사람 결정 2026-09-19:
+     「실제 원본 그리고 밑에 템플릿」). 없는 번호를 부르면 깨진 그림 아이콘이
+     뜨므로 alt 를 감춘다 — 설계도는 그대로 보이면 된다. */
+  /* 「한판」은 장들을 가로로 이어 붙인 **한 장**이다. 그대로 깔면 둘레의 흰 여백까지
+     보이고 장이 설계도 칸보다 크게 나온다 — 그래서 templates.js 가 장별로 잘라
+     아래 설계도와 **같은 폭·같은 틈**으로 세운다(사람 지적 2026-09-19). */
+  .pk-원본줄 { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-top:10px; }
+  .pk-원장 { flex:0 0 auto; width:165px; background-repeat:no-repeat;
+    border:1px solid var(--line); border-radius:4px; background-color:#f4f4f6; }
+  /* 짜임새를 못 셈했을 때만 쓰는 옛 모양 */
+  .pk-원본 { margin-top:10px; overflow-x:auto; }
+  .pk-원본 img { display:block; width:100%; min-width:520px; height:auto;
+    border:1px solid var(--line); border-radius:4px; background:#f4f4f6; }
+  .pk-줄 { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-top:10px; }
+  .pk-장 { flex:0 0 auto; width:165px; }
+  .pk-판 { position:relative; width:165px; aspect-ratio:1080/1350;
+    border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .pk-칸 { position:absolute; overflow:hidden; }
+  /* 자리 이름 — 작은 네모에는 안 들어가므로 그때는 안 그린다(templates.js). */
+  .pk-칸 i { font-style:normal; font-size:7px; line-height:1;
+    display:block; padding:2px 3px; letter-spacing:-.02em; }
+  .pk-글 { position:absolute; border:1px dashed rgba(0,0,0,.55);
+    background:rgba(255,255,255,.35); font-size:8px; line-height:1.15;
+    color:#111; padding:1px 2px; overflow:hidden; }
+  .pk-글 b { display:block; font-size:8px; }
+  .pk-글 span { color:#444; }
+  /* 이 칸에는 「닫기」 라는 것이 없다 — templates.틀그림 이 넣는 단추를 감춘다. */
+  #peekClose { display:none; }
+  @media (max-width: 720px) {
+    #app { flex-direction:column; }
+    #chat { width:auto !important; min-width:0; height:50vh; border-right:0; border-bottom:1px solid var(--line); }
+    #split { display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="chat">
+    <div id="msgs"></div>
+    <!-- 올린 사진 띠. **한 장도 없으면 안 보인다.** 안에 든 것은 lib/chat.js
+         가 그린다(사진띠html) — 고른 언어를 타기 때문이다. -->
+    <div id="shots" hidden></div>
+    <div id="ask">
+      <!-- 안내 글은 lib/chat.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+      <textarea id="say" rows="2"></textarea>
+      <!-- 올릴 사진. **여러 장 고를 수 있지만 올리는 것은 한 장씩**이다 —
+           원본 그대로 보내므로 한 번에 묶으면 게이트웨이가 10MB 에서 끊는다
+           (lib/chat.js 의 사진올리기). 끌어다 놓기·붙여넣기도 같은 문으로 간다. -->
+      <input id="photoFile" type="file" multiple hidden
+             accept="image/png,image/jpeg,image/webp">
+      <!-- 로고 파일. **안 보인다** — 선택창의 「로고 올리기」 단추가 대신 누른다
+           (lib/chat.js 의 로고고르기). 여기 두는 까닭은 브라우저가 파일 고르기를
+           사람이 «누른 그 순간» 에만 열어 주기 때문이다. -->
+      <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <!-- 두 단추의 글자는 lib/chat.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+      <!-- 사진 올리기. 끌어다 놓기·붙여넣기와 같은 일을 한다 — 셋 다 같은 문이다. -->
+      <button id="photoBtn" type="button" class="lang"></button>
+      <button id="newBtn" type="button" class="lang"></button>
+      <!-- 스위치 하나가 둘을 정한다 — 봇이 하는 말과 만들어지는 카드의 언어. -->
+      <button id="langBtn" type="button" class="lang"></button>
+      <button id="send" type="button"></button>
+    </div>
+  </section>
+  <div id="split"></div>
+  <section id="right">
+    <div id="paneBar">
+      <!-- 글자는 lib/chat.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+      <button id="paneBack" type="button" hidden></button>
+      <!-- 「이 템플릿으로 만들기」(사람 결정 2026-09-28). 템플릿을 누르면 구경만
+           하고, 고르는 것은 이 단추다. 글자는 lib/chat.js 가 채운다. -->
+      <button id="paneUse" type="button" hidden></button>
+      <!-- 글자는 lib/chat.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+      <a id="paneOpen" href="#" target="_blank" rel="noopener" hidden></a>
+      <!-- 글자는 lib/chat.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+      <button id="paneSuggest" type="button"></button>
+    </div>
+    <!-- 템플릿 띠. 하나를 고른 뒤에도 목록이 계속 보이게 여기 남는다
+         (사람 결정 2026-09-19). 목록 화면일 때는 아래 큰 격자가 대신하므로 숨긴다. -->
+    <div id="paneStrip" hidden></div>
+    <div id="pane"></div>
+  </section>
+</div>
+<!-- 건의 쪽지창. **이름을 안 받는다**(사람 결정 2026-09-21: 「익명으로 받을게」)
+     — 이름을 쓰기 귀찮아서 건의 자체를 안 하게 되는 쪽이 더 나쁘다.
+     어느 화면에서 눌렀는지는 화면이 알아서 같이 보낸다. -->
+<dialog id="건의창">
+  <h2 id="건의제목"></h2>
+  <textarea id="건의글" rows="6"></textarea>
+  <p id="건의말" class="muted"></p>
+  <menu id="건의줄">
+    <button id="건의닫기" type="button"></button>
+    <button id="건의보내기" type="button"></button>
+  </menu>
+</dialog>
+<script type="module">
+  import { mount } from './lib/chat.js'
+  mount()
+</script>
+</body>
+</html>

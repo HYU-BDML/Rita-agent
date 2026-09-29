@@ -1,0 +1,8 @@
+node_modules/
+.next/
+data/
+public/gen/
+*.tsbuildinfo
+.env*
+!.env.example
+*.bak

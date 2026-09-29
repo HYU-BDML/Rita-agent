@@ -1,0 +1,536 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대행사 콘텐츠 서비스 · BM과 실행 계획</title><style>
+:root{color-scheme:light;--ink:#152d38;--muted:#536870;--bg:#f4f7f8;--line:#d5e1e3;--accent:#06615f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.8 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif}header,main{max-width:1180px;margin:auto;padding:30px}header{padding-top:48px}.eyebrow{font-size:13px;font-weight:700;color:var(--accent)}h1{font-size:clamp(28px,4vw,43px);line-height:1.35}h2{font-size:25px;margin-top:36px}h3{font-size:20px}a{color:var(--accent);text-underline-offset:3px}.lead{max-width:880px;font-size:19px}.note{color:var(--muted);font-size:14px}.banner{padding:18px 22px;background:#e3efeb;border-left:4px solid var(--accent)}.card{padding:28px;background:white;border:1px solid var(--line);border-radius:12px;margin-bottom:24px}.presets{display:flex;gap:8px;flex-wrap:wrap}.presets button{border:1px solid var(--line);padding:10px 16px;background:white;border-radius:6px;font:inherit;cursor:pointer}.presets button[aria-pressed=true]{background:var(--accent);color:white}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:22px 0}label{font-size:14px;color:var(--muted)}input,select{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #a8bcbf;border-radius:6px;font:inherit;color:var(--ink);background:white}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}.metric{padding:18px;background:#edf4f2;border-radius:8px}.metric span{display:block;font-size:13px}.metric strong{display:block;font-size:27px;line-height:1.6}.metric small{font-size:12px;color:var(--muted)}.bad{color:#a63324}.good{color:#065c4e}details{border-top:1px solid var(--line);padding-top:12px;margin-top:20px}summary{cursor:pointer;font-weight:600}article h1{font-size:29px}article h2{border-top:1px solid var(--line);padding-top:20px;margin-top:42px;font-size:23px}table{display:block;overflow:auto;border-collapse:collapse;font-size:14px;line-height:1.7;margin:20px 0}td,th{border:1px solid var(--line);padding:10px 13px;min-width:100px;vertical-align:top}th{background:#edf4f2;text-align:left}p,li{overflow-wrap:anywhere}article p{max-width:1000px}nav{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0}blockquote{border-left:4px solid var(--accent);padding:8px 20px;margin-left:0;background:#f0f5f3}@media(max-width:720px){header,main{padding:20px}.card{padding:18px}.grid,.metrics{grid-template-columns:1fr 1fr}.metric strong{font-size:22px}}@media(max-width:460px){.grid,.metrics{grid-template-columns:1fr}}@media print{#calculator,header nav{display:none}body{font-size:11pt;background:white}.card{border:0;padding:0}main{padding:0}h2{break-after:avoid}}
+</style><header><div class="eyebrow">2026.09.29 · 상품·가격·고객 확보·손익·8주 실행</div><h1>대행사가 매달 구매하고,<br>고객이 늘수록 이익이 남는가.</h1><p class="lead">첫 상품은 브랜드 자료로 카드뉴스와 캡션을 직접 제작·수정하는 도구다. 단일 브랜드로 시작하고, 여러 브랜드를 운영하는 대행사 구독으로 확장한다.</p><div class="banner"><strong>제안: 1브랜드 월 59,000원 → 3브랜드 월 149,000원.</strong><br>가격·원가는 검증 전 가정이다. 사람의 대신 제작은 별도 상품으로 평가한다. 모든 손익은 부가세 제외 기준이다.</div><nav><a href="#calculator">손익 가정 바꾸기</a><a href="#report">전체 BM·실행 계획</a><a href="BM_평가와_구체실행계획.md">문서 원본</a><a href="전략검토.html">기존 조사와 경쟁 전략</a></nav></header>
+<main><section class="card" id="calculator"><h2>고객의 이득과 우리의 이익을 함께 본다</h2><p class="note">실측·견적·매출 예측이 아닌 계산 도구다. 사용량은 성공적으로 사용 가능한 세트이며, 세트당 원가에는 실패·재시도·포함 AI 수정의 비용도 배분한다.</p>
+<div class="presets"><button data-plan="solo" aria-pressed="false">1브랜드 · 59,000원</button><button data-plan="agency" aria-pressed="true">3브랜드 · 149,000원</button></div>
+<div class="grid"><label>월 이용료 가정 (원)<input id="price" type="number" min="0" step="1000" value="149000"></label><label>실제 월 제작량 (세트)<input id="qty" type="number" min="0" step="1" value="30"></label><label>세트당 절약하는 시간 (분)<input id="saved" type="number" min="0" step="1" value="20"></label><label>고객 시간의 가치 (원/시간)<input id="customerWage" type="number" min="0" step="1000" value="30000"></label><label>고객 도입비의 월 배분 (원)<input id="customerSetup" type="number" min="0" step="1000" value="30000"></label><label>우리 원가 시나리오<select id="scenario"><option value="low">자동화가 잘된 상태</option><option value="mid" selected>중간 가정</option><option value="high">재시도·보정이 많은 상태</option></select></label></div>
+<details open><summary>실행·지원·획득비 가정</summary><div class="grid"><label>실패·수정 포함 세트당 원가 (원)<input id="unit" type="number" min="0" step="100" value="1200"></label><label>월 지원·보정 시간 (분)<input id="support" type="number" min="0" step="5" value="45"></label><label>우리 노동 가치 (원/시간)<input id="ourWage" type="number" min="0" step="1000" value="30000"></label><label>고객당 인프라 배분 (원)<input id="infra" type="number" min="0" step="1000" value="6000"></label><label>결제 수수료 가정 (%)<input id="fee" type="number" min="0" max="100" step="0.1" value="3"></label><label>신규 고객 획득비 (원)<input id="cac" type="number" min="0" step="10000" value="200000"></label><label>우리의 최초 설정·교육비 (원)<input id="setup" type="number" min="0" step="5000" value="45000"></label><label>월 고정비 가정 (원)<input id="fixed" type="number" min="0" step="100000" value="5000000"></label></div></details>
+<div class="metrics" aria-live="polite"><div class="metric"><span>고객에게 남는 월 가치</span><strong id="benefit"></strong><small>절약시간 가치 − 요금 − 도입비 배분</small></div><div class="metric"><span>우리 월 직접 기여이익</span><strong id="contribution"></strong><small id="margin"></small></div><div class="metric"><span>획득·설정비 회수기간</span><strong id="payback"></strong><small>같은 월 기여이익과 고객 유지 가정</small></div><div class="metric"><span>고정비 충당에 필요한 고객</span><strong id="breakeven"></strong><small>신규 획득·설정·이탈 대체 비용 제외</small></div><div class="metric"><span>월 반복 직접비</span><strong id="cost"></strong><small>실행 + 지원 + 인프라 + 결제</small></div><div class="metric"><span>고객이 절약하는 시간</span><strong id="savedHours"></strong><small>자동으로 현금 절감이 되는 것은 아님</small></div></div><p class="note" id="interpretation"></p><p class="note">직접 기여이익은 순이익이 아니다. 최초 서버 총액, 고정 개발·영업비, 환불·세금 등과 실제 지급 조건은 별도로 확인해야 한다. 고객 가치는 품질 악화가 없다는 조건이며 실제 지불 의사를 증명하지 않는다. 제작량을 포함 한도보다 높게 입력하면 요금·지원 범위도 함께 조정해야 한다.</p></section>
+<article class="card" id="report"><h1>대행사 콘텐츠 제작 서비스의 BM 평가와 실행 계획</h1>
+<p>2026-09-29. 출시 전 사업 설계안이다. 첫 고객군은 사용자 확정 사항이며, 아래 상품·가격·예산·일정은 이번 제안이다. 실제 고객 결제, 원가, 품질 비교, 고객 획득비는 아직 관측하지 않았다. 가격·원가·시간의 가정은 실측값으로 교체한다. 기존 문서의 5만원 시험 상품보다 이 문서의 상품·과금 제안을 우선한다. 기존 Claude 프로젝트와 운영 서비스는 변경하지 않았다.</p>
+<p><a href="BM_%EC%9D%98%EC%82%AC%EA%B2%B0%EC%A0%95.html#calculator">가격·사용량·지원 시간을 바꾸는 BM 계산기</a>에서 고객 가치와 우리 기여이익·회수기간을 함께 비교할 수 있다.</p>
+<p><strong>개인 고객·제품 범위 보완:</strong> <a href="%EA%B0%9C%EC%9D%B8%EA%B3%84%EC%A0%95_%EC%84%B1%EC%9E%A5%EC%A7%80%EC%9B%90%EA%B3%BC_%EC%BD%98%ED%85%90%EC%B8%A0%EC%B6%94%EC%B2%9C_%EC%84%A4%EA%B3%84.md">개인 계정 성장지원과 콘텐츠 추천 설계</a>에 따라 개인 계정 운영자를 초기 경험·비교 검증에 포함하고 읽기 중심 계정 분석→다음 소재 추천→제작을 앞당기는 안을 추가했다. 아래 수익표는 카드뉴스 중심 가정으로, 계정 동기화·지속 자료 수집·영상 처리 원가까지 검증한 것이 아니다. 두 고객 확장안에서는 대행사 1곳·개인 운영자 1명을 비교하는 방식으로 조정할 수 있다.</p>
+<h2>1. 사업 판단: 대행사 구독형 제작 도구에 투자할 가치가 있다</h2>
+<p>권하는 BM은 <strong>소규모 대행사가 월 이용료를 내고, 여러 고객사의 콘텐츠를 직접 제작·수정하는 소프트웨어</strong>다. 브랜드 수와 포함 제작량으로 요금을 정하고, 사람이 대신하는 설정·제작은 별도 상품으로 분리한다. 첫 제품은 카드뉴스와 캡션이다. 소재 발굴·발행·성과 분석은 같은 고객이 추가로 구매할 이유를 확인하면서 연결한다.</p>
+<p>이 BM을 선택하는 이유는 대행사 한 곳이 여러 브랜드의 반복 업무를 가져오기 때문이다. 한 고객을 확보해 해결하는 작업 수와 확장 여지가 커질 수 있다. 다만 브랜드 10개를 관리하는 대행사 한 곳은 고객 10곳이 아니다. 그 대행사가 해지하면 10개 브랜드 매출이 함께 사라질 수 있다.</p>
+<p>사업적 장점은 반복 사용과 브랜드 추가에 따른 매출 확대 가능성이다. 가장 큰 약점은 낮은 초기 객단가에서 사람 지원이 수익을 잠식할 수 있다는 점이다. <strong>현재 판단은 ‘초기 상품화와 유료 시험에 투자할 근거가 있다’이며, ‘대규모 성장이 입증됐다’는 아니다.</strong></p>
+<table>
+<thead>
+<tr>
+<th>BM 후보</th>
+<th>돈을 내는 사람·사는 것</th>
+<th>좋은 점</th>
+<th>사업상 약점</th>
+<th>판단</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>대행사 월구독 + 브랜드·제작량</td>
+<td>대행사 대표가 팀의 제작 도구를 구매</td>
+<td>반복 업무, 고객 안에서 브랜드 확대, 템플릿·수정 기록 재사용</td>
+<td>온보딩·지원이 비싸면 낮은 단가로 감당하기 어려움</td>
+<td><strong>주력 BM</strong></td>
+</tr>
+<tr>
+<td>콘텐츠 완성품 제작 대행</td>
+<td>대행사 또는 브랜드가 납품 결과를 구매</td>
+<td>초기 매출과 고객 문제 학습이 빠를 수 있음</td>
+<td>작업자 투입과 매출이 함께 늘어날 수 있음</td>
+<td>초기 학습·별도 유료 서비스. SaaS 수요와 분리</td>
+</tr>
+<tr>
+<td>저가 크리에이터 구독</td>
+<td>개인이 자신의 제작·운영 도구를 구매</td>
+<td>혼자 결정하므로 도입 절차가 단순할 수 있음</td>
+<td>활동 중단, 낮은 사용 빈도, 획득비 대비 객단가를 확인해야 함</td>
+<td>두 번째 고객군으로 비교</td>
+</tr>
+<tr>
+<td>성과 수수료</td>
+<td>고객이 매출·문의 증가의 일부를 지급</td>
+<td>사업 성과와 가격을 연결</td>
+<td>기여도·측정·정산 합의가 어렵고, 우리가 통제하지 못하는 요인이 큼</td>
+<td>첫 BM으로 선택하지 않음</td>
+</tr>
+<tr>
+<td>Rita 거래 수수료</td>
+<td>에이전트 거래 당사자가 플랫폼에 수수료 지급</td>
+<td>제3자 거래가 늘면 사업 범위 확대 가능</td>
+<td>공급·수요 양쪽 확보와 실제 거래가 필요</td>
+<td>별도 BM. 자사 SaaS 매출과 중복 계산하지 않음</td>
+</tr>
+</tbody>
+</table>
+<h2>2. 첫 구매자는 3~10개 브랜드를 정기 운영하는 소규모 대행사다</h2>
+<p>규모는 모집을 위한 가설이며, 실제 자격은 업무로 판단한다. 첫 후보는 월 20건 이상 정보형·상품 설명형 카드뉴스를 만들고, 지난 승인본과 수정 요청이 남아 있으며, 2주 안에 다음 납품이 있는 팀이다. 대표나 팀장이 도구 예산을 결정하고 제작 담당자가 실제로 사용한다. 교육·생활서비스·상품 소개처럼 원자료를 바탕으로 반복 제작하는 업무부터 탐색하되 업종을 확정하지는 않는다.</p>
+<p><strong>사는 사람:</strong> 대행사 대표·운영 책임자. <strong>쓰는 사람:</strong> 콘텐츠 기획자·디자이너. <strong>결과를 승인하는 사람:</strong> 대행사의 고객사 담당자. 첫 유료 상품은 대행사에 판매한다. 고객사 담당자에게 별도 가입비나 좌석 요금을 요구하지 않는 방향으로 설계한다.</p>
+<p>대체하려는 지출은 우선 반복 제작·수정 노동과 일부 외주다. 기존 Canva·미리캔버스·발행 도구를 계속 쓰는 경우 그 구독료가 절감된다고 계산하지 않는다. 인력을 실제 줄이지 않더라도 추가 납품, 야근 감소, 외주 축소 중 고객이 중요하게 여기는 효과가 있어야 한다.</p>
+<p>구매가 발생할 계기는 기존 브랜드를 새로 수임한 때, 담당자가 바뀐 때, 납품량이 늘어난 때, 같은 수정이 반복되는 때다. 자료 없는 신생 브랜드는 설정 원가가 달라 첫 실험과 구분한다. 지금 제품을 구매할 이유는 최신 AI라는 설명보다 다가오는 실제 납품에서 나와야 한다.</p>
+<h2>3. 고객에게 파는 상품과 가격을 이렇게 제안한다</h2>
+<p>아래 금액은 <strong>월 결제·부가세 제외 공급가 가설</strong>이다. 경쟁사나 고객 조사로 검증한 적정가격이 아니다. 첫 제공 상품은 단일 브랜드 플랜이며, 대행사 플랜은 고객 분리·복수 브랜드 관리가 작동한 뒤 판매한다.</p>
+<table>
+<thead>
+<tr>
+<th>상품</th>
+<th style="text-align:right">제안 가격</th>
+<th>포함 범위</th>
+<th>제공 시점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>단일 브랜드</td>
+<td style="text-align:right">월 59,000원</td>
+<td>브랜드 1개, 월 10세트, 직접 편집·부분 수정·버전 확정·내보내기</td>
+<td>첫 유료 30일 시험도 같은 가격. 작동 확인 후 시작</td>
+</tr>
+<tr>
+<td>대행사 기본</td>
+<td style="text-align:right">월 149,000원</td>
+<td>브랜드 3개, 워크스페이스 합계 월 30세트</td>
+<td>2~3개월차 이후 준비·수요 확인 시</td>
+</tr>
+<tr>
+<td>추가 브랜드</td>
+<td style="text-align:right">월 49,000원</td>
+<td>활성 브랜드 1개와 월 제작량 10세트 추가</td>
+<td>대행사 기본 플랜의 확장 옵션</td>
+</tr>
+<tr>
+<td>대신 설정·제작</td>
+<td style="text-align:right">범위별 별도 견적</td>
+<td>템플릿 제작·자료 정리·사람 검수 등 명시한 작업</td>
+<td>실제 소요시간을 잰 뒤 제안</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1세트는 카드뉴스 6~8장과 캡션 1건</strong>이다. 월 30세트는 카드 30장이 아니다. 팀 전체가 월 제작량을 함께 쓰는 방식으로 제안한다. 활성 브랜드는 해당 결제 주기에 신규 제작·AI 수정을 한 브랜드로 정의하는 안이며, 지난 결과물을 읽고 보관하는 것만으로 추가 요금을 내지 않게 한다.</p>
+<p>초기에는 고객 제공 사진과 사용 권한을 확인한 소재, 템플릿 2종을 쓴다. 고가 영상과 대량 AI 이미지 생성은 포함하지 않는다. 직접 문구·사진을 바꾸는 편집은 별도 사용량을 차감하지 않는다. AI 부분 수정은 세트당 3회, 회당 선택 카드 1장 또는 캡션이라는 한도를 첫 실험 가설로 둔다. 전체 초안을 새로 만드는 요청은 신규 생성으로 구분한다. 사용 전 차감량을 보여주고 자동 초과 결제는 하지 않는다. 시스템 오류로 실패한 생성은 고객 한도에서 복원하되 우리 원가에는 남긴다. 한도가 고객 업무에 맞는지는 파일럿에서 확인한다.</p>
+<p>구독료에 매번 사람이 대신 고쳐 주는 서비스는 포함하지 않는다. 처음에는 20분 사용 안내를 제공하고, 반복 안내·장애 대응·보정 시간을 별도로 기록한다. ‘지원 15분’ 같은 손익 가정은 고객의 오류를 방치할 권한이 아니라 우리가 달성해야 할 운영 효율이다.</p>
+<p>첫 30일 시험에 납품 가능한 상태의 한 건을 직접 만들어 보는 무료 시연을 앞에 둔다. 이후 약속한 기능이 작동하고 고객이 원할 때 59,000원으로 시작한다. 초기 파일럿은 템플릿 내 직접 폼 편집을 우선하며, AI 부분 수정은 작동이 확인된 경우에만 포함한다. 미제공이면 계약 범위에서 명시하고 위 정식 상품과 같은 기능으로 비교하지 않는다. 연간 선결제나 장기 할인으로 유지가 있는 것처럼 보이지 않게 하고, 다음 30일은 다시 선택·결제하는 방식으로 유료 반복을 관찰한다. 제공 불능·환불은 매출에서 구분해 기록한다.</p>
+<h2>4. 가격이 성립하려면 얼마만큼 좋아야 하는가</h2>
+<p>가격은 경쟁사 요금만 보고 정하지 않는다. 경쟁사 구독료는 비교의 한 요소이고, 고객이 지금 투입하는 노동과 외주가 또 다른 요소다. 과거 조사에서 확인한 생성·브랜드·승인 기능이 우리와 겹쳐도 더 나은 종합 가치로 경쟁할 수 있다.</p>
+<table>
+<thead>
+<tr>
+<th>비교 대안의 공식 요금</th>
+<th>포함량·결제 기준</th>
+<th>우리 가격 판단에 주는 의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mirr Build $49/월</td>
+<td>월 결제, AI 1,500크레딧, SNS 계정 5개, 자동화 5개, 사용자 3명</td>
+<td>제작·운영을 묶은 대안. 1,500크레딧을 우리 카드뉴스 세트 수로 바꿔 비교할 수 없음</td>
+</tr>
+<tr>
+<td>Metricool Advanced $67/월</td>
+<td>월 결제, 브랜드 15개. 연 결제는 월환산 $53. 승인·고객 관리·API 등 포함</td>
+<td>관리 기능의 넓이만으로 가격을 설명하기 어려움. 실제 제작·수정 가치가 필요</td>
+</tr>
+<tr>
+<td>Blotato Starter $29/월</td>
+<td>월 요금 표시, 이미지·영상용 AI 1,250크레딧, 소셜 계정 20개</td>
+<td>저가 생성·발행 대안도 존재. 우리를 최저가 제품으로 전제하지 않음</td>
+</tr>
+</tbody>
+</table>
+<p>2026-09-29 공식 페이지 확인: <a href="https://www.mirra.my/en/pricing">Mirr</a>, <a href="https://metricool.com/pricing/">Metricool</a>, <a href="https://www.blotato.com/pricing">Blotato</a>. 계정과 브랜드는 같은 단위가 아니며, 크레딧·게시물·완성 세트도 다르다. 기능표상 무제한에 적용되는 공정 사용 조건과 추가 비용은 계약 전에 따로 확인한다. 환율·세금을 임의 적용해 가격 순위를 만들지 않았다.</p>
+<p>단일 브랜드 3개를 따로 쓰면 177,000원이고 대행사 기본은 149,000원으로 약 15.8% 낮다. 5개 브랜드는 247,000원, 10개 브랜드는 492,000원이다. 이 구조는 대행사의 고객 수와 사용량이 늘 때 매출도 늘리는 가설이다. 모든 고객이 상위 플랜으로 간다고 예측하지 않는다.</p>
+<p>시간당 3만원의 업무 가치를 가정하고 월 30세트를 전부 쓴다면 다음과 같다. 시간 가치는 실제 임금·외주비와 같다고 단정하지 않는다.</p>
+<table>
+<thead>
+<tr>
+<th>세트당 절감</th>
+<th style="text-align:right">월 절감시간</th>
+<th style="text-align:right">평가한 시간 가치</th>
+<th style="text-align:right">149,000원 구독료를 뺀 가치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10분</td>
+<td style="text-align:right">5시간</td>
+<td style="text-align:right">150,000원</td>
+<td style="text-align:right">1,000원</td>
+</tr>
+<tr>
+<td>20분</td>
+<td style="text-align:right">10시간</td>
+<td style="text-align:right">300,000원</td>
+<td style="text-align:right">151,000원</td>
+</tr>
+<tr>
+<td>30분</td>
+<td style="text-align:right">15시간</td>
+<td style="text-align:right">450,000원</td>
+<td style="text-align:right">301,000원</td>
+</tr>
+</tbody>
+</table>
+<p><strong>건당 10분 절감만으로는 이 가격의 도입 이유가 약하다.</strong> 설정·학습 비용을 넣으면 손해일 수 있다. 20분 이상을 줄이거나 품질·외주비·담당자 인수인계 등에서 추가 가치가 있어야 한다. ‘가격의 두 배 가치’는 이 실험에서 삼을 수 있는 목표이지 보편적인 구매 법칙이 아니다.</p>
+<p>고객이 월 10세트만 쓴다면 월 30세트 한도 전체의 가치를 주장하지 않는다. 실제 사용량으로 계산하고 작은 플랜이 더 적합한지 본다. 시간 절감이 현금 지출 감소로 바로 이어지지 않으면 추가 작업 수용·야근·검수 부담 등 고객이 실제로 원하는 결과로 확인한다.</p>
+<h2>5. 우리에게 얼마가 남는지 계산한다</h2>
+<p>다음은 실측 원가가 아닌 민감도 분석이다. 세트당 원가는 텍스트 생성·검사·렌더뿐 아니라 실패·재시도·포함 AI 부분 수정을 합친 기간 비용을 사용 가능한 세트 수로 나눈 값이다. 최종 채택까지 걸리는 사람 보정은 지원·제작 노동에 따로 더한다. 채택되지 않은 초안의 비용도 지우지 않는다.</p>
+<p>가정은 노동 시간당 3만원, 결제비 매출의 3%, 포함 제작량 전부 사용이다. 인프라는 고객당 배분 가정이며 초기 1~2고객의 실제 서버 청구액과 다를 수 있다. 부가세를 제외한 계산이며 실제 결제 수수료와 청구 기준으로 나중에 교체한다.</p>
+<table>
+<thead>
+<tr>
+<th>시나리오</th>
+<th style="text-align:right">세트당 실행비</th>
+<th style="text-align:right">월 지원·보정</th>
+<th style="text-align:right">고객당 인프라</th>
+<th style="text-align:right">149,000원·30세트의 직접 기여이익</th>
+<th style="text-align:right">기여율</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>자동화가 잘된 상태</td>
+<td style="text-align:right">600원</td>
+<td style="text-align:right">15분</td>
+<td style="text-align:right">4,000원</td>
+<td style="text-align:right">115,030원</td>
+<td style="text-align:right">77.2%</td>
+</tr>
+<tr>
+<td>중간 가정</td>
+<td style="text-align:right">1,200원</td>
+<td style="text-align:right">45분</td>
+<td style="text-align:right">6,000원</td>
+<td style="text-align:right">80,030원</td>
+<td style="text-align:right">53.7%</td>
+</tr>
+<tr>
+<td>재시도·보정이 많은 상태</td>
+<td style="text-align:right">2,500원</td>
+<td style="text-align:right">180분</td>
+<td style="text-align:right">8,000원</td>
+<td style="text-align:right">-28,470원</td>
+<td style="text-align:right">-19.1%</td>
+</tr>
+</tbody>
+</table>
+<p>중간 가정의 비용은 실행 36,000원 + 인프라 6,000원 + 결제 4,470원 + 지원 노동 22,500원 = 68,970원이다. 기여이익은 고정 개발·영업·관리비와 신규 고객 획득비를 빼기 전이다. 순이익이나 회계상 매출총이익으로 표시하지 않는다.</p>
+<p><strong>59,000원 진입 플랜을 별도로 평가하면</strong> 같은 세 시나리오의 직접 기여이익은 39,730원(67.3%), 16,730원(28.4%), -65,770원(-111.5%)이다. 싼 진입 플랜에 많은 상담과 대신 제작을 붙이면 사업성이 급격히 나빠진다. 자동화가 어렵다면 해당 플랜의 지원 방식·가격·고객 범위를 바꿔야 한다. 상위 플랜의 이익으로 손실을 숨기지 않는다.</p>
+<p>최초 설정·교육은 반복 지원과 분리한다. 예를 들어 첫 설정에 1.5시간, 시간 가치가 3만원이면 고객당 초기 원가 45,000원이다. 학생·대표의 무료 노동도 경제성에서는 기록한다. 개발비를 AI로 줄여도 고객 원자료 정리와 품질 보정이 계속 필요하면 그 비용은 사라지지 않는다.</p>
+<h2>6. 고객 확보비와 손익분기가 사업의 크기를 결정한다</h2>
+<p>고객 획득비에는 광고뿐 아니라 후보 조사·연락·상담·시연에 쓴 사람 시간도 넣는다. 예를 들어 모집·시연 12시간을 시간당 3만원으로 평가하고 현금 지출이 4만원이면 총 40만원이다. 신규 유료 고객이 2곳이면 고객당 20만원, 1곳이면 40만원이다. 이는 계획 계산이며 관측된 전환율이 아니다. 무료 체험이나 브랜드 수를 유료 고객 분모에 넣지 않는다.</p>
+<p>획득비 20만원 + 초기 설정비 4만5천원이라는 가정에서는 대행사 기본 중간 시나리오의 월 기여이익 80,030원으로 약 3.1개월이 걸려 회수한다. 단일 브랜드 중간 시나리오는 약 14.6개월이다. 같은 직접 영업을 59,000원 플랜에 반복하면 불리할 수 있다. 59,000원은 낮은 비용으로 시작할 수 있는 경로가 되어야 하고, 초기 대행사 영업은 여러 브랜드를 도입할 업무와 예산이 있는지 확인해야 한다. 업그레이드를 사실로 가정해 획득비를 정당화하지 않는다.</p>
+<p>따라서 첫 59,000원 파일럿은 관계 기반의 제한된 학습 판매로 구분한다. 한 번 갱신하고 직접 기여이익이 양수라는 이유만으로 같은 영업을 확대하지 않는다. 149,000원 플랜의 실제 도입 또는 반복 가능한 획득비 감소를 먼저 확인하고, 관측한 유지 기간과 비교해 다음 모집 비용을 정한다. 미래 14개월 유지가 아직 없는데 회수를 확정한 것으로 계산하지 않는다.</p>
+<p>월 고정비를 500만원으로 가정하면 대행사 기본 고객은 자동화 시나리오 44곳, 중간 시나리오 63곳이 있어야 그 고정비를 충당한다. 고정비는 위에서 이미 차감한 반복 지원 노동을 제외한 금액이다. 신규 획득·설정비, 세금, 추가 투자까지 모두 충당하는 숫자는 아니다.</p>
+<p>중간 시나리오에서 고객 유지 과정의 부담도 보자. 월 고객 이탈을 5%, 교체 고객 획득·설정비를 245,000원으로 가정하면 고객당 월 12,250원을 추가로 써야 고객 수를 유지한다. 남는 금액은 67,780원이고 같은 고정비 500만원을 충당하려면 약 74곳이 필요하다. 이탈 10%라면 약 91곳이다. 실제 이탈률과 장기 수명을 아직 모르므로 LTV나 성공 확률을 확정 숫자로 만들지 않는다.</p>
+<table>
+<thead>
+<tr>
+<th>모두 149,000원 플랜이라는 가정</th>
+<th style="text-align:right">월 반복매출</th>
+<th style="text-align:right">동일 고객 수가 12개월 유지될 때 연환산액</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15곳</td>
+<td style="text-align:right">223만5천원</td>
+<td style="text-align:right">2,682만원</td>
+</tr>
+<tr>
+<td>50곳</td>
+<td style="text-align:right">745만원</td>
+<td style="text-align:right">8,940만원</td>
+</tr>
+<tr>
+<td>100곳</td>
+<td style="text-align:right">1,490만원</td>
+<td style="text-align:right">1억7,880만원</td>
+</tr>
+<tr>
+<td>1,000곳</td>
+<td style="text-align:right">1억4,900만원</td>
+<td style="text-align:right">17억8,800만원</td>
+</tr>
+</tbody>
+</table>
+<p>월 149,000원만으로 연환산 매출 100억원을 만들려면 약 5,593곳이 필요하다. 이는 시장 규모나 모집 가능성을 입증하지 않는다. <strong>한국 소규모 대행사만으로 큰 사업이 된다고 아직 말할 수 없다.</strong> 대행사 안에서 브랜드 수가 늘어 객단가가 오르는지, 인접 고객·해외에서 같은 제품이 팔리는지, 획득과 지원이 효율화되는지가 이후의 사업성 질문이다. Rita 연결이 이 질문을 자동으로 해결하지 않는다.</p>
+<h2>7. 첫 고객은 이렇게 확보한다</h2>
+<p>첫 모집은 아래 조건을 만족하는 후보 20곳을 조사해 1곳의 유료 사용을 얻는 계획이다. 20→4→1은 목표 수량이지 예상 전환율이 아니다. 2명 학생안에서는 최소 1곳을 깊게 보고, 3명이면 두 번째 고객을 추가한다.</p>
+<ol>
+<li>정기 SNS 운영·카드뉴스 납품을 공개적으로 제공하는 대행사, 관련 일을 하는 프리랜서 팀, 소개받은 운영 책임자를 찾는다.</li>
+<li>브랜드 3~10개, 카드뉴스 월 20건 이상, 승인본·수정 기록 보유, 2주 내 납품, 대표 또는 팀장이 도구 결정을 할 수 있는지 확인한다.</li>
+<li>후보 20곳 중 적합한 곳 12곳에 개인화된 연락을 하는 계획을 세운다. 실제 발송은 사용자 지시 후 진행한다. 이전 관계·소개·비지인을 구분한다.</li>
+<li>인터뷰 3~4곳에서 최근 작업 하나를 자료 수령부터 최종 납품까지 본다. 기존 도구에 만족하는 점과 바꿀 이유가 없는 부분도 기록한다.</li>
+<li>자료를 제공할 1~2곳에 같은 작업의 시연을 한다. 기존 도구의 숙련된 사용과 비교하며 입력·부분 수정·내보내기까지 고객이 직접 해 보게 한다.</li>
+<li>약속 범위가 작동하면 59,000원·30일·1브랜드·10세트를 제안한다. 미완성 기능이나 추가 인력 보정을 숨겨 판매하지 않는다.</li>
+<li>다음 제작 주기에 자발적으로 다시 쓰는지 보고, 다음 30일을 같은 조건으로 구매하는지 확인한다. 더 많은 브랜드 도입 의향은 실제 추가 구매와 구분한다.</li>
+</ol>
+<p>연락 문안 초안: “여러 브랜드의 카드뉴스를 만들 때 지난 수정사항을 다시 반영하는 작업을 줄이는 도구를 만들고 있습니다. 최근 납품 한 건을 기준으로 현재 방식과 실제 수정 시간을 비교해 보고 싶습니다. 먼저 작동하는 한 건을 확인한 뒤, 원하시면 브랜드 하나로 월 59,000원의 직접 사용 시험을 진행합니다.” 이 문안을 외부에 발송한 상태는 아니다.</p>
+<p>첫 고객에게 얻을 것은 응원보다 실제 자료·업무 사용·다음 결제다. 프리랜서 디자이너는 상업 품질을 판단할 수 있어야 한다. 시험 참여 대가를 주는 평가자가 그 돈으로 구독한 것을 독립 구매 증거로 세지 않는다.</p>
+<h2>8. 첫 제품은 여섯 작업을 끝내게 한다</h2>
+<table>
+<thead>
+<tr>
+<th>고객의 작업</th>
+<th>첫 버전의 기능</th>
+<th>완료 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>브랜드를 한 번 설명</td>
+<td>소개 자료·승인본 3개·금지 표현·사진 입력</td>
+<td>사실·선호·이번 요청이 구분되어 저장되고 고객이 확인</td>
+</tr>
+<tr>
+<td>이번 제작 요청</td>
+<td>고객 자료 또는 허용된 자료 링크로 후보 주제·근거 제시</td>
+<td>부족한 사실을 지어내지 않고 사용자가 제작할 주제 선택</td>
+</tr>
+<tr>
+<td>초안 제작</td>
+<td>6~8장 카드와 캡션을 템플릿 2종 중 하나로 구성</td>
+<td>실제 렌더 결과에 글자 넘침·누락이 없고 실패 이유 표시</td>
+</tr>
+<tr>
+<td>직접 수정</td>
+<td>제목·본문·사진·배치 옵션의 폼 편집, 선택 부분 AI 수정</td>
+<td>바꾸지 않은 카드와 승인된 요소가 유지됨</td>
+</tr>
+<tr>
+<td>확정·전달</td>
+<td>버전 확정, PNG 묶음과 캡션 내보내기</td>
+<td>내보낸 파일이 확정 버전과 같고 고객의 실제 납품에 사용 가능</td>
+</tr>
+<tr>
+<td>다음 회차</td>
+<td>이전 수정 중 지속 적용할 내용을 고객이 선택</td>
+<td>같은 요청을 다시 설명하는 수고와 반복 오류를 비교할 수 있음</td>
+</tr>
+</tbody>
+</table>
+<p>자유 배치가 가능한 Canva 수준 편집기, 영상 편집기, 다중 SNS 자동 발행, 복잡한 고객사 권한은 첫 8주에 동시에 만들지 않는다. 외부 편집기 파일 호환을 약속하지 않고, 우리 템플릿 안에서 필요한 수정을 마칠 수 있는지 실제로 확인한다. PNG만 전달하고 ‘완전히 편집 가능한 Canva 파일’이라고 말하지 않는다. 외부 도구로 다시 만드는 수고가 크면 첫 고객이나 출력 형식이 맞지 않는 것이다.</p>
+<p>기존 Dify·트렌드·렌더 코드는 활용하되 외부 고객용 인증·자료 분리·비용 제한·로그·복구 경계가 필요하다. 로컬 코드 조사에서 기존 렌더 서버에 파일 편집 경로와 공개 출력 경로가 확인되어, 서버 전체를 그대로 외부에 노출하는 설계는 채택하지 않는다. 실제 운영 서버 취약점을 검증했다는 뜻은 아니다. 필요한 렌더·템플릿 부분을 별도 제한된 실행 환경으로 옮기는 작업을 계획한다.</p>
+<p>소재 발굴→제작→수정→발행→성과→다음 제작이라는 최종 흐름은 유지한다. 첫 단계는 소수 자료에서 실제 제작을 마치는 것이고, 둘째 단계는 복수 브랜드와 검토 전달, 셋째 단계는 공식 계정 연결·예약 발행·실제 지표 수집이다. 고객이 발행까지 되어야 산다고 반복해서 말하면 우선순위와 개발 예산을 바꾼다.</p>
+<h2>9. 8주 일정과 역할을 시간으로 배정한다</h2>
+<p>학생 2명 × 주 4.5시간 × 8주 = 72시간을 기준으로 한다. 경영 학생 36시간, 개발 학생 36시간이다. 별도로 디자이너 5시간, 숙련 개발자 16~24시간, 사용자 주 1시간과 초기 인터뷰 동석을 제안한다. 추가 인력이 없으면 8주 안의 외부 유료 제품 제공을 확정 일정으로 약속하지 않는다.</p>
+<table>
+<thead>
+<tr>
+<th>주차</th>
+<th>경영 학생 4.5시간</th>
+<th>개발 학생 4.5시간</th>
+<th>주말까지 남길 결과</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1주</td>
+<td>후보 20곳·자격 기준·연락 초안</td>
+<td>사본에서 기존 입력→렌더 재현, 변경할 경계 확인</td>
+<td>후보 원장, 실제 샘플 1개, 필요한 외부 개발 작업</td>
+</tr>
+<tr>
+<td>2주</td>
+<td>인터뷰 2건, 실제 자료 확보</td>
+<td>브랜드 입력·자료 범위·작업 ID</td>
+<td>실제 업무 1건, 기존 방식 시간, 출력 편집 경로 확인</td>
+</tr>
+<tr>
+<td>3주</td>
+<td>인터뷰 1~2건, 고객 시연·구매자 확인</td>
+<td>텍스트·사진의 직접 폼 편집·미리보기·버전·내보내기</td>
+<td>고객이 직접 수정한 결과물, 기능·품질 비교 기록</td>
+</tr>
+<tr>
+<td>4주</td>
+<td>범위·가격·지원 설명, 준비된 경우 첫 30일 결제</td>
+<td>초대 접근·격리·한도·비용·실패 처리 점검</td>
+<td>고객 1곳의 유료 직접 사용 시작 또는 구체적 연기 사유</td>
+</tr>
+<tr>
+<td>5주</td>
+<td>다음 실제 작업 관찰·미채택 이유 기록</td>
+<td>관측된 오류 개선, 안정된 핵심 흐름 위에 AI 부분 수정 추가</td>
+<td>두 번째 작업의 시간·품질·원가</td>
+</tr>
+<tr>
+<td>6주</td>
+<td>추가 조작 없이 재사용하는지 확인</td>
+<td>검증된 수정 규칙 재사용</td>
+<td>고객 자발 사용, 실제 사람 지원 시간</td>
+</tr>
+<tr>
+<td>7주</td>
+<td>다음 결제·추가 브랜드의 구매 결정 확인</td>
+<td>결제 기간·한도·로그 대조, 결과 보관</td>
+<td>지원 포함 손익, 구매 거절 이유</td>
+</tr>
+<tr>
+<td>8주</td>
+<td>시작일 기준 30일 종료 후 갱신 확인</td>
+<td>안정화·재현·인계</td>
+<td>1고객 사례 평가, 다음 단계 투자안</td>
+</tr>
+</tbody>
+</table>
+<p>4주차라도 8주 종료일 전에 30일이 지나지 않으면 재결제 관찰을 연장한다. 달력 때문에 갱신으로 간주하지 않는다. 3~4주차에 품질·접근 분리·직접 편집이 준비되지 않으면 결제를 받지 않고 개발 또는 관찰 기간을 늘린다. 수작업 납품만 끝냈다면 서비스 수요 확인으로 기록한다.</p>
+<p>숙련 개발자 시간은 1~4주차에 집중해 인증·자료 분리·렌더 실행 경계·비용 제한·복구를 직접 검토하고 필요한 구현을 맡긴다. 4주 시작을 목표로 할 때는 생성→직접 폼 편집→확정→내보내기를 먼저 완주하고 AI 부분 수정은 뒤로 보낸다. 디자이너는 실제 상업용 SNS 납품 경험과 템플릿 편집 역량이 있어야 하며 첫 기준·템플릿과 중간·최종 결과를 점검한다. 사용자 본인은 고객 접점·상품 범위·가격·추가 투자 판단을 맡는다. 외부 고객의 오류를 처리할 책임 있는 운영 담당자를 정하며, 학생에게 상시 장애 대응을 맡기지 않는다.</p>
+<p>Codex를 이용해 구현 초안·코드 수정·테스트를 진행하고 학생은 실제 실행·고객 검증·기록을 맡길 수 있다. 숙련 인력 시간은 코드를 모두 수작업으로 작성한다는 견적이 아니라, 외부 고객 데이터와 운영을 책임질 검토·구현 용량의 가정이다. 코드 점검 뒤 범위와 견적에 따라 조정한다.</p>
+<p>세 번째 학생이 있으면 주 4.5시간을 출처·브랜드·디자인 검수와 두 번째 고객 관찰에 배정한다. 기능 범위를 두 배로 늘리는 데 쓰지 않는다. 1고객은 사례 확인이고 2고객도 큰 시장을 입증하는 표본이 아니다.</p>
+<h2>10. 예산: 몇십만원으로 할 수 있는 일과 유료 제품 준비 비용을 구분한다</h2>
+<p><strong>30만원은 기술·모집의 추가 실비 상한</strong>으로, 기존 도구를 이용한 관찰·시연·소량 제작에 맞춘 안이다. 인건비가 포함된 외부 고객용 제품 개발 예산은 아니다.</p>
+<p>다음은 견적을 받기 전 예산 설계용 시간·단가 가정이다. 지급을 결정하거나 발주한 상태가 아니다. 사용자 시간과 기존 구독료는 아래 현금 합계에서 제외한다.</p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>산식</th>
+<th style="text-align:right">예산 가정</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>학생 2명</td>
+<td>총 72시간 × 시간당 2만원</td>
+<td style="text-align:right">144만원</td>
+</tr>
+<tr>
+<td>디자인 실무자</td>
+<td>5시간 × 시간당 5만원</td>
+<td style="text-align:right">25만원</td>
+</tr>
+<tr>
+<td>숙련 개발자</td>
+<td>16~24시간 × 시간당 8만원</td>
+<td style="text-align:right">128~192만원</td>
+</tr>
+<tr>
+<td>AI·호스팅·모집·예비 실비</td>
+<td>상한</td>
+<td style="text-align:right">30만원</td>
+</tr>
+<tr>
+<td>합계</td>
+<td>전부 유급으로 계산</td>
+<td style="text-align:right"><strong>327~391만원</strong></td>
+</tr>
+</tbody>
+</table>
+<p>학생 보수와 전문 인력이 다른 기존 예산으로 이미 확보됐다면 신규 현금 지출은 낮아질 수 있다. 그렇다고 경제적 비용이 없어지는 것은 아니다. 전문 인력을 이 시간에 확보할 수 있는지와 실제 남은 개발량은 견적·코드 점검으로 확인한다. 이 합계가 완성 보장 가격은 아니다.</p>
+<p>권하는 지출 순서는 처음부터 전액 집행하는 것이 아니라, 기존 자산과 소액 실비로 실제 작업·자료를 확보하고 편집 경로를 확인한 뒤 전문 개발·디자인 시간을 배정하는 것이다. 추가 예산을 쓰기 전에 ‘누구의 어느 작업을 끝낼 것인가’가 정해져 있어야 한다. 파일럿 1~2곳의 한 달 매출 59,000~118,000원으로 초기 개발비를 회수하려는 계획은 아니다.</p>
+<p>자본 배분은 첫 8주를 하나의 투자 단위로 둔다. 종료 때 같은 상품 계속, 한 차례 범위 수정, 추가 개발 중단 중 하나를 선택한다. 수정에 드는 새 비용은 기존 예산이 자동으로 연장된 것으로 보지 않고 작업·금액·판정 시점을 다시 적는다. 이번 조사로 유료 발주나 지출을 승인·집행한 것은 아니다.</p>
+<h2>11. 8주 이후에는 달력보다 구매·원가 조건으로 확대한다</h2>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>조건부 목표</th>
+<th>필요한 증거·인력</th>
+<th>다음 투자</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1~2개월</td>
+<td>고객 1곳의 직접 사용·두 제작 주기·다음 결제, 여유가 있으면 2곳</td>
+<td>지금 일정과 전문 보완 인력</td>
+<td>첫 상품·가격·편집 범위 개선</td>
+</tr>
+<tr>
+<td>3~4개월</td>
+<td>유료 대행사 3~5곳, 복수 브랜드 도입</td>
+<td>비지인 고객 포함, 대신 제작 없이 반복 사용, 고객별 원가</td>
+<td>데이터 분리·브랜드 관리·검토 전달 제품화. 운영 담당자 확보</td>
+</tr>
+<tr>
+<td>5~6개월</td>
+<td>조건 충족 시 10~15곳</td>
+<td>획득비·지원량·갱신을 보며 용량 계산</td>
+<td>공식 발행·실제 성과 수집 중 구매 이유가 큰 것부터</td>
+</tr>
+<tr>
+<td>이후</td>
+<td>30~50곳으로 재현</td>
+<td>담당자가 바뀌어도 운영 가능, 이익과 획득 경로 확인</td>
+<td>채널 확대·객단가 확대·인접 고객 시험</td>
+</tr>
+</tbody>
+</table>
+<p>위 고객 수는 매출 예측이나 현재 팀의 제공 약속이 아니다. 15곳에 월 45분 지원이면 월 11.25시간이다. 그 외 온보딩·영업·장애·개발도 필요하다. 5곳에서 실제 업무 시간을 측정해 고객 대응에 주 8~12시간, 개발·운영 책임자에 주 10시간 이상을 배정할 수 있는지 점검하는 안이다. 이 시간도 계획 가정이며 데이터에 따라 조정한다. 학생 팀의 기존 시간을 그대로 둔 채 15곳으로 늘리지 않는다.</p>
+<p>유지율은 실제로 갱신 시점이 온 고객만 분모로 계산한다. 8주에 모집한 고객 전원을 ‘2개월 유지 고객’으로 세지 않는다. 초기에는 유료 재사용 사례를 보고, 고객이 늘면 가입 월별로 직접 사용·갱신·해지 이유·브랜드 증감을 추적한다. 서비스 만족으로 남은 고객과 직접 사용하는 도구 고객도 구분한다.</p>
+<h2>12. 사업적 평가와 투자 판단</h2>
+<table>
+<thead>
+<tr>
+<th>평가 축</th>
+<th>현재 판단</th>
+<th>이유와 확인할 것</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>지출이 존재하는 시장인가</td>
+<td>긍정적 근거 있음</td>
+<td>해외 제작·운영 구독 사업의 실적·가격 확인. 한국 선택 고객의 지출은 인터뷰 필요</td>
+</tr>
+<tr>
+<td>같은 고객에게 반복 판매할 수 있는가</td>
+<td>유망한 구조</td>
+<td>정기 납품과 연결. 실제 재사용·갱신은 아직 없음</td>
+</tr>
+<tr>
+<td>한 고객에서 매출을 늘릴 수 있는가</td>
+<td>가능성 있음</td>
+<td>브랜드·사용량 확장 과금. 대행사 고객 이탈에 따른 감소도 함께 발생</td>
+</tr>
+<tr>
+<td>수익성이 좋은가</td>
+<td><strong>조건부</strong></td>
+<td>세트 원가와 사람 지원에 따라 기여율 77%에서 적자까지 달라짐</td>
+</tr>
+<tr>
+<td>고객 확보가 쉬운가</td>
+<td>현재 가장 큰 불확실성 중 하나</td>
+<td>영업망·반복 획득 채널이 아직 검증되지 않음. 저가 플랜에 직접 영업하면 회수기간이 길 수 있음</td>
+</tr>
+<tr>
+<td>경쟁사를 이길 수 있는가</td>
+<td>비교할 가치 있으나 미검증</td>
+<td>수정·검수와 다음 회차 제작에 집중. 기능 중복으로 탈락시키지 않음</td>
+</tr>
+<tr>
+<td>모방에 견딜 수 있는가</td>
+<td>초기에는 약함</td>
+<td>결과 품질·운영 효율·고객 접근을 쌓아야 함. 데이터 보유 자체를 방어력으로 세지 않음</td>
+</tr>
+<tr>
+<td>현재 팀으로 제공할 수 있는가</td>
+<td>제한된 파일럿 + 전문 보완 필요</td>
+<td>학생 개발 36시간으로 인증·자료 분리·지원까지 안정 제공을 보장할 수 없음</td>
+</tr>
+<tr>
+<td>큰 회사가 될 수 있는가</td>
+<td>아직 근거 부족</td>
+<td>한국 세부 고객의 규모·획득 경로 미확인. 객단가·인접 시장·해외 확장으로 재평가</td>
+</tr>
+<tr>
+<td>Rita에 도움이 되는가</td>
+<td>개발·평가 자산 재사용 가능</td>
+<td>자사 판매와 제3자 거래는 서로 다른 시장 검증</td>
+</tr>
+</tbody>
+</table>
+<p><strong>투자 제안:</strong> 첫 고객이 실제 자료와 다음 납품을 제공하면, 단일 브랜드 직접 사용 상품을 만드는 제한 투자에 진행한다. 갱신과 경제성이 함께 확인되면 3~5고객으로 확대한다. 문제가 원가에 있으면 표준화·지원 방식·가격을 바꾸고, 결과물에 있으면 형식·고객 범위를 바꾼다. 자료와 작업을 확보하지 못하면 외부 제품 기능을 더 만드는 데 예산을 쓰지 않는다.</p>
+<p>이 단계에서 바라볼 성공은 작은 유료 서비스에 머무르는 것이 아니라, <strong>한 고객을 얻는 비용보다 그 고객이 반복해서 남기는 이익이 크고, 고객이 늘어도 사람 노동이 같은 비율로 늘지 않는 구조</strong>를 확인하는 것이다. 이것이 성립할 때 더 큰 인력과 예산을 넣을 사업적 근거가 생긴다.</p>
+<h2>13. Rita와의 관계 및 근거</h2>
+<p>독립 서비스의 매출은 대행사가 내는 구독료다. Rita 안에서는 같은 제작·검수 기능을 실행 단위로 제공할 수 있지만, 내부 이전 금액을 외부 매출처럼 더하지 않는다. 나중에 제3자 에이전트가 실제로 팔릴 때는 거래액·수수료·공급자 지급액·실행비를 따로 계산해야 한다. 플랫폼 수익률은 아직 확정하지 않는다.</p>
+<p>재사용할 것은 소재·기획·렌더·브랜드 검수·작업 기록의 경계다. 첫 제품 안에서는 하나의 코드로 구현해도 된다. 사업에서 반복 구매되는 작업을 확인한 다음 Rita의 에이전트 상품으로 분리한다.</p>
+<p>경쟁사의 공식 가격·과금 단위는 <a href="https://www.mirra.my/en/pricing">Mirr</a>, <a href="https://www.blotato.com/pricing">Blotato</a>, <a href="https://buffer.com/pricing">Buffer</a>, <a href="https://metricool.com/pricing/">Metricool</a>에서 2026-09-29 확인했다. 이들 요금은 소셜 계정·브랜드·좌석·생성 크레딧·결제 기간이 달라 단순 최저가 순위를 만들지 않는다. 회사의 수익성 근거와 국내 대안은 <a href="%ED%95%B4%EC%99%B8%EA%B8%B0%EC%97%85_%EA%B7%BC%EA%B1%B0%EC%99%80%ED%95%B4%EC%84%9D.md">해외기업 조사</a>, <a href="%ED%95%9C%EA%B5%AD%EC%8B%9C%EC%9E%A5_%EA%B2%BD%EC%9F%81%EA%B3%BC%EA%B8%B0%ED%9A%8C.md">한국시장 조사</a>를 함께 본다. 우리 가격과 원가는 이들 회사에서 인용한 수치가 아니라 본 문서의 시험 가정이다.</p>
+</article></main><script>
+const $=id=>document.getElementById(id), value=id=>Math.max(0,Number($(id).value)||0), money=n=>Math.round(n).toLocaleString('ko-KR')+'원';
+function calculate(){const p=value('price'),q=value('qty'),savedHours=q*value('saved')/60,benefit=savedHours*value('customerWage')-p-value('customerSetup'),cost=q*value('unit')+value('support')/60*value('ourWage')+value('infra')+p*Math.min(value('fee'),100)/100,c=p-cost,margin=p?c/p*100:null,pay=c>0?(value('cac')+value('setup'))/c:null,be=c>0?Math.ceil(value('fixed')/c):null;return{p,q,savedHours,benefit,cost,c,margin,pay,be};}
+function render(){const m=calculate();$('benefit').textContent=money(m.benefit);$('contribution').textContent=money(m.c);$('margin').textContent=m.margin===null?'매출 0원: 기여율 계산 불가':'직접 기여율 '+m.margin.toFixed(1)+'%';$('payback').textContent=m.pay===null?'회수 불가':m.pay.toFixed(1)+'개월';$('breakeven').textContent=m.be===null?'성립 안 함':m.be.toLocaleString('ko-KR')+'곳';$('cost').textContent=money(m.cost);$('savedHours').textContent=m.savedHours.toFixed(1)+'시간';$('benefit').className=m.benefit>0?'good':'bad';$('contribution').className=m.c>0?'good':'bad';$('interpretation').textContent=m.c<=0?'이 가정에서는 고객이 늘수록 반복 직접 손실이 커진다. 가격·원가·지원 범위를 바꿔야 한다.':m.benefit<=0?'우리에게 이익이 남더라도, 이 가정에서는 고객에게 요금과 도입비를 넘는 시간 가치가 남지 않는다. 실제 추가 품질 가치 또는 다른 제안이 필요하다.':'산술상 양쪽에 가치가 남는다. 실제 품질·지불·갱신·획득비가 확인된 것은 아니다.';}
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',render));document.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click',()=>{const solo=b.dataset.plan==='solo';$('price').value=solo?59000:149000;$('qty').value=solo?10:30;document.querySelectorAll('[data-plan]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();}));$('scenario').addEventListener('change',()=>{const s={low:[600,15,4000],mid:[1200,45,6000],high:[2500,180,8000]}[$('scenario').value];['unit','support','infra'].forEach((id,i)=>$(id).value=s[i]);render();});render();
+</script></html>

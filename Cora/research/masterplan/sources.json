@@ -1,0 +1,507 @@
+{
+  "schema_version": 1,
+  "prepared_at": "2026-09-29",
+  "purpose": "마스터플랜의 문헌 근거·측정·검증 설계",
+  "review_type": "targeted primary-source literature mapping; not systematic review",
+  "full_text_caveat": "전문을 모두 읽었다고 주장하지 않는다. 각 directly_checked에 실제 확인 범위를 기록했다.",
+  "application_caveat": "문헌의 한국어 Instagram 일반화 및 우리 제품 효과는 미검증. 조작화·기능·평가 제안은 literature.md의 연구자 제안이다.",
+  "sources": [
+    {
+      "id": "L01",
+      "title": "What Makes Online Content Viral?",
+      "authors": [
+        "Jonah Berger",
+        "Katherine L. Milkman"
+      ],
+      "year": 2012,
+      "venue": "Journal of Marketing Research 49(2), 192–205",
+      "doi": "10.1509/jmr.10.0353",
+      "url": "https://doi.org/10.1509/jmr.10.0353",
+      "evidence_type": "peer_reviewed_field_observation_and_experiments",
+      "scope": "New York Times 기사 공유와 정서 조작 실험",
+      "claim": "공유를 이해할 때 정서의 긍정·부정과 각성 수준을 구분할 필요가 있다.",
+      "limits": [
+        "이메일 공유를 한국어 Instagram 성과로 직접 일반화하지 않는다.",
+        "바이럴 보장 연구가 아니다."
+      ],
+      "constructs": [
+        "emotional valence",
+        "arousal",
+        "awe",
+        "anger",
+        "anxiety",
+        "sadness",
+        "practical utility"
+      ],
+      "directly_checked": "출판사 서지; 저자 PDF 초록·이론·Study 1 설계와 코딩 설명",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://doi.org/10.1509/JMR.10.0353",
+        "https://jonahberger.com/wp-content/uploads/2013/02/ViralityB.pdf"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L02",
+      "title": "How Concrete Language Shapes Customer Satisfaction",
+      "authors": [
+        "Grant Packard",
+        "Jonah Berger"
+      ],
+      "year": 2021,
+      "online_first": "2020-07-18",
+      "venue": "Journal of Consumer Research 47(5), 787–806",
+      "doi": "10.1093/jcr/ucaa038",
+      "url": "https://doi.org/10.1093/jcr/ucaa038",
+      "evidence_type": "peer_reviewed_field_text_analysis_and_experiments",
+      "scope": "고객·직원 응대의 언어와 만족·구매 관련 결과",
+      "claim": "구체적 언어가 직원이 듣고 이해한다는 지각에 영향을 줄 수 있다.",
+      "limits": [
+        "캡션 성과의 직접 증거가 아니다.",
+        "영어 사전의 한국어 타당성은 별도 검증한다."
+      ],
+      "constructs": [
+        "linguistic concreteness",
+        "perceived listening",
+        "customer satisfaction"
+      ],
+      "directly_checked": "초록·개념 정의·연구 개요·Study 1 측정·통제 설명",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://academic.oup.com/jcr/article/47/5/787/5873524"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L03",
+      "title": "Automated Text Analysis for Consumer Research",
+      "authors": [
+        "Ashlee Humphreys",
+        "Rebecca Jen-Hui Wang"
+      ],
+      "year": 2018,
+      "online_first": "2017-09-29",
+      "venue": "Journal of Consumer Research 44(6), 1274–1306",
+      "doi": "10.1093/jcr/ucx104",
+      "url": "https://doi.org/10.1093/jcr/ucx104",
+      "evidence_type": "peer_reviewed_methodological_review",
+      "scope": "소비자 연구의 자동 텍스트 분석 방법·구성개념·표집",
+      "claim": "언어 이론과 구성개념에 맞춰 측정·방법을 선택해야 한다.",
+      "limits": [
+        "특정 제품 점수의 효능 증거가 아니다.",
+        "이번 조사에서는 본문 미접근."
+      ],
+      "constructs": [
+        "construct measurement",
+        "automated text analysis",
+        "sampling"
+      ],
+      "directly_checked": "출판사 초록·서지",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://academic.oup.com/jcr/article-abstract/44/6/1274/4283031"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L04",
+      "title": "Uniting the Tribes: Using Text for Marketing Insight",
+      "authors": [
+        "Jonah Berger",
+        "Ashlee Humphreys",
+        "Stephan Ludwig",
+        "Wendy W. Moe",
+        "Oded Netzer",
+        "David A. Schweidel"
+      ],
+      "year": 2020,
+      "venue": "Journal of Marketing 84(1), 1–25",
+      "doi": "10.1177/0022242919873106",
+      "url": "https://doi.org/10.1177/0022242919873106",
+      "evidence_type": "peer_reviewed_methodological_review",
+      "scope": "마케팅 텍스트 분석의 예측·이해와 타당성",
+      "claim": "텍스트 측정의 구성·판별·수렴·외적 타당성을 구분해 검증해야 한다.",
+      "limits": [
+        "예측 성능은 편집의 인과 효과를 증명하지 않는다."
+      ],
+      "constructs": [
+        "prediction",
+        "understanding",
+        "construct validity",
+        "external validity"
+      ],
+      "directly_checked": "대학 서지·초록; 저자 PDF 타당성 절·Table 5",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://research.monash.edu/en/publications/uniting-the-tribes-using-text-for-marketing-insight/",
+        "https://www.columbia.edu/~on2110/Papers/Uniting%20The%20Tribes.pdf"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L05",
+      "title": "Identifying Customer Needs from User-Generated Content",
+      "authors": [
+        "Artem Timoshenko",
+        "John R. Hauser"
+      ],
+      "year": 2019,
+      "online_first": "2019-01-30",
+      "venue": "Marketing Science 38(1), 1–20",
+      "doi": "10.1287/mksc.2018.1123",
+      "url": "https://doi.org/10.1287/mksc.2018.1123",
+      "evidence_type": "peer_reviewed_applied_ml_with_human_analyst_validation",
+      "scope": "구강 관리 제품 UGC와 인터뷰 기반 고객 필요 비교",
+      "claim": "비정보·중복 문장을 줄여 사람의 고객 필요 발견을 효율화한다.",
+      "limits": [
+        "댓글 작성자가 전체 시장을 대표하지 않는다.",
+        "주제 빈도와 수요 규모는 다르다."
+      ],
+      "constructs": [
+        "customer needs",
+        "informativeness",
+        "semantic redundancy"
+      ],
+      "directly_checked": "출판사 초록·서지; 본문·데이터 미검토",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://pubsonline.informs.org/doi/abs/10.1287/mksc.2018.1123"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L06",
+      "title": "The Power of Brand Selfies",
+      "authors": [
+        "Jochen Hartmann",
+        "Mark Heitmann",
+        "Christina Schamp",
+        "Oded Netzer"
+      ],
+      "year": 2021,
+      "online_first": "2021-07-21",
+      "venue": "Journal of Marketing Research 58(6), 1159–1177",
+      "doi": "10.1177/00222437211037258",
+      "url": "https://doi.org/10.1177/00222437211037258",
+      "evidence_type": "peer_reviewed_multimodal_field_analysis_and_experiments",
+      "scope": "Twitter·Instagram 소비재 이미지, 광고 및 실험",
+      "claim": "이미지 유형의 좋아요·댓글과 브랜드 구매 의향 결과가 다를 수 있다.",
+      "limits": [
+        "구매 의향 댓글은 실제 구매가 아니다.",
+        "소비재 표본을 모든 크리에이터에 일반화하지 않는다."
+      ],
+      "constructs": [
+        "consumer selfie",
+        "brand selfie",
+        "packshot",
+        "sender engagement",
+        "purchase intention"
+      ],
+      "directly_checked": "초록·이미지 유형·표본 설명·Table 1–2와 측정 개요",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://journals.sagepub.com/doi/10.1177/00222437211037258",
+        "https://research.wu.ac.at/en/publications/the-power-of-brand-selfies-4/"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L07",
+      "title": "Standing Out While Fitting In: Visual Design of Text Overlays in Social Media Communication",
+      "authors": [
+        "Stefania Farace",
+        "Francisco Villarroel Ordenes",
+        "Dennis Herhausen",
+        "Dhruv Grewal",
+        "Ko de Ruyter"
+      ],
+      "year": 2026,
+      "online_first": "2025-05-29",
+      "venue": "Journal of Marketing 90(1), 132–151",
+      "doi": "10.1177/00222429251322773",
+      "url": "https://doi.org/10.1177/00222429251322773",
+      "evidence_type": "peer_reviewed_field_studies_online_experiments_interviews",
+      "scope": "소셜미디어 이미지의 글자 크기·중앙성·역동성 조합",
+      "claim": "텍스트 배치 효과를 배경 이미지와의 조합으로 판단해야 한다.",
+      "limits": [
+        "중앙 배치를 일률적으로 좋거나 나쁘다고 분류하지 않는다.",
+        "한국어 카드뉴스 직접 검증이 아니다."
+      ],
+      "constructs": [
+        "text overlay size",
+        "text centrality",
+        "image dynamism",
+        "visual appeal"
+      ],
+      "directly_checked": "출판사 서지; 저자 소속 대학 초록·권호; PDF 접근 실패",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://journals.sagepub.com/doi/abs/10.1177/00222429251322773",
+        "https://research.vu.nl/en/publications/standing-out-while-fitting-in-visual-design-of-text-overlays-in-s/"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L08",
+      "title": "When Words Meet Visuals: How Content Composition Drives Social Media Engagement for Marketer-Generated Content",
+      "authors": [
+        "Ivy Chu Dang",
+        "Canice M. C. Kwan",
+        "Jayson S. Jia",
+        "Yang Shi"
+      ],
+      "year": 2026,
+      "online_first": "2025-08-18",
+      "version_note": "출판사 온라인 판본 갱신 2025-12-16; 정식 권호 2026-02",
+      "venue": "Journal of Marketing Research 63(1), 167–190",
+      "doi": "10.1177/00222437251373042",
+      "url": "https://doi.org/10.1177/00222437251373042",
+      "evidence_type": "peer_reviewed_observational_multimodal_causal_ml",
+      "scope": "Facebook·Instagram 유기적 브랜드 게시물 34,610개",
+      "claim": "글·그림 비중과 내용·시각적 맥락을 함께 분석한다.",
+      "limits": [
+        "관찰자료의 causal forest는 미측정 교란 제거를 보장하지 않는다.",
+        "본문 식별 가정·부록 미검토."
+      ],
+      "constructs": [
+        "text-picture balance",
+        "informativeness",
+        "emotional positivity",
+        "congruence",
+        "visual context"
+      ],
+      "directly_checked": "출판사 초록·저자·권호·판본 이력",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://journals.sagepub.com/doi/10.1177/00222437251373042"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L09",
+      "title": "XGBoost: A Scalable Tree Boosting System",
+      "authors": [
+        "Tianqi Chen",
+        "Carlos Guestrin"
+      ],
+      "year": 2016,
+      "venue": "KDD 2016, 785–794",
+      "doi": "10.1145/2939672.2939785",
+      "arxiv": "1603.02754",
+      "url": "https://doi.org/10.1145/2939672.2939785",
+      "evidence_type": "peer_reviewed_ml_system_method",
+      "scope": "확장 가능한 트리 부스팅 시스템",
+      "claim": "정형화된 특성을 이용한 효율적 예측 모델의 후보를 제공한다.",
+      "limits": [
+        "우리 콘텐츠 예측 정확도는 별도 검증해야 한다.",
+        "표본 편향·누출을 자동 해결하지 않는다."
+      ],
+      "constructs": [
+        "gradient boosted trees",
+        "sparsity-aware learning"
+      ],
+      "directly_checked": "ACM 서지·초록; arXiv 기록",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://doi.org/10.1145/2939672.2939785",
+        "https://arxiv.org/abs/1603.02754"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L10",
+      "title": "BERTopic: Neural topic modeling with a class-based TF-IDF procedure",
+      "authors": [
+        "Maarten Grootendorst"
+      ],
+      "year": 2022,
+      "submitted": "2022-03-11",
+      "venue": "arXiv preprint",
+      "doi": null,
+      "arxiv": "2203.05794",
+      "url": "https://arxiv.org/abs/2203.05794",
+      "evidence_type": "preprint_topic_model_method",
+      "scope": "임베딩·군집화·c-TF-IDF를 통한 토픽 표현",
+      "claim": "문서 집합에서 의미상 소재 묶음을 발견하는 방법이다.",
+      "limits": [
+        "토픽 빈도는 미래 인기나 고객 수요 규모가 아니다.",
+        "한국어 도메인 안정성 검증 필요."
+      ],
+      "constructs": [
+        "document embeddings",
+        "topic clusters",
+        "c-TF-IDF",
+        "topic coherence"
+      ],
+      "directly_checked": "arXiv 초록·구조·실험·결과 제공 부분",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://arxiv.org/abs/2203.05794"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L11",
+      "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+      "authors": [
+        "Nils Reimers",
+        "Iryna Gurevych"
+      ],
+      "year": 2019,
+      "venue": "EMNLP-IJCNLP 2019, 3982–3992",
+      "doi": "10.18653/v1/D19-1410",
+      "arxiv": "1908.10084",
+      "url": "https://aclanthology.org/D19-1410/",
+      "evidence_type": "peer_reviewed_sentence_embedding_method",
+      "scope": "문장 의미 유사도·전이 과제",
+      "claim": "문장 벡터로 유사 자료 검색과 군집화를 효율화한다.",
+      "limits": [
+        "한국어 최신 임베딩의 성능 근거와 동일하지 않다.",
+        "유사도는 사실성·표절 판정이 아니다."
+      ],
+      "constructs": [
+        "sentence embeddings",
+        "semantic similarity",
+        "cosine similarity"
+      ],
+      "directly_checked": "학회 서지·초록; PDF 모델 절 제공 부분",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://aclanthology.org/D19-1410/",
+        "https://aclanthology.org/D19-1410.pdf"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L12",
+      "title": "A Unified Approach to Interpreting Model Predictions",
+      "authors": [
+        "Scott M. Lundberg",
+        "Su-In Lee"
+      ],
+      "year": 2017,
+      "venue": "Advances in Neural Information Processing Systems 30, 4765–4774",
+      "doi": null,
+      "arxiv": "1705.07874",
+      "url": "https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html",
+      "evidence_type": "peer_reviewed_model_explanation_method",
+      "scope": "개별 모델 예측의 가법적 특성 기여 설명",
+      "claim": "SHAP은 모델 예측에 대한 특성 기여를 계산하는 틀이다.",
+      "limits": [
+        "설명값을 편집의 인과 효과로 해석하지 않는다.",
+        "정식 DOI 미확인으로 공란."
+      ],
+      "constructs": [
+        "SHAP",
+        "feature attribution",
+        "additive explanations"
+      ],
+      "directly_checked": "학회 초록·서지; PDF 첫 부분",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html",
+        "https://arxiv.org/abs/1705.07874"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L13",
+      "title": "Feature relevance quantification in explainable AI: A causal problem",
+      "authors": [
+        "Dominik Janzing",
+        "Lenon Minorics",
+        "Patrick Blöbaum"
+      ],
+      "year": 2020,
+      "venue": "AISTATS, PMLR 108, 2907–2916",
+      "doi": null,
+      "arxiv": "1910.13413",
+      "url": "https://proceedings.mlr.press/v108/janzing20a.html",
+      "evidence_type": "peer_reviewed_causal_methodological_critique",
+      "scope": "Shapley 기반 설명에서 관찰·개입 분포의 구별",
+      "claim": "제거된 특성의 확률 분포 선택이 설명 해석에 중요하다.",
+      "limits": [
+        "인용이나 SHAP 설정 변경만으로 인과 식별이 성립하지 않는다."
+      ],
+      "constructs": [
+        "observational distribution",
+        "interventional distribution",
+        "feature relevance"
+      ],
+      "directly_checked": "학회 초록·서지; 증명 전체 미검토",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://proceedings.mlr.press/v108/janzing20a.html",
+        "https://arxiv.org/abs/1910.13413"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L14",
+      "title": "Unbiased Learning-to-Rank with Biased Feedback",
+      "authors": [
+        "Thorsten Joachims",
+        "Adith Swaminathan",
+        "Tobias Schnabel"
+      ],
+      "year": 2017,
+      "venue": "WSDM 2017, 781–789",
+      "doi": "10.1145/3018661.3018699",
+      "arxiv": "1608.04468",
+      "url": "https://doi.org/10.1145/3018661.3018699",
+      "evidence_type": "peer_reviewed_ranking_method_with_simulation_and_online_evaluation",
+      "scope": "검색 클릭의 위치 편향과 propensity 기반 순위 학습",
+      "claim": "클릭을 그대로 관련성 정답으로 쓰면 편향되므로 노출 과정을 고려한다.",
+      "limits": [
+        "Instagram 노출 확률을 임의 추정해 편향 제거를 주장할 수 없다.",
+        "소표본에서는 가중으로 분산이 커질 수 있다."
+      ],
+      "constructs": [
+        "position bias",
+        "propensity",
+        "counterfactual ranking",
+        "implicit feedback"
+      ],
+      "directly_checked": "저자 PDF DOI·초록·모형·소표본 한계·온라인 평가 부분",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://www.cs.cornell.edu/~tj/publications/joachims_etal_17a.pdf",
+        "https://www.microsoft.com/en-us/research/publication/unbiased-learning-rank-biased-feedback/"
+      ],
+      "checked_at": "2026-09-29"
+    },
+    {
+      "id": "L15",
+      "title": "Practical Guide to Controlled Experiments on the Web: Listen to Your Customers Not to the HiPPO",
+      "authors": [
+        "Ron Kohavi",
+        "Randal M. Henne",
+        "Dan Sommerfield"
+      ],
+      "year": 2007,
+      "venue": "KDD 2007, 959–967",
+      "doi": "10.1145/1281192.1281295",
+      "url": "https://doi.org/10.1145/1281192.1281295",
+      "evidence_type": "peer_reviewed_online_experimentation_practical_guide",
+      "scope": "제품 변경을 평가하는 무작위 통제 실험",
+      "claim": "실제 사용자 행동으로 제품 변경의 효과를 평가한다.",
+      "limits": [
+        "서로 다른 날 게시한 콘텐츠의 단순 비교는 무작위 A/B가 아니다.",
+        "작은 고객 표본의 전후 비교는 탐색 증거."
+      ],
+      "constructs": [
+        "randomized assignment",
+        "online experiment",
+        "evaluation criterion"
+      ],
+      "directly_checked": "저자 PDF 초록·저자 서지; DOI와 서지는 Crossref 확인; PDF 일부 재접근 실패",
+      "full_text_read": false,
+      "verification_urls": [
+        "https://www.exp-platform.com/Documents/GuideControlledExperiments.pdf",
+        "https://ai.stanford.edu/~ronnyk/ronnyk-bib.html",
+        "https://api.crossref.org/works/10.1145/1281192.1281295"
+      ],
+      "checked_at": "2026-09-29"
+    }
+  ]
+}

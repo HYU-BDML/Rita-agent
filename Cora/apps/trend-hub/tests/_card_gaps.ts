@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import { grammarsWithEvidence } from '../lib/core/grammar';
+const db = JSON.parse(fs.readFileSync('data/db.json', 'utf8'));
+const gs = grammarsWithEvidence(db.candidates ?? [], db.posts ?? [], '2026-09-24T00:00:00Z');
+const all = gs.flatMap((g) => g.evidence.map((e) => ({ g: g.id, ...e })));
+const no = (f: (e: typeof all[0]) => boolean) => all.filter(f);
+console.log(`근거 카드 ${all.length}장`);
+console.log(`  조회 없음   ${no((e) => e.topViews === null).length}장  예: ${no((e) => e.topViews === null).slice(0, 3).map((e) => `${e.subject}(${e.g})`).join(', ')}`);
+console.log(`  썸네일 0장  ${no((e) => e.thumbs.length === 0).length}장  예: ${no((e) => e.thumbs.length === 0).slice(0, 3).map((e) => `${e.subject}(${e.g})`).join(', ')}`);
+console.log(`  캡션 없음   ${no((e) => !e.caption).length}장  예: ${no((e) => !e.caption).slice(0, 4).map((e) => `${e.subject}(${e.g})`).join(', ')}`);
+console.log(`  썸네일 3장  ${no((e) => e.thumbs.length === 3).length}장 · 1~2장 ${no((e) => e.thumbs.length > 0 && e.thumbs.length < 3).length}장`);
+console.log(`  셋 다 있음  ${no((e) => e.topViews !== null && e.thumbs.length > 0 && Boolean(e.caption)).length}장`);
