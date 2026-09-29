@@ -1,3 +1,4 @@
+import {timeline,subtitles} from './timeline';
 import { artwork, png } from './artwork';
 import { rendererContract, type Draft } from './model';
 const encoder = new TextEncoder();
@@ -26,3 +27,5 @@ export async function exportPack(d: Draft) {
   entries.push({name:'caption.txt',bytes:encoder.encode(d.caption)},{name:'project.json',bytes:encoder.encode(JSON.stringify(d,null,2))},{name:'renderer-contract.json',bytes:encoder.encode(JSON.stringify(rendererContract(d),null,2))});
   const safe=d.brief.brand.replace(/[^\p{L}\p{N}_-]/gu,'_').slice(0,40)||'cards';download(zip(entries),`${safe}-cora.zip`,'application/zip');
 }
+
+export function exportSubtitles(d:Draft){const text=subtitles(timeline(d.slides.length,d.slides.map(s=>({seconds:s.seconds??3,subtitle:s.subtitle??''}))));if(!text)throw new Error('먼저 장면 자막을 입력해 주세요.');download(encoder.encode(text),'cora-subtitles.srt','application/x-subrip;charset=utf-8');}
