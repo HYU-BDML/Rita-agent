@@ -8,4 +8,4 @@
 - Implement backend/auth/integrations with AI where feasible; collect concrete unresolved issues for later independent review and fixes.
 - Never commit secrets, runtime databases, customer materials, generated assets or dependency folders.
 - Preserve the external Drive outputs/work symlinks. Mirror user-facing deliverables into the original outputs directory when needed.
-- Validate actual behavior before claiming functionality. Initial imported app has not yet been installed or executed in Cora.
+- Validate actual behavior before claiming functionality. Current local studio has build, unit and browser checks; see docs/Cora_실행과인계/04_검증결과.md for scope.

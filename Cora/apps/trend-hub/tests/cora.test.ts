@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { CoraStore } from '../lib/cora/store';
-import { outline, ideasFor, sampleBrief, validateDraft, rendererContract } from '../lib/cora/model';
+import { outline, ideasFor, sampleBrief, validateDraft, rendererContract, validateBrand, importDraft } from '../lib/cora/model';
 import { artwork, wrap } from '../lib/cora/artwork';
 import { zip } from '../lib/cora/export';
 
@@ -38,4 +38,17 @@ test('Cora: renderer adapter follows the edited order and title',()=>{
 test('Cora: export ZIP has UTF-8 names, a central directory and entry counts',()=>{
  const data=zip([{name:'caption.txt',bytes:new TextEncoder().encode('한국어 캡션')}]);const view=new DataView(data.buffer);
  assert.equal(view.getUint32(0,true),0x04034b50);assert.equal(view.getUint16(6,true),0x800);assert.equal(view.getUint32(data.length-22,true),0x06054b50);assert.equal(view.getUint16(data.length-12,true),1);
+});
+
+test('Cora: brand isolation, safe import, review invalidation and versioned deletion',()=>{
+ const s=new CoraStore(':memory:');try{
+ const a=s.signup('agency@example.test','test-password-a');const b=s.signup('other@example.test','test-password-b');
+ const brand=s.saveBrand(a.id,validateBrand({name:'책방',audience:'독자',goal:'모임',accent:'#205b4a',notes:'가격 확인'}));
+ assert.equal(s.brands(a.id)[0].id,brand.id);assert.equal(s.brands(b.id).length,0);
+ const d=validateDraft({...draft(),workStatus:'ready',reviewNotes:'사실 확인 완료',postedUrl:'https://example.test/post'});
+ const p=s.save(a.id,d)!;const imported=importDraft({...p,id:'foreign-id'});assert.equal(imported.workStatus,'draft');assert.equal(imported.postedUrl,'');assert.notEqual(imported.slides[0].id,p.slides[0].id);assert.equal('id' in imported,false);
+ assert.equal(s.save(a.id,{...d,caption:'변경'},p.id,1)?.workStatus,'draft');assert.equal(s.delete(b.id,p.id,2),false);
+ assert.throws(()=>s.delete(a.id,p.id,1),/CONFLICT/);assert.equal(s.get(a.id,p.id)?.version,2);assert.equal(s.delete(a.id,p.id,2),true);assert.equal(s.get(a.id,p.id),null);
+ assert.throws(()=>validateDraft({...d,workStatus:'approved'}));assert.throws(()=>validateDraft({...d,slides:[null,null]}));
+ }finally{s.close();}
 });

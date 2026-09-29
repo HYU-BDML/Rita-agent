@@ -26,3 +26,12 @@
 허가된 테스트 계정 하나에서 Cora로 만든 콘텐츠를 실제 게시하고 외부 게시물과 저장한 URL/상태가 일치해야 한다. 예약 시간대, 중복 클릭, 권한 해제, 실패/응답 유실 시나리오도 확인한다. 계정 연결·외부 공개 게시 승인이 아직 없는 상태이므로 현재는 요구사항과 통합 설계만 기록한다.
 
 기능 구현은 본인·조유경·AI가 주도한다. n8n/Blotato의 현재 적합성이 확인되면 연결하고, 구체적 미해결 항목만 후속 개발자에게 넘긴다.
+
+## 2026-09-29 재확인
+
+Sabrina의 옛 템플릿/API 주소가 이동됐다. 현재 공개 문서는 아래다.
+
+- https://help.blotato.com/integrations-and-automation-templates/templates/5-automate-instagram-carousels-with-ai-chat.md
+- https://help.blotato.com/rest-api-reference/api-reference.md
+
+직접 HTTP로 문서를 읽었고, 현재 계정 목록 조회·게시 요청·게시 상태 조회 경로를 확인했다. 아직 실제 계정 연결/키 발급/유료 호출/게시를 수행하지 않았다. 공급사 다고객 SaaS 사용 조건과 계정별 권한 격리는 계약 확인 대상이다. 상세 개발·시험 순서는 docs/Cora_실행과인계/01_사업과제품_실행계획.md 6~8절을 따른다.

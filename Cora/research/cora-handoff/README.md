@@ -1,0 +1,1 @@
+인계 패키지 생성/검증 기록용 도구입니다. 앱 실행에 필요하지 않습니다. package.py는 CORA_WORKSPACE_ROOT 아래 outputs/Cora_실행과인계 및 work/rita-agent-source를 사용합니다. 기존 자료를 읽고 검수 CSV를 초기화하므로 학생 작성 CSV에 실행하지 마세요. 브라우저 도구는 CORA_HANDOFF_DIR와 Playwright/Chrome을 사용합니다. 새 디렉터리에서 생성한 뒤 검토하여 반영합니다.

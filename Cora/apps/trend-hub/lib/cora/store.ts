@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { Draft, Project } from './model';
+import type { Draft, Project, BrandProfile } from './model';
 
 type ProjectRow = { id: string; version: number; body: string; created: string; updated: string };
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -15,6 +15,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, salt TEXT NOT NULL, hash TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL, version INTEGER NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS brands(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
   }
   signup(email: string, password: string) {
@@ -38,19 +39,20 @@ export class CoraStore {
   }
   user(token: string) { return this.db.prepare('SELECT u.id,u.email FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token=? AND s.expires>?').get(digest(token), Date.now()) as { id: string; email: string } | undefined; }
   logout(token: string) { this.db.prepare('DELETE FROM sessions WHERE token=?').run(digest(token)); }
-  list(userId: string) { return (this.db.prepare('SELECT id,version,created,updated,body FROM projects WHERE user_id=? ORDER BY updated DESC').all(userId) as ProjectRow[]).map(r => { const b = JSON.parse(String(r.body)) as Draft; return { id: String(r.id), version: Number(r.version), brand: b.brief.brand, title: b.idea, count: b.slides.length, updatedAt: String(r.updated) }; }); }
+  list(userId: string) { return (this.db.prepare('SELECT id,version,created,updated,body FROM projects WHERE user_id=? ORDER BY updated DESC').all(userId) as ProjectRow[]).map(r => { const b = JSON.parse(String(r.body)) as Draft; return { id: String(r.id), version: Number(r.version), brand: b.brief.brand, title: b.idea, count: b.slides.length, workStatus: b.workStatus ?? 'draft', updatedAt: String(r.updated) }; }); }
   get(userId: string, id: string): Project | null {
     const r = this.db.prepare('SELECT * FROM projects WHERE id=? AND user_id=?').get(id, userId) as ProjectRow | undefined;
     return r ? { ...JSON.parse(String(r.body)), id: String(r.id), version: Number(r.version), createdAt: String(r.created), updatedAt: String(r.updated) } : null;
   }
   save(userId: string, body: Draft, id?: string, version?: number): Project | null {
-    const time = new Date().toISOString(); const encoded = JSON.stringify(body);
+    const time = new Date().toISOString(); let encoded = JSON.stringify(body);
     this.db.exec('BEGIN IMMEDIATE');
     try {
       if (id) {
         const current = this.get(userId, id);
         if (!current) { this.db.exec('ROLLBACK'); return null; }
         if (current.version !== version) throw new Error('CONFLICT');
+        if(current.workStatus==='ready' && JSON.stringify([current.brief,current.slides,current.caption])!==JSON.stringify([body.brief,body.slides,body.caption])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
         this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded, time, id, userId);
       } else {
         id = randomUUID(); this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id, userId, encoded, 1, time, time);
@@ -59,6 +61,11 @@ export class CoraStore {
       this.db.prepare('INSERT INTO revisions VALUES (?,?,?,?)').run(id, result.version, encoded, time);
       this.db.exec('COMMIT'); return result;
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
+  }
+  brands(userId:string):BrandProfile[] {return (this.db.prepare('SELECT id,body FROM brands WHERE user_id=? ORDER BY rowid DESC').all(userId) as {id:string;body:string}[]).map(r=>({...JSON.parse(String(r.body)),id:String(r.id)}));}
+  saveBrand(userId:string,body:Omit<BrandProfile,'id'>):BrandProfile {const id=randomUUID();this.db.prepare('INSERT INTO brands VALUES (?,?,?)').run(id,userId,JSON.stringify(body));return {...body,id};}
+  delete(userId:string,id:string,version:number):boolean {
+    this.db.exec('BEGIN IMMEDIATE');try{const p=this.get(userId,id);if(!p){this.db.exec('ROLLBACK');return false;}if(p.version!==version)throw new Error('CONFLICT');this.db.prepare('DELETE FROM projects WHERE id=? AND user_id=?').run(id,userId);this.db.exec('COMMIT');return true;}catch(e){this.db.exec('ROLLBACK');throw e;}
   }
   close() { this.db.close(); }
 }

@@ -938,6 +938,12 @@
         "lib/producers/deck.ts: deckFromCards (renderer contract only)"
       ],
       "external_calls": "No paid model, render service, or social posting executed."
+    },
+    {
+      "date": "2026-09-29",
+      "scope": "apps/trend-hub/lib/cora, components/cora, app/api/cora, scripts, docs/Cora_실행과인계",
+      "description": "First-party brand presets, personal work status/notes, filtering, safe copy/restore, versioned deletion; inherited first-party store/model expanded. No third-party source copied. Strategy and benchmark public-page captures include provenance.",
+      "verification": "327 tests passed, 1 legacy data-dependent skipped; two Chrome suites and document browser validation passed."
     }
   ]
 }

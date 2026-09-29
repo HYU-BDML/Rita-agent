@@ -3,7 +3,8 @@ import { deckFromCards } from '../producers/deck';
 export interface Brief { brand: string; audience: string; goal: string; material: string; sourceUrl: string; accent: string }
 export interface Idea { id: string; title: string; description: string; structure: string }
 export interface Slide { id: string; headline: string; body: string; image?: string }
-export interface Draft { brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline'; postedUrl: string }
+export type WorkStatus = 'draft' | 'review' | 'ready';
+export interface Draft { brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
 export interface Project extends Draft { id: string; version: number; createdAt: string; updatedAt: string }
 export const blankBrief: Brief = { brand: '', audience: '', goal: '저장하고 다시 보는 콘텐츠', material: '', sourceUrl: '', accent: '#205b4a' };
 export const sampleBrief: Brief = { ...blankBrief, brand: '모퉁이 책방', audience: '퇴근 후 조용한 시간을 찾는 직장인', material: '모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.\n책을 읽은 뒤 마음에 남은 문장을 나누는 시간을 갖습니다.', goal: '책 모임을 소개하고 참여를 안내하기' };
@@ -43,10 +44,25 @@ export function validateDraft(value: unknown): Draft {
   for (const url of [brief.sourceUrl, v.postedUrl]) { if (url && (typeof url !== 'string' || !/^https?:\/\//i.test(url))) throw new Error('링크는 http 또는 https 주소여야 합니다.'); }
   const ids = new Set<string>();
   const slides = v.slides.map(s => {
+    if (!s || typeof s !== 'object') throw new Error('카드 형식을 확인해 주세요.');
     const slide: Slide = { id: str(s.id, 80, '카드 번호'), headline: str(s.headline, 80, '제목'), body: str(s.body, 500, '본문') };
     if (!slide.id || ids.has(slide.id)) throw new Error('중복된 카드 번호입니다.'); ids.add(slide.id);
     if (s.image) { if (typeof s.image !== 'string' || s.image.length > 400000 || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s.image)) throw new Error('사진 크기 또는 형식을 확인해 주세요.'); slide.image = s.image; }
     return slide;
   });
-  return { brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: 'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
+  if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
+  return { workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: 'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
+}
+
+export interface BrandProfile { id:string; name:string; audience:string; goal:string; accent:string; notes:string }
+export function validateBrand(value: unknown): Omit<BrandProfile,'id'> {
+ const v=value as Partial<BrandProfile>;
+ if(!v || typeof v!=='object') throw new Error('브랜드 정보를 확인해 주세요.');
+ const take=(x:unknown,max:number)=>{if(typeof x!=='string'||x.length>max)throw new Error('브랜드 입력 길이를 확인해 주세요.');return x.trim();};
+ const b={name:take(v.name,80),audience:take(v.audience,160),goal:take(v.goal,200),accent:take(v.accent,7),notes:take(v.notes??'',2000)};
+ if(!b.name||!/^#[\da-f]{6}$/i.test(b.accent))throw new Error('브랜드 이름과 색상을 확인해 주세요.');return b;
+}
+// Restoring or copying never imports ownership, approval or publication provenance.
+export function importDraft(value:unknown):Draft {
+ const d=validateDraft(value);return {...d,workStatus:'draft',postedUrl:'',slides:d.slides.map(s=>({...s,id:crypto.randomUUID()}))};
 }

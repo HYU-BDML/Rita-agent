@@ -1,0 +1,34 @@
+[
+  {
+    "name": "planable",
+    "url": "https://planable.io/agencies/",
+    "finalUrl": "https://planable.io/agencies/",
+    "title": "Social media management for agencies: plan, approve, publish across every client",
+    "status": "captured",
+    "scope": "public landing page; not logged-in product verification"
+  },
+  {
+    "name": "contentstudio",
+    "url": "https://contentstudio.io/social-media-approval-workflow",
+    "finalUrl": "https://contentstudio.io/social-media-approval-workflow",
+    "title": "Social Media Approval Workflow for Teams and Clients",
+    "status": "captured",
+    "scope": "public landing page; not logged-in product verification"
+  },
+  {
+    "name": "mirr",
+    "url": "https://www.mirra.my/en",
+    "finalUrl": "https://www.mirra.my/en",
+    "title": "Social Media Content Marketing AI | Mirr",
+    "status": "captured",
+    "scope": "public landing page; not logged-in product verification"
+  },
+  {
+    "name": "buffer",
+    "url": "https://buffer.com/pricing",
+    "finalUrl": "https://buffer.com/pricing",
+    "title": "Pricing | Buffer",
+    "status": "captured",
+    "scope": "public landing page; not logged-in product verification"
+  }
+]
