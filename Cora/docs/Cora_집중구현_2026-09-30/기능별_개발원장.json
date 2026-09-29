@@ -806,10 +806,10 @@
     "source": "Blotato/운영 필요",
     "source_url": "",
     "reuse": "기존 Cora/원장 연결",
-    "status": "미구현",
+    "status": "부분 구현",
     "acceptance": "사용자 경로→실제 저장/외부 결과→실패 복구까지 테스트",
     "external_condition": "실제 권한·자료·공급사 계약이 필요한 항목 별도",
-    "evidence": ""
+    "evidence": "06_게시준비와_어댑터.md; 검증기록/publication-proof.json; 승인본 고정·중복 준비 방지·원본 변경/검토 회수 감지. Blotato 접수/예약/게시/unknown 계약 모의 시험 통과. 실제 전송·영구 큐·결과 대조 연결 대기."
   },
   {
     "id": "F067",
@@ -848,10 +848,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/api-reference",
     "reuse": "Sabrina n8n/Blotato 어댑터·idempotency·결과 대조",
-    "status": "미구현",
+    "status": "부분 구현",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 게시물 생성/수정과 예약/즉시 발행 작업을 별도로 제공.",
     "external_condition": "SNS별 실제 권한·형식 제한은 별도 확인 필요.",
-    "evidence": ""
+    "evidence": "06_게시준비와_어댑터.md; 검증기록/publication-proof.json; 승인본 고정·중복 준비 방지·원본 변경/검토 회수 감지. Blotato 접수/예약/게시/unknown 계약 모의 시험 통과. 실제 전송·영구 큐·결과 대조 연결 대기."
   },
   {
     "id": "F070",

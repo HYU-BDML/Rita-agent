@@ -19,6 +19,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS work_items(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), kind TEXT NOT NULL, title TEXT NOT NULL, data TEXT NOT NULL, created TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS brands(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS reviews(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, owner_id TEXT NOT NULL REFERENCES users(id), reviewer_id TEXT NOT NULL REFERENCES users(id), version INTEGER NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', comment TEXT NOT NULL DEFAULT '', created TEXT NOT NULL, decided TEXT, UNIQUE(project_id,version,reviewer_id));
+      CREATE TABLE IF NOT EXISTS publication_drafts(id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, review_id TEXT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE, version INTEGER NOT NULL, account_label TEXT NOT NULL, scheduled_at TEXT NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL, UNIQUE(project_id,version,account_label,scheduled_at));
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
   }
   signup(email: string, password: string) {
@@ -106,6 +107,23 @@ export class CoraStore {
     }catch(e){this.db.exec('ROLLBACK');throw e;}
   }
   cancelReview(userId:string,id:string){return this.db.prepare("UPDATE reviews SET status='cancelled' WHERE id=? AND owner_id=? AND status!='cancelled'").run(id,userId).changes>0;}
+  preparePublication(userId:string,reviewId:string,accountLabel:string,scheduledAt:string){
+    if(typeof accountLabel!=='string'||!accountLabel.trim()||accountLabel.length>100||typeof scheduledAt!=='string')throw new Error('게시 대상과 시각을 확인해 주세요.');
+    let when='';if(scheduledAt){if(!/(Z|[+-]\d{2}:\d{2})$/.test(scheduledAt)||!Number.isFinite(Date.parse(scheduledAt))||Date.parse(scheduledAt)<=Date.now())throw new Error('시간대가 있는 미래 시각이 필요합니다.');when=new Date(scheduledAt).toISOString();}
+    const account=accountLabel.trim().toLowerCase();this.db.exec('BEGIN IMMEDIATE');try{
+      const r=this.review(userId,reviewId);if(!r||r.owner_id!==userId)throw new Error('NOT_FOUND');if(r.effectiveStatus!=='approved')throw new Error('현재 저장 버전에 대한 다른 검토자의 승인이 필요합니다.');
+      const prior=this.db.prepare('SELECT id,status FROM publication_drafts WHERE project_id=? AND version=? AND account_label=? AND scheduled_at=?').get(r.project_id,r.version,account,when) as {id:string;status:string}|undefined;
+      if(prior){if(prior.status==='cancelled')throw new Error('취소한 준비 작업입니다. 새 버전으로 준비하세요.');this.db.exec('COMMIT');return this.publications(userId,prior.id)[0]!;}
+      const id=randomUUID();this.db.prepare('INSERT INTO publication_drafts VALUES (?,?,?,?,?,?,?,?,?,?)').run(id,userId,r.project_id,reviewId,r.version,account,when,JSON.stringify(r.snapshot),'awaiting_connection',new Date().toISOString());
+      this.db.exec('COMMIT');return this.publications(userId,id)[0]!;
+    }catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
+  publications(userId:string,id=''){
+    type Row={id:string;project_id:string;review_id:string;version:number;current_version:number;account_label:string;scheduled_at:string;snapshot:string;status:string;review_status:string;created:string};
+    const rows=this.db.prepare("SELECT d.*,p.version as current_version,r.status as review_status FROM publication_drafts d JOIN projects p ON p.id=d.project_id JOIN reviews r ON r.id=d.review_id WHERE d.user_id=? AND (?='' OR d.id=?) ORDER BY d.created DESC LIMIT 50").all(userId,id,id) as Row[];
+    return rows.map(r=>({id:r.id,projectId:r.project_id,reviewId:r.review_id,version:r.version,currentVersion:r.current_version,accountLabel:r.account_label,scheduledAt:r.scheduled_at,status:r.status,effectiveStatus:r.status==='cancelled'?'cancelled':r.version!==r.current_version||r.review_status!=='approved'?'needs_review':r.status,title:(JSON.parse(r.snapshot) as Project).idea,brand:(JSON.parse(r.snapshot) as Project).brief.brand,caption:(JSON.parse(r.snapshot) as Project).caption,createdAt:r.created}));
+  }
+  cancelPublication(userId:string,id:string){return this.db.prepare("UPDATE publication_drafts SET status='cancelled' WHERE id=? AND user_id=? AND status='awaiting_connection'").run(id,userId).changes>0;}
   close() { this.db.close(); }
 }
 const globalStore = globalThis as typeof globalThis & { coraStore?: CoraStore };
