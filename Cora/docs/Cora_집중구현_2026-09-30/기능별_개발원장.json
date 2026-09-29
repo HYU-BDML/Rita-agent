@@ -1100,10 +1100,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/video-lab/create",
     "reuse": "기존 숏폼 저장소 실제 코드 유무 확인, 장면 문서·렌더 작업 큐",
-    "status": "부분 구현",
+    "status": "부분 검증",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 자동 길이 또는 슬라이더·숫자로 목표 길이를 지정한다.",
     "external_condition": "최종 길이는 목표와 다를 수 있음. 긴 영상의 실제 상한 미검증.",
-    "evidence": "렌더 API 장면당 1~10초 지원, UI는 3초. 타임라인 편집 없음."
+    "evidence": "08_영상장면과_자막.md; 검증기록/timeline-proof.json; 장면별 1~10초·자막 저장 및 실제 MP4 선택형 한글 자막 트랙 검증. 음성 동기화·전환·차트·번인 자막은 미구현."
   },
   {
     "id": "F040",
@@ -1254,10 +1254,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/api-reference",
     "reuse": "기존 숏폼 저장소 실제 코드 유무 확인, 장면 문서·렌더 작업 큐",
-    "status": "미구현",
+    "status": "부분 검증",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: MP4 외에 장면·자산·위치·시간·음성·스타일을 구조화된 문서로 저장한다.",
     "external_condition": "필드 존재는 해당 UI 기능을 모두 사용할 수 있다는 보장이 아님.",
-    "evidence": ""
+    "evidence": "08_영상장면과_자막.md; 검증기록/timeline-proof.json; 장면별 1~10초·자막 저장 및 실제 MP4 선택형 한글 자막 트랙 검증. 음성 동기화·전환·차트·번인 자막은 미구현."
   },
   {
     "id": "F051",
@@ -1324,10 +1324,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/api-reference",
     "reuse": "기존 숏폼 저장소 실제 코드 유무 확인, 장면 문서·렌더 작업 큐",
-    "status": "미구현",
+    "status": "부분 검증",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 자막 프리셋·장면 전환·테마를 구조화해 저장. 막대·도넛·선 차트 자산도 정의.",
     "external_condition": "문서 구조가 자체 신경망 학습을 뜻하지 않음. 차트 UI는 미확인.",
-    "evidence": ""
+    "evidence": "08_영상장면과_자막.md; 검증기록/timeline-proof.json; 장면별 1~10초·자막 저장 및 실제 MP4 선택형 한글 자막 트랙 검증. 음성 동기화·전환·차트·번인 자막은 미구현."
   },
   {
     "id": "F064",

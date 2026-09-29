@@ -2,7 +2,7 @@ import { deckFromCards } from '../producers/deck';
 
 export interface Brief { brand: string; audience: string; goal: string; material: string; sourceUrl: string; accent: string }
 export interface Idea { id: string; title: string; description: string; structure: string }
-export interface Slide { id: string; headline: string; body: string; image?: string }
+export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string }
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
@@ -50,6 +50,8 @@ export function validateDraft(value: unknown): Draft {
     const slide: Slide = { id: str(s.id, 80, '카드 번호'), headline: str(s.headline, 80, '제목'), body: str(s.body, 500, '본문') };
     if (!slide.id || ids.has(slide.id)) throw new Error('중복된 카드 번호입니다.'); ids.add(slide.id);
     if (s.image) { if (typeof s.image !== 'string' || s.image.length > 400000 || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s.image)) throw new Error('사진 크기 또는 형식을 확인해 주세요.'); slide.image = s.image; }
+    if(s.seconds!==undefined){if(!Number.isInteger(s.seconds)||s.seconds<1||s.seconds>10)throw new Error('장면 길이는 1~10초입니다.');slide.seconds=s.seconds;}
+    if(s.subtitle!==undefined)slide.subtitle=str(s.subtitle,200,'장면 자막');
     return slide;
   });
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
