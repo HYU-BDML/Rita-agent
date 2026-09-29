@@ -1,0 +1,14 @@
+# 글꼴 — 재배포 금지 라이선스가 섞여 있다(cardnews/*/fonts/README.md)
+*.ttf
+*.otf
+# 실제 인스타그램 자료
+cardnews/web/test/fixtures/
+# 작업 중에 생기는 것
+cardnews/web/_확인/
+cardnews/render/_확인/
+cardnews/analyze/data/
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+.wrangler/

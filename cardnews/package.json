@@ -1,0 +1,16 @@
+{
+  "name": "cardnews-collector",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"cardnews/web/test/*.test.js\"",
+    "dev": "node dev-server.mjs 8788",
+    "build": "node build.mjs",
+    "deploy": "node build.mjs && wrangler deploy",
+    "dev:cf": "wrangler dev"
+  },
+  "devDependencies": {
+    "docx": "^9.7.1",
+    "wrangler": "^4.123.0"
+  }
+}

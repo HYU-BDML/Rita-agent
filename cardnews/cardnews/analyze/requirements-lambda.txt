@@ -1,0 +1,7 @@
+# 분석 Lambda 가 지고 갈 것. **pycocotools 는 없다** — `merge_labeled` 에서
+# 죽은 `rle` 갈래를 걷어내며 같이 빠졌다(2026-08-27). 그게 제일 무거운 짐이었다.
+Pillow==12.2.0
+requests==2.32.3
+numpy==2.2.6
+opencv-python-headless==4.11.0.86
+PyYAML==6.0.2

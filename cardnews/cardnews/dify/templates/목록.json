@@ -1,0 +1,40 @@
+[
+ {
+  "코드": "DG0AA6PJ8s4",
+  "이름": "DG0AA6PJ8s4",
+  "만든날": "2026-09-19",
+  "장수": 7,
+  "역할": {
+   "훅": 1,
+   "정의": 1,
+   "사례": 4,
+   "요약": 1
+  },
+  "미리보기": null,
+  "한판": null,
+  "못그림": 1,
+  "강조색": "#A9ED66",
+  "한계출처": "관측",
+  "나온곳": "분석",
+  "주소": "https://cardnews-render-554608989606.s3.ap-northeast-2.amazonaws.com/templates/DG0AA6PJ8s4.json"
+ },
+ {
+  "코드": "DHqCBQnRAjW",
+  "이름": "DHqCBQnRAjW",
+  "만든날": "2026-09-19",
+  "장수": 7,
+  "역할": {
+   "훅": 1,
+   "사례": 4,
+   "요약": 1,
+   "CTA": 1
+  },
+  "미리보기": null,
+  "한판": null,
+  "못그림": 4,
+  "강조색": "#C9FC95",
+  "한계출처": "관측",
+  "나온곳": "분석",
+  "주소": "https://cardnews-render-554608989606.s3.ap-northeast-2.amazonaws.com/templates/DHqCBQnRAjW.json"
+ }
+]

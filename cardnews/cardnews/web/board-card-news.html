@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 글씨가 뜨기 전에 브라우저가 이것부터 보여 준다. 스크립트가 뜨자마자
+     고른 언어로 갈아끼운다(app.js 화면글자채우기). -->
+<title>카드뉴스 수집기</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#e3e3e3; --card:#fafafa; --accent:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; background:var(--bg); color:var(--fg);
+         font-family: system-ui, 'Malgun Gothic', sans-serif; font-size:14px; }
+  /* relative 인 것은 즐겨찾기 패널이 본문 오른쪽 바깥에 자리를 잡는 기준이 되기 때문이다 */
+  .wrap { max-width:1100px; margin:0 auto; position:relative; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  input[type=text], select, button, textarea { font:inherit; padding:7px 10px;
+         border:1px solid var(--line); border-radius:6px; background:#fff; color:inherit; }
+  button { cursor:pointer; }
+  button:hover { background:#f2f2f2; }
+  button:disabled { cursor:default; color:var(--muted); }
+  #q { flex:1; min-width:200px; }
+  .chip { border:1px solid var(--line); border-radius:6px; padding:3px 9px; font-size:12px; }
+  .chip button { border:0; background:none; padding:0 0 0 4px; color:var(--muted); }
+  /* 본문 바깥 오른쪽 여백에 세로로 세운다. 본문(1100px)은 가운데 정렬이라
+     화면이 넓으면 양옆이 통째로 빈다. 그 빈 자리를 쓴다. */
+  /* 세로 위치는 app.js 가 "저장한 것 갱신" 버튼 줄에 맞춰 넣는다.
+     left:100% 는 본문 오른쪽 끝 — 거기서 한 뼘 더 밀어 여백으로 내보낸다. */
+  #favs { flex-direction:column; align-items:stretch; gap:5px;
+          position:absolute; left:100%; margin-left:30px; width:230px; z-index:5; }
+  #favs .favttl { font-size:11px; color:var(--muted); padding-left:2px; }
+  /* 여백이 안 나올 만큼 좁은 화면에서는 본문을 덮으므로, 저장 버튼 아래로 되돌린다.
+     1100(본문) + 좌우 276씩(패널 230 + 사이 30 + 화면끝 16) = 1652. 그보다 좁으면 자리가 없다. */
+  @media (max-width: 1651px) {
+    #favs { position:static; width:min(340px, 100%); margin-left:auto; margin-top:8px; }
+    #favs .favttl { display:none; }
+  }
+  /* 즐겨찾기 칩 — 누르면 저장해둔 결과를 되살린다. 만료된 것은 흐리게 둔다. */
+  .fav { display:flex; align-items:center; gap:8px; border:1px solid var(--line);
+         border-radius:6px; padding:3px 4px 3px 9px; font-size:12px; background:#fff; }
+  /* 이름이 남는 자리를 다 먹고, 길면 말줄임 — 건수·시각·× 는 오른쪽에 고정된다 */
+  .fav > b { flex:1; min-width:0; font-weight:500; cursor:pointer;
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fav .when { flex:0 0 auto; color:var(--muted); font-size:11px; white-space:nowrap; }
+  .fav .del { border:0; background:none; padding:0 3px; color:var(--muted); cursor:pointer; font-size:13px; }
+  .fav.old { opacity:.55; }
+  .fav.old .when { color:#b45309; }
+  .bar { border-top:1px solid var(--line); margin-top:14px; padding-top:14px; }
+  .muted { color:var(--muted); font-size:12px; }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+          gap:12px; margin-top:16px; }
+  .card { border:1px solid var(--line); border-radius:10px; overflow:hidden;
+          cursor:pointer; background:var(--card); }
+  .card:hover { border-color:#bbb; }
+  /* 공동 목록은 첫 장이 영상인 게시물을 <video> 로 그린다. 표지 칸은 둘이 똑같아야 한다. */
+  .card img, .card video { width:100%; aspect-ratio:4/5; object-fit:cover; display:block; background:#eee; }
+  .card .meta { padding:8px 10px; }
+  .card .cap { font-size:12px; line-height:1.4; max-height:3.4em; overflow:hidden; }
+  .badge { position:absolute; top:6px; right:6px; background:#fff; border-radius:4px;
+           padding:1px 6px; font-size:11px; }
+  .thumb { position:relative; }
+  /* 일부 인스타 CDN이 Cross-Origin-Resource-Policy: same-origin 을 보내 브라우저가 못 싣는다 */
+  .noimg { display:none; width:100%; aspect-ratio:4/5; align-items:center; justify-content:center;
+           text-align:center; background:#f4f4f4; border-radius:6px; color:var(--muted);
+           font-size:11px; line-height:1.6; }
+  #empty { text-align:center; padding:64px 0; color:var(--muted); }
+  #status { margin-top:12px; color:var(--muted); font-size:12px; }
+  #progress { margin-top:12px; }
+  .spin { width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--accent);
+          border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  dialog { border:1px solid var(--line); border-radius:10px; padding:0;
+           box-shadow:0 10px 40px rgba(0,0,0,.18); }
+  dialog::backdrop { background:transparent; }
+  .keyline { font-family:ui-monospace, Consolas, monospace; font-size:12px; }
+  .guide { border:1px solid var(--line); border-radius:6px; background:#fafafa; }
+  .guide summary { cursor:pointer; padding:7px 10px; font-size:12px; color:var(--accent); }
+  .guide > div { padding:0 12px 12px; }
+  .guide code { background:#eee; border-radius:3px; padding:1px 4px; font-size:11px; }
+  /* 언어 스위치 — 「업데이트」 옆에서 눈에 띄되 그보다 작게(채팅 화면과 같은 모양). */
+  .lang { font-size:12px; color:var(--muted); min-width:72px; }
+  .lang:hover { color:var(--fg); border-color:var(--accent); }
+  /* 안 본 소식이 있을 때만 붙는 점. 이게 없으면 아무도 열어보지 않는다. */
+  .dot { display:inline-block; width:6px; height:6px; margin-left:6px; vertical-align:middle;
+         border-radius:50%; background:var(--accent); }
+  #updList { margin-top:4px; }
+  #updList section { padding:12px 0; border-top:1px solid var(--line); }
+  #updList section:first-child { border-top:0; }
+  #updList h4 { margin:0 0 4px; font-size:14px; }
+  #updList p { margin:0; font-size:13px; line-height:1.7; color:#333; }
+  .tab { border:1px solid var(--line); border-radius:6px; padding:7px 14px; background:#fff; }
+  /* 디자인 틀 고르는 격자 — 표지 그림이 주인공이라 글씨는 작게 눕힌다. */
+  .tpl-grid { display:grid; gap:14px; margin-top:16px;
+    grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); }
+  .tpl-card { border:1px solid var(--line); border-radius:8px; padding:10px; background:#fff; }
+  .tpl-face { aspect-ratio:4/5; overflow:hidden; border-radius:6px; background:#f4f4f6; }
+  .tpl-face img { width:100%; height:100%; object-fit:cover; display:block; }
+  .tpl-noface { display:flex; align-items:center; justify-content:center;
+    height:100%; color:var(--muted); font-size:13px; }
+  /* 낱말 한가운데서 자르지 않는다 — 영어 이름이 「Magazine Accounts to Wat / ch」
+     로 갈라진다. anywhere 는 한 낱말이 칸보다 길 때만 자른다(실측 2026-09-19). */
+  .tpl-name { font-weight:600; margin-top:8px; overflow-wrap:anywhere; }
+  a.tpl-card { display:block; color:inherit; text-decoration:none; }
+  a.tpl-card:hover { border-color:var(--accent); }
+  .tpl-meta { color:var(--muted); font-size:12px; margin-top:2px; }
+  /* 단추 이름은 언어를 탄다 — 영어가 한국어보다 길어 한 줄에 안 들어간다.
+     넘치면 칸 밖으로 튀어나가므로 아랫줄로 접는다(실측 2026-09-19). */
+  .tpl-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+             margin-top:8px; font-size:12px; }
+  .tpl-empty { color:var(--muted); margin-top:16px; }
+  /* 만들기 칸 — 넷을 고른다. 격자 위에 얹혀 그 자리에서 끝나게 한다. */
+  .make-box { border:1px solid var(--accent); border-radius:8px; padding:14px;
+    margin-top:14px; background:#fff; }
+  .make-줄 { display:block; margin-top:10px; font-size:13px; color:var(--muted); }
+  .make-줄 input, .make-줄 select, .make-줄 textarea {
+    display:block; width:100%; margin-top:4px; padding:7px 9px;
+    border:1px solid var(--line); border-radius:6px; font:inherit; }
+  .make-done { margin-top:12px; }
+  .make-done img { max-width:220px; border-radius:8px; display:block; }
+  .make-done a { display:inline-block; margin-top:8px; }
+  /* 틀 들여다보기 — 장마다 한 칸. 배경 위에 자리를 그대로 얹는다. */
+  .peek-box { border:1px solid var(--line); border-radius:8px; padding:14px;
+    margin-top:14px; background:#fff; }
+  /* 원본 게시물 — 설계도 위에 같은 줄 모양으로 깐다(사람 결정 2026-09-19). */
+  /* 「한판」은 장들을 가로로 이어 붙인 **한 장**이다. 그대로 깔면 둘레의 흰 여백까지
+     보이고 장이 설계도 칸보다 크게 나온다 — 그래서 templates.js 가 장별로 잘라
+     아래 설계도와 **같은 폭·같은 틈**으로 세운다(사람 지적 2026-09-19). */
+  .pk-원본줄 { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-top:10px; }
+  .pk-원장 { flex:0 0 auto; width:165px; background-repeat:no-repeat;
+    border:1px solid #e3e3e3; border-radius:4px; background-color:#f4f4f6; }
+  /* 짜임새를 못 셈했을 때만 쓰는 옛 모양 */
+  .pk-원본 { margin-top:10px; overflow-x:auto; }
+  .pk-원본 img { display:block; width:100%; min-width:520px; height:auto;
+    border:1px solid #e3e3e3; border-radius:4px; background:#f4f4f6; }
+  .pk-줄 { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-top:10px; }
+  .pk-장 { flex:0 0 auto; width:165px; }
+  .pk-판 { position:relative; width:165px; aspect-ratio:1080/1350;
+    border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .pk-칸 { position:absolute; overflow:hidden; }
+  /* 자리 이름 — 작은 네모에는 안 들어가므로 그때는 안 그린다(templates.js). */
+  .pk-칸 i { font-style:normal; font-size:7px; line-height:1;
+    display:block; padding:2px 3px; letter-spacing:-.02em; }
+  .pk-글 { position:absolute; border:1px dashed rgba(0,0,0,.55);
+    background:rgba(255,255,255,.35); font-size:8px; line-height:1.15;
+    color:#111; padding:1px 2px; overflow:hidden; }
+  .pk-글 b { display:block; font-size:8px; }
+  .pk-글 span { color:#444; }
+  .tab.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .tab .n { color:var(--muted); font-weight:400; margin-left:4px; }
+  .tab.on .n { color:var(--accent); }
+  /* 헤더 타이틀 토글 — 검색/공동목록 탭과 달리 파란 테두리 박스가 아니라
+     원래 <strong> 제목처럼 수수하게: 고른 쪽만 진하게, 나머지는 옅게. */
+  .type-toggle { border:0; background:none; padding:0; font:inherit;
+                 font-size:16px; font-weight:700; color:var(--muted); cursor:pointer; }
+  .type-toggle.on { color:var(--fg); }
+  .type-toggle:hover { color:var(--fg); }
+  .type-sep { color:var(--line); font-weight:400; }
+  .heart { position:absolute; top:6px; left:6px; width:30px; height:30px; padding:0;
+           border:0; border-radius:50%; background:rgba(255,255,255,.88); font-size:15px;
+           line-height:30px; text-align:center; cursor:pointer; }
+  .heart:hover { background:#fff; }
+  .heart.on { color:#e0245e; }
+  /* 고정 — 하트 옆. 안 고정한 카드에서는 흐리게 있다가 올리면 진해진다. */
+  .pin { position:absolute; top:6px; left:40px; width:30px; height:30px; padding:0;
+         border:0; border-radius:50%; background:rgba(255,255,255,.88); font-size:14px;
+         line-height:30px; text-align:center; cursor:pointer; opacity:.35; filter:grayscale(1); }
+  .pin:hover { opacity:.9; filter:none; }
+  .pin.on { opacity:1; filter:none; background:#fff7d6; }
+  .heart:disabled { cursor:default; }
+  .copying { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+             background:rgba(255,255,255,.82); font-size:12px; color:var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <span style="margin-right:auto; display:flex; align-items:center; gap:8px;">
+      <button id="typeCardnews" class="type-toggle on" data-말="갈래_카드뉴스"></button>
+      <span class="type-sep">|</span>
+      <button id="typeReel" class="type-toggle" data-말="갈래_릴스"></button>
+    </span>
+    <!-- 글자는 app.js 가 채운다 — 고른 언어를 타기 때문이다. -->
+    <button id="langBtn" class="lang" type="button"></button>
+    <button id="updBtn"><span data-말="머리_업데이트"></span><span id="updDot" class="dot" style="display:none;"></span></button>
+    <button id="keyBtn" data-말="머리_키설정"></button>
+  </div>
+
+  <div class="row" style="margin-top:14px;">
+    <button id="tabSearch" class="tab on" data-말="탭_검색"></button>
+    <button id="tabBoard" class="tab"><span data-말="탭_공동목록"></span><span class="n" id="boardCount">0</span></button>
+    <button id="tabTemplates" class="tab"><span data-말="탭_템플릿"></span><span class="n" id="tplCount">0</span></button>
+    <button id="tabMade" class="tab"><span data-말="탭_만든것"></span><span class="n" id="madeCount">0</span></button>
+  </div>
+
+  <div id="searchPane">
+  <div class="row" style="margin-top:16px;">
+    <input type="text" id="q" data-말ph="검색_넣는곳">
+    <select id="count"></select>
+    <button id="go" data-말="검색_단추"></button>
+  </div>
+
+  <div class="row" style="margin-top:8px;">
+    <span id="cost" class="muted" style="margin-left:auto;"></span>
+  </div>
+
+  <div id="used" class="muted" style="margin-top:8px; display:none;"></div>
+
+  <div class="bar row" id="minSlidesRow">
+    <!-- 슬라이드 장수 거르개는 카드뉴스에만 쓴다. 릴스 모드에서는 이 묶음만 숨긴다 —
+         줄 전체를 숨기면 정렬과 즐겨찾기 버튼까지 같이 사라진다. -->
+    <span class="row" id="slideFilter">
+      <span class="muted" data-말="검색_슬라이드"></span>
+      <input type="range" id="minSlides" min="2" max="15" value="5" step="1">
+      <span id="minSlidesOut"></span>
+    </span>
+    <span class="muted" style="margin-left:12px;" data-말="검색_정렬"></span>
+    <select id="sort"></select>
+    <span id="count-out" class="muted" style="margin-left:auto;"></span>
+    <button id="favSave" style="display:none;" data-말="즐_담기"></button>
+  </div>
+
+  <!-- 즐겨찾기 — 저장 버튼 바로 아래에 오른쪽으로 붙여 쌓는다.
+       돈 주고 받은 결과를 다시 꺼내는 자리다. 누르는 것만으로는 돈이 나가지 않는다. -->
+  <div id="favs" style="display:none;"></div>
+
+  <div id="progress" class="row" style="display:none;">
+    <span class="spin"></span>
+    <span id="prog" class="muted"></span>
+    <button id="cancel" style="margin-left:auto;" data-말="검색_중단"></button>
+  </div>
+  <div id="status"></div>
+  <div id="empty" data-말h="빔_아직안함"></div>
+  <div id="grid"></div>
+  <div style="text-align:center; margin-top:14px;">
+    <button id="more" style="display:none; width:100%;" data-말="검색_더보기"></button>
+  </div>
+  </div>
+
+  <div id="templatePane" style="display:none;">
+    <p class="tpl-meta" style="margin-top:14px;" data-말="템_안내"></p>
+    <div id="tplStatus" class="tpl-meta"></div>
+    <div id="makePane" style="display:none;"></div>
+    <div id="peekPane" style="display:none;"></div>
+    <div id="tplList"></div>
+  </div>
+
+  <div id="madePane" style="display:none;">
+    <p class="tpl-meta" style="margin-top:14px;" data-말="만_안내"></p>
+    <div id="madeStatus" class="tpl-meta"></div>
+    <div id="madeList"></div>
+  </div>
+
+  <div id="boardPane" style="display:none;">
+    <div id="boardStatus" class="muted" style="margin-top:16px;"></div>
+    <div id="boardEmpty" style="text-align:center; padding:64px 0; color:var(--muted);" data-말h="공_빔_카드뉴스"></div>
+    <div id="boardGrid" style="display:grid;
+         grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px;"></div>
+  </div>
+</div>
+
+
+<dialog id="pwDlg">
+  <form id="pwForm" method="dialog" style="padding:18px; width:min(340px,94vw);">
+    <strong style="font-size:15px;" data-말="공_암호제목"></strong>
+    <div class="muted" style="margin-top:6px;" data-말="공_암호설명"></div>
+    <input type="password" id="pwIn" autocomplete="off" maxlength="64"
+           spellcheck="false" style="width:100%; margin-top:12px;">
+    <div id="pwMsg" class="muted" style="margin-top:8px;"></div>
+    <div class="row" style="margin-top:16px;">
+      <button value="ok" type="submit" style="margin-left:auto;" data-말="공_들어가기"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="updDlg">
+  <form method="dialog" style="padding:18px; width:min(520px,94vw); max-height:88vh; overflow:auto;">
+    <strong style="font-size:15px;" data-말="새_제목"></strong>
+    <div id="updList"></div>
+    <div class="row" style="margin-top:16px;">
+      <button value="ok" type="submit" style="margin-left:auto;" data-말="새_닫기"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="keyDlg">
+  <form id="keyForm" method="dialog" style="padding:18px; width:min(620px,94vw); max-height:88vh; overflow:auto;">
+    <strong style="font-size:15px;" data-말="키_제목"></strong>
+
+    <div style="margin-top:14px;">
+      <div class="row" style="margin-bottom:6px;">
+        <b style="font-size:13px;" data-말="키_apify"></b>
+        <span class="muted" data-말="키_apify설명"></span>
+      </div>
+      <details class="guide"><summary data-말="키_어떻게"></summary><div id="apifyGuide"></div></details>
+      <div class="muted" style="margin-top:10px;" data-말="키_저장된키"></div>
+      <div id="keyList" style="margin:6px 0 10px; display:flex; flex-direction:column; gap:4px;"></div>
+      <label class="muted" for="keyIn" data-말="키_추가"></label>
+      <textarea id="keyIn" rows="4" placeholder="apify_api_..." spellcheck="false"
+                style="width:100%; margin-top:5px; resize:vertical;"></textarea>
+    </div>
+
+    <div style="margin-top:16px; border-top:1px solid var(--line); padding-top:14px;">
+      <div class="row" style="margin-bottom:6px;">
+        <b style="font-size:13px;" data-말="키_쿠키"></b>
+        <span class="muted" data-말="키_쿠키설명"></span>
+      </div>
+      <details class="guide"><summary data-말="키_어떻게"></summary><div id="cookieGuide"></div></details>
+      <div class="muted" style="margin-top:10px;" data-말="키_저장된쿠키"></div>
+      <div id="ckList" style="margin:6px 0 10px;"></div>
+      <label class="muted" for="ckIn" data-말="키_쿠키붙이기"></label>
+      <input type="text" id="ckIn" placeholder="sessionid=..." spellcheck="false"
+             style="width:100%; margin-top:5px;">
+    </div>
+
+    <div class="row" style="margin-top:18px;">
+      <button value="clear" type="submit" id="keyClear" data-말="키_전체삭제"></button>
+      <button value="cancel" type="submit" style="margin-left:auto;" data-말="키_취소"></button>
+      <button value="save" type="submit" data-말="키_저장"></button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

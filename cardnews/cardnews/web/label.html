@@ -1,0 +1,125 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>라벨링</title>
+<style>
+  /* 색은 작업대 화면(render/workbench.py)과 같은 다섯 개다. 여기 한곳에 이름으로 둔다 —
+     작업대는 파랑을 여러 줄에 글자로 박아 둬서 바꾸려면 다 찾아야 한다. */
+  :root {
+    --판바탕: #191c21;   /* 오른쪽 조작판 바탕 */
+    --손바탕: #22262d;   /* 단추·입력칸 바탕 */
+    --테:     #2f343c;   /* 테두리 */
+    --글:     #c8ccd2;   /* 보통 글자 */
+    --흐림:   #9aa0a6;   /* 이름표·안내 글자 */
+    --고름:   #4c8dff;   /* 지금 골라진 것 */
+  }
+  body { margin: 0; background: #111; color: #eee; font: 14px/1.5 system-ui, sans-serif; }
+
+  /* 그림은 왼쪽, 조작은 오른쪽. 그림이 세로(88vh) 기준이라 양옆이 늘 비어 있어서
+     조작판을 거기 세워도 그림이 안 줄어든다. */
+  #root { display: flex; align-items: flex-start; justify-content: center;
+          gap: 12px; padding: 12px; }
+  #무대 { display: grid; gap: 8px; justify-items: center; }
+  canvas { max-height: 88vh; width: auto; background: #000; cursor: crosshair; }
+
+  #조작판 { flex: 0 0 286px; box-sizing: border-box;
+           background: var(--판바탕); border: 1px solid var(--테); border-radius: 12px;
+           padding: 12px 14px; font-size: 13px; color: var(--글);
+           max-height: 88vh; overflow-y: auto; }
+
+  /* 창이 좁으면 조작판이 그림을 밀어낸다 — 그때만 그림 아래로 내린다. */
+  @media (max-width: 820px) {
+    #root { flex-direction: column; align-items: center; }
+    #조작판 { flex: none; width: min(680px, 92vw); max-height: none; }
+  }
+
+  #root button { background: var(--손바탕); color: var(--글); border: 1px solid var(--테);
+                 border-radius: 6px; padding: 3px 9px; font-size: 13px; cursor: pointer; }
+  #root button:hover { background: #2a2f36; }
+  /* 꺼진 단추 — 눌릴 것처럼 보이면 안 된다 */
+  #root button:disabled { cursor: default; }
+  #root button:disabled:hover { background: var(--손바탕); }
+  /* 지금 골라진 단추는 바탕을 파랗게 채운다. 테두리만 바꾸면 작은 단추에서 눈에 안 띈다. */
+  #root button.눌림 { background: var(--고름); color: #fff; border-color: var(--고름); }
+
+  #조작판 input[type=number], #조작판 select, #조작판 textarea {
+    background: var(--손바탕); color: #e8eaed; border: 1px solid var(--테);
+    border-radius: 6px; padding: 3px 6px; }
+  /* 사진 설명 — 여러 줄이라 제 줄을 통째로 쓴다. 옆에 붙이면 「사진 설명 [ ]」
+     으로 칸이 손톱만 해져 무엇을 적으라는 건지 안 보인다. */
+  #조작판 textarea {
+    display: block; width: 100%; margin-top: 4px; resize: vertical;
+    font: inherit; line-height: 1.4; }
+
+  /* 종류 단추 6개 — 3칸씩 두 줄. 늘어나게 두면 마지막 한 개가 줄을 통째로 차지한다. */
+  #종류칸 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+
+  /* 칸은 한 줄에 하나씩. 「기울기」와 「글자 위계」는 label 이라 제 줄을 안 차지해서
+     판이 좁아지자 한 줄에 붙어 「기울기 [0] °글자 위계」로 보였다(2026-09-19). */
+  #속성칸 { display: flex; flex-direction: column; gap: 8px; }
+
+  /* 이름표·안내 글 */
+  .흐린글 { color: var(--흐림); }
+
+  ul { list-style: none; padding: 0; display: grid; gap: 6px; width: min(680px, 92vw); }
+  a { color: #7db6ff; text-decoration: none; display: block; padding: 10px 12px;
+      border: 1px solid #333; border-radius: 6px; }
+  a:hover { background: #1c1c1c; }
+</style>
+<div id="root"></div>
+<script type="module">
+  import { mountLabeler, api } from './lib/label.js'
+  // 채팅이 고른 언어가 같은 브라우저 저장소에 있다 — 이 쪽은 같은 출처의
+  // iframe 이라 그대로 읽힌다(수집기 화면과 같은 길).
+  import { 말하기 } from './lib/라벨말.js'
+  import { 저장된언어 } from './lib/언어.js'
+  const 말 = 말하기(저장된언어())
+  document.title = 말('쪽제목')
+  const root = document.getElementById('root')
+  const id = new URLSearchParams(location.search).get('id')
+
+  // 담긴 카드뉴스를 가져온다. 암호 쿠키가 만료되면 서버는 401 에 **말이 되는 JSON**
+  // (`{ok:false,why}`)을 준다 — 배열인 줄 알고 쓰면 그 자리에서 죽어 빈 화면만 남는다.
+  const cardsOf = async () => {
+    const got = await fetch('/api/picks?type=cardnews').then((r) => r.json()).catch(() => null)
+    return Array.isArray(got) ? got : null
+  }
+
+  async function labeler() {
+    // 어느 장이 영상인지는 서버만 안다(picks.slide_kinds). 확장자를 여기서 지어내면
+    // 영상이 섞인 캐러셀에서 404 가 나고 decode() 가 거절돼 화면이 통째로 빈다.
+    // 서버가 이미 장마다 올바른 주소를 준다(rowToCard 의 slides).
+    const cards = await cardsOf()
+    const card = cards?.find((c) => c.id === id)
+    if (!card) {
+      root.innerHTML = `<p>${말('쪽_게시물없음')}</p>`
+      return
+    }
+    const slides = []
+    for (const [i, src] of card.slides.entries()) {
+      if (!src.endsWith('.jpg')) continue   // 영상 장은 라벨링 대상이 아니다
+      const im = new Image()
+      im.src = src
+      try {
+        await im.decode()
+      } catch {
+        root.innerHTML = `<p>${말('쪽_그림못엶', i + 1)}</p>`
+        return
+      }
+      // 장 번호는 실제 자리를 그대로 쓴다. 영상을 건너뛰었다고 다시 매기면 서버의
+      // 장 번호와 어긋나 엉뚱한 장에 저장된다.
+      slides.push({ index: i + 1, w: im.naturalWidth, h: im.naturalHeight, src })
+    }
+    if (!slides.length) {
+      root.innerHTML = `<p>${말('쪽_그림없음')}</p>`
+      return
+    }
+    await mountLabeler(root, { id, slides, api })
+  }
+
+  // 이 화면은 이제 골라 놓은 게시물 하나만 그린다 — 목록은 공동 목록 화면 몫이다.
+  if (id) {
+    await labeler()
+  } else {
+    root.innerHTML = `<p>${말('쪽_코드없음')}</p>`
+  }
+</script>

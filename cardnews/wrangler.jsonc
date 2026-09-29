@@ -1,0 +1,38 @@
+{
+  // Cloudflare 배포 설정.
+  //
+  // 대시보드의 드래그 앤 드롭 업로드는 "정적 파일만 있는 Worker" 를 만들기 때문에
+  // _worker.js 가 코드로 실행되지 않고 그냥 파일로 서빙된다(실측: /img?ping=1 이 404,
+  // /_worker.js 가 200). _worker.js 는 Pages 전용 규칙인데 대시보드가 더 이상
+  // Pages 를 만들지 않는다. 그래서 여기서 진입 스크립트를 직접 지정한다.
+  //
+  //   npm run build && npx wrangler deploy
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cardnews",
+  "main": "cardnews/web/_worker.js",
+  "compatibility_date": "2026-08-15",
+
+  // dist 에는 _worker.js 가 없다. 진입 스크립트를 정적 파일로도 올리면 안 된다.
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS"
+  },
+
+  // 공동 목록 — 글자는 표(D1)에, 그림은 창고(R2)에 둔다.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "cardnews-board", "database_id": "4ccfe721-1dd3-4549-a7a0-90e49ae42f1e" }
+  ],
+  "r2_buckets": [
+    { "binding": "SHOTS", "bucket_name": "cardnews-shots" }
+  ],
+
+  // 모델 이름은 비밀이 아니다. 열쇠(DEEPSEEK_API_KEY)는 시크릿으로 따로 넣는다.
+  //
+  // **이제 워커가 부르는 모델은 하나다**(2026-09-22). 「AI에게 물어보기」를
+  // 빼면서 OpenAI 를 부르는 자리가 워커에서 사라졌다 — `OPENAI_MODEL` 도
+  // 같이 뺐다. 시크릿 `OPENAI_API_KEY` 는 이제 아무도 안 읽는다.
+  "vars": {
+    // 채팅 페이지의 말귀(`server/chat.js`).
+    "DEEPSEEK_MODEL": "deepseek-chat"
+  }
+}
