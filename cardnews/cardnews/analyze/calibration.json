@@ -1,0 +1,29 @@
+{
+  "hangul_ink_ratio": 0.91,
+  "hangul_ink_ratio_bold": 0.93,
+  "stroke_ratio_regular": 0.0531,
+  "stroke_ratio_bold": 0.0877,
+  "bold_threshold": 0.0704,
+  "radius_bias_px": 0.775,
+  "alpha_bias": -0.0373,
+  "font_regular": "C:\\Windows\\Fonts\\malgun.ttf",
+  "font_bold": "C:\\Windows\\Fonts\\malgunbd.ttf",
+  "card": "C:\\Users\\david\\project\\trend\\analyze\\data\\calibration_card.jpg",
+  "card_truth": {
+    "title_px": 72,
+    "body_px": 38,
+    "radius": 24,
+    "alpha": 0.55,
+    "leading_ratio": 1.6,
+    "box": [
+      100,
+      820,
+      980,
+      1180
+    ],
+    "canvas": [
+      1080,
+      1350
+    ]
+  }
+}

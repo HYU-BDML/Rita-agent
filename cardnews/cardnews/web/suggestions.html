@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>건의 모음</title>
+<!-- 검색에 걸릴 이유가 없는 쪽이다. 우리만 본다. -->
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#e3e3e3; --accent:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:14px/1.6 system-ui, 'Malgun Gothic', sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  .셈 { color:var(--muted); font-size:13px; margin:0 0 18px; }
+  .건의 { border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 10px; }
+  .글 { white-space:pre-wrap; word-break:break-word; margin:0 0 8px; }
+  .꼬리 { display:flex; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--muted); }
+  .꼬리 a { color:var(--accent); }
+  .빈 { color:var(--muted); padding:30px 0; }
+  #말 { color:#b00; font-size:13px; min-height:1.4em; margin:8px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>건의 모음</h1>
+  <p class="셈" id="셈"></p>
+
+  <!-- **암호가 없다**(사람 결정 2026-09-21: 「어차피 /건의 를 안 치면 모르는
+       거잖아」). 주소를 아는 사람만 온다는 잣대다. 이름을 안 받으므로 누가
+       썼는지는 여기서도 알 수 없다. -->
+  <p id="말"></p>
+
+  <div id="목록"></div>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id)
+
+const 때쓰기 = (iso) => {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso || ''
+  const 둘 = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${둘(d.getMonth() + 1)}-${둘(d.getDate())} `
+       + `${둘(d.getHours())}:${둘(d.getMinutes())}`
+}
+
+const 안전하게 = (s) => String(s ?? '').replace(/[&<>"]/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+
+// 어느 화면에서 눌렀는지. 값은 채팅이 보내는 그대로다(`상태.오른쪽.종류`).
+const 화면이름 = { 틀목록: '템플릿 목록', 틀: '템플릿 하나', 라벨판: '라벨판',
+                미리보기: '초안 미리보기', 작업대: '작업대' }
+
+function 그리기(건의들) {
+  $('셈').textContent = 건의들.length ? `${건의들.length}건 — 최신순` : ''
+  if (!건의들.length) {
+    $('목록').innerHTML = '<p class="빈">아직 들어온 건의가 없습니다.</p>'
+    return
+  }
+  $('목록').innerHTML = 건의들.map((g) => {
+    const 꼬리 = [때쓰기(g.때), 화면이름[g.화면] || g.화면]
+      .filter(Boolean).map((t) => `<span>${안전하게(t)}</span>`)
+    // **그때 붙잡고 있던 카드뉴스를 바로 열 수 있다.** 이게 없으면 「이상해요」가
+    // 무엇을 두고 한 말인지 알 길이 없다.
+    if (g.카드뉴스) {
+      꼬리.push(`<a href="${안전하게(g.카드뉴스)}" target="_blank" rel="noopener">그때 만들던 것 ↗</a>`)
+    }
+    return `<div class="건의"><p class="글">${안전하게(g.글)}</p>`
+         + `<div class="꼬리">${꼬리.join('')}</div></div>`
+  }).join('')
+}
+
+async function 불러오기() {
+  const res = await fetch('/api/suggest', { cache: 'no-store' })
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok || j.ok === false) { $('말').textContent = j.why || `HTTP ${res.status}`; return }
+  $('말').textContent = ''
+  그리기(j.건의 || [])
+}
+
+불러오기()
+</script>
+</body>
+</html>

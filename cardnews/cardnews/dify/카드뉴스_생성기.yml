@@ -1,0 +1,1349 @@
+app:
+  name: 카드뉴스_생성기
+  mode: workflow
+  icon: 🗂️
+  icon_background: '#EFF1F5'
+  description: 주제 한 줄만 넣으면 규칙표(docs/규칙표_카드뉴스.md, n=1 템플릿)대로 대본을 쓰고 §2 고정 자리에 얹어 카드를 굽는다. 원고·사진·로고는 다 선택 입력, 사례 장수는 「구조」가 원고를 보고 알아서 정한다.
+kind: app
+version: 0.7.0
+workflow:
+  environment_variables: []
+  conversation_variables: []
+  features:
+    file_upload:
+      enabled: true
+      allowed_file_types:
+      - image
+      allowed_file_extensions: []
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      number_limits: 10
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+  graph:
+    nodes:
+    - id: '2200000000001'
+      type: custom
+      position:
+        x: 40
+        y: 300
+      positionAbsolute:
+        x: 40
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: start
+        title: 시작
+        desc: 주제만 넣어도 돈다. 원고·사진·로고·틀 주소는 다 선택. 사례 장수는 이제 사람이 안 고른다 — 「구조」가 원고를 보고 정한다. 디자인도 이제 사람이 안 고른다 — 「틀 고르기」가 틀의 서랍에서 장마다 고른다. 사진은 결과를 보고 작업대에서 넣는다.
+        selected: false
+        variables:
+        - variable: topic
+          label: 카드뉴스 주제
+          type: text-input
+          required: true
+          max_length: 100
+          options: []
+          default: ''
+        - variable: user_script
+          label: 직접 쓴 원고(선택) — 비우면 주제로 새로 씀
+          type: paragraph
+          required: false
+          max_length: 20000
+          options: []
+          default: ''
+        - variable: photo_urls
+          label: 사진 주소(선택, 줄마다 하나) — 사진·인물 자리에 순서대로 채움
+          type: paragraph
+          required: false
+          max_length: 5000
+          options: []
+          default: ''
+        - variable: logo_url
+          label: 로고 주소(선택) — 모든 로고 자리에 같은 걸 채움
+          type: text-input
+          required: false
+          max_length: 500
+          options: []
+          default: ''
+        - variable: template_name
+          label: 디자인 틀 — 저장소에 쌓인 것 중에서 고른다
+          type: select
+          required: false
+          options:
+          - 기본
+          - DG0AA6PJ8s4
+          - DHqCBQnRAjW
+          default: 기본
+        - variable: template_url
+          label: 디자인 틀 주소(고급, 선택) — 적으면 위에서 고른 것보다 이게 이긴다. 목록에 아직 안 오른 틀을 쓸 때만
+          type: text-input
+          required: false
+          max_length: 500
+          options: []
+          default: ''
+    - id: '2200000000021'
+      type: custom
+      position:
+        x: 300
+        y: 40
+      positionAbsolute:
+        x: 300
+        y: 40
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: llm
+        title: 구조
+        desc: 정확한 자수는 안 잰다 — 「대본 검증」 사슬이 그건 맡는다.
+        selected: false
+        model: &id001
+          provider: langgenius/bedrock/bedrock
+          name: global.anthropic.claude-sonnet-4-6
+          mode: chat
+          completion_params:
+            max_tokens: 16000
+        prompt_template:
+        - role: system
+          text: 너는 카드뉴스 편집자다. 원고를 몇 장으로 나눌지만 정한다. **정확한 글자 수·문장은 신경 쓰지 마라** — 그건 뒤에서 다른 사람이 한다.
+          id: 2200000000021-sys
+        - role: user
+          text: "주제: {{#2200000000001.topic#}}\n\n사용자가 직접 쓴 원고(비어 있으면 주제만 보고 판단):\n{{#2200000000001.user_script#}}\n\n카드뉴스는 훅 1장 + 사례 N장(네가 N을 정한다) + 요약 1장 + CTA 1장으로 구성된다.\n\n**할 일 — 딱 두 가지만:**\n1. 원고에 실제로 뚜렷이 구분되는 사례·예시가 몇 개 있는지 세어 N을 정한다(1~6 사이).\n   - 원고가 비어 있으면(주제만 있으면) N=4으로 한다.\n   - 사례가 6개보다 많으면 대표적인 것만 6개 추린다.\n   - 원고가 하나의 흐름으로 된 글이라 사례 형식이 아니거나 사례가 한둘뿐이면 N을 작게 잡아도 된다 — 억지로 쪼개 늘리지 마라.\n2. 사례마다 무엇을 다루는지 한 줄로 요약한다(정확한 문장·글자 수는 필요 없다).\n\nJSON 하나만 출력한다(다른 설명 금지):\n{\"사례_개수\": N, \"사례_개요\": [\"...\", \"...\"]}\n배열 길이는 반드시 N개다."
+          id: 2200000000021-usr
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        structured_output_enabled: false
+    - id: '2200000000022'
+      type: custom
+      position:
+        x: 560
+        y: 40
+      positionAbsolute:
+        x: 560
+        y: 40
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 구조 정리
+        desc: LLM이 정한 사례 장수를 1~6 안으로 가두고, 파싱 실패·빈 원고는 조용히 기본값(4)으로 돌아간다.
+        selected: false
+        code: "# Dify 코드 노드 「구조 정리」   ← LLM 「구조」 뒤에 붙는다\n#\n# **이 노드가 하는 일: 「구조」LLM 이 정한 사례 장수·개요를 기계가 다시 다듬는다.**\n# 「구조」는 원고(또는 주제)를 보고 \"사례가 몇 개(1~6)\"·\"사례마다 뭘 다루는지 한 줄\"만\n# 정하는 가벼운 LLM 이다 — 정확한 글자 수·문장은 신경 쓰지 않는다(그건 뒤에 오는\n# 「대본」LLM 의 몫). 이 코드 노드는 그 결과를 파싱해서 숫자는 범위 안으로 가두고,\n# 실패하면(파싱 안 되거나 원고가 비어 있으면) 조용히 기본값(4)으로 돌아간다 —\n# 여기서 막히면 전체 파이프라인이 못 돈다, 「구조」는 안전망이 있어야 하는 자리다.\n#\n# 입력 변수:\n#     text   String   ← 구조 / text\n#\n# 출력 변수:\n#     사례_개수   String   \"1\"~\"6\" 사이. 「레시피 꺼내기」의 입력으로 그대로 간다.\n#     outline    String   사람이 읽는 개요(\"1. ...\\n2. ...\\n...\"). 비어 있을 수 있다\n#                          (원고 없이 주제만 준 경우). 칸 이름이 아스키인 이유: 「대본」\n#                          LLM 프롬프트가 {{#..#}} 로 이 값을 직접 읽는다 — Dify 의\n#                          변수 참조 정규식이 아스키만 받는다(오류모음 §22).\n\nimport json\nimport re\n\n사례_최소, 사례_최대, 기본_사례개수 = 1, 6, 4\n\n\ndef _벗기기(글: str) -> str:\n    \"\"\"LLM 이 ```json 으로 감싸 보내는 일이 흔하다(카드뉴스_대본검증.py 와 같은 함정).\"\"\"\n    글 = (글 or \"\").strip()\n    글 = re.sub(r\"^```(?:json)?\\s*|\\s*```$\", \"\", 글, flags=re.M).strip()\n    처음, 끝 = 글.find(\"{\"), 글.rfind(\"}\")\n    return 글[처음:끝 + 1] if 처음 >= 0 and 끝 > 처음 else 글\n\n\ndef main(text: str) -> dict:\n    벗긴것 = _벗기기(text)\n    try:\n        d = json.loads(벗긴것) if 벗긴것 else {}\n    except Exception:\n        d = {}\n\n    try:\n        n = int(d.get(\"사례_개수\"))\n    except (TypeError, ValueError):\n        n = 기본_사례개수\n    n = max(사례_최소, min(사례_최대, n))\n\n    개요목록 = d.get(\"사례_개요\")\n    if not isinstance(개요목록, list):\n        개요목록 = []\n    개요목록 = [str(x).strip() for x in 개요목록 if str(x).strip()][:n]\n    outline = \"\\n\".join(f\"{i}. {줄}\" for i, 줄 in enumerate(개요목록, start=1))\n\n    return {\"사례_개수\": str(n), \"outline\": outline}\n"
+        code_language: python3
+        variables:
+        - variable: text
+          value_selector:
+          - '2200000000021'
+          - text
+          value_type: string
+        outputs:
+          사례_개수:
+            type: string
+            children: null
+          outline:
+            type: string
+            children: null
+    - id: '2200000000024'
+      type: custom
+      position:
+        x: 820
+        y: 40
+      positionAbsolute:
+        x: 820
+        y: 40
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: http-request
+        title: 틀 받기
+        desc: 주소가 비면 기본 틀, 있으면 그 주소의 틀을 받아 온다.
+        selected: false
+        method: post
+        url: https://l26m3zzcjd.execute-api.ap-northeast-2.amazonaws.com/template/resolve
+        authorization:
+          type: no-auth
+          config: null
+        headers: Content-Type:application/json
+        params: ''
+        body:
+          type: json
+          data:
+          - id: 2200000000024b
+            type: text
+            key: ''
+            value: '{"url": "{{#2200000000001.template_url#}}", "이름": "{{#2200000000001.template_name#}}"}'
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        ssl_verify: true
+    - id: '2200000000025'
+      type: custom
+      position:
+        x: 1080
+        y: 40
+      positionAbsolute:
+        x: 1080
+        y: 40
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 틀 고르기
+        desc: 대본이 정한 장 수만큼 골격을 만들고, 장마다 서랍에서 어울리는 디자인을 고른다. 틀이 장 수를 정하지 않는다.
+        selected: false
+        code: "# -*- coding: utf-8 -*-\n# 「틀 고르기」 — Dify 코드 노드 본문.\n#\n# **대본이 장 수를 정하고, 틀은 그 장에 입힐 옷을 댄다.** 틀이 장 수를 정하지 않는다.\n# 그래서 이 노드가 하는 일은 두 가지다:\n#\n#   1. 「구조」가 정한 사례 장수로 **골격을 만든다** (훅 1 + 사례 N + 요약 1 + CTA 1)\n#   2. 골격의 장마다 **서랍에서 어울리는 디자인을 고른다**\n#\n# 예전에는 「레시피 꺼내기」가 사례 장수별 틀을 **미리 다 만들어 박아 두고** 골라\n# 썼다. 그러면 바깥에서 가져온 틀을 못 쓴다 — 고리가 닫히지 않는다.\n#\n# 입력 변수:\n#     틀_json     String  ← 틀 받기 / body — templates/*.json 한 개\n#     사례_개수    String  ← 구조 정리 / 사례_개수\n#\n# 출력 변수:\n#     틀_json  String  골격이 사례 개수만큼 늘어나고 슬라이드가 채워진 틀\n#     few_shot String  「대본」 LLM 에게 줄 칸 설명\n#     고른것    String  어느 디자인을 골랐는지 사람이 읽는 한 줄들\n\nimport json\n\n# 통자수는 대본 검증·배치 검증과 **한 곳**에서 온다(카드뉴스_자수.py).\nimport 카드뉴스_자수 as 자수\n\n역할순서 = (\"훅\", \"사례\", \"요약\", \"CTA\")\n\n# 그 역할이 서랍에 없을 때 대신 쓸 역할. **앞에서부터 있는 것을 쓴다.**\n#\n# 실측 게시물마다 역할 구성이 다르다 — 키키(DG0AA6PJ8s4)는\n# 훅·정의·사례·해결·요약 이고 CTA 가 없다. 예전 코드는 없는 역할을 만나면\n# ValueError 로 멈춰서, 키키 틀 하나로는 한 장도 못 만들었다.\n#\n# **본문류(해결·정의·문제·비교·데이터)는 서로 바꿔 쓸 수 있다** — 칸 구성이\n# 「소제목 한 줄 + 본문 여러 줄」로 같기 때문이다. 훅은 안 적는다: 훅은 글자가\n# 크고 사진이 크게 들어가 본문 자리에 넣으면 눈에 띄게 어긋난다.\n대신표 = {\n    \"사례\": (\"해결\", \"정의\", \"문제\", \"비교\", \"데이터\"),\n    \"해결\": (\"사례\", \"정의\", \"문제\", \"비교\", \"데이터\"),\n    \"정의\": (\"사례\", \"해결\", \"문제\", \"비교\", \"데이터\"),\n    \"요약\": (\"CTA\", \"사례\", \"해결\"),\n    \"CTA\": (\"요약\", \"사례\", \"해결\"),\n    \"훅\": (),          # 훅은 대신할 것이 없다 — 서랍에 훅이 없으면 그때는 멈춘다\n}\n\n\ndef 대신할역할(역할: str, 서랍: dict):\n    \"\"\"`역할` 이 서랍에 없을 때 대신 쓸 역할. 있으면(대신할 필요가 없으면) None.\"\"\"\n    if 서랍.get(역할):\n        return None\n    for 딴것 in 대신표.get(역할, ()):\n        if 서랍.get(딴것):\n            return 딴것\n    return None\n\n\n# 「본문류」 — 칸 구성이 「소제목 한 줄 + 본문 여러 줄」로 같아서 서로 바꿔 써도\n# 어긋나지 않는 무리다. **이 무리는 «그 역할이 있어도» 한 통으로 모은다.**\n#\n# 없을 때만 대신하면 서랍이 기울어 있을 때 놀고 있는 옷이 생긴다 — 실측\n# (DG0AA6PJ8s4): 사례 1벌 · 해결 4벌인데 사례 자리 넷을 그 «하나»로 돌려 쓰고\n# 해결 넷은 한 번도 안 불렸다(2026-08-26). 훅·요약·CTA 는 모으지 않는다.\n# 요약 자리에 CTA 디자인이 섞이면 그건 다른 옷이다.\n본문류 = (\"사례\", \"해결\", \"정의\", \"문제\", \"비교\", \"데이터\")\n\n\ndef 후보모으기(역할: str, 서랍: dict) -> list:\n    \"\"\"그 역할에 쓸 디자인 후보. 본문류면 무리를 통째로 모은다.\n\n    모을 때 차례는 `본문류` 에 적힌 차례다 — 서랍의 열쇠 차례(파이썬 사전 순서)에\n    기대면 계량표를 다시 뽑을 때마다 고르는 옷이 조용히 바뀐다.\n    \"\"\"\n    if 역할 in 본문류:\n        모은것 = []\n        for 이름 in (역할,) + tuple(x for x in 본문류 if x != 역할):\n            모은것 += 서랍.get(이름) or []\n        return 모은것\n    return 서랍.get(역할) or []\n\n\ndef 고르기(서랍: dict, 골격: list) -> list:\n    \"\"\"골격의 장마다 디자인 하나씩. **아직 안 쓴 것을 먼저** 쓴다.\n\n    같은 디자인이 연달아 나오면 눈에 띈다. 그래서 역할마다 순번을 따로 돌리고,\n    다 쓰면 처음부터 다시 돈다. 서랍이 얕으면(디자인이 하나뿐이면) 결과가 예전\n    돌려쓰기와 같아진다 — 그건 서랍을 채우면 저절로 나아지는 문제지 코드 문제가\n    아니다.\n\n    본문류(사례·해결·정의·문제·비교·데이터)는 `후보모으기` 가 무리를 통째로\n    모아서 준다 — 그 역할이 서랍에 있어도 그렇다. 훅·요약·CTA 는 그대로\n    「없을 때만」 대신표를 탄다.\n    \"\"\"\n    쓴수 = {}\n    난것 = []\n    for 역할 in 골격:\n        후보 = 후보모으기(역할, 서랍)\n        쓸역할 = 역할\n        if not 후보:\n            쓸역할 = 대신할역할(역할, 서랍)\n            후보 = 서랍.get(쓸역할) or [] if 쓸역할 else []\n        if not 후보:\n            raise ValueError(f\"서랍에 «{역할}» 도, 대신 쓸 것도 하나도 없다 — \"\n                             f\"있는 것: {', '.join(sorted(서랍)) or '없음'}\")\n        # **셈 열쇠는 «어느 통에서 꺼냈나» 로 잡는다.** 본문류는 `후보모으기`\n        # 가 요청 역할마다 다른 차례로 통을 새로 만든다 — 그래서 역할이 곧\n        # 통이고, 역할로 세면 된다. 반면 훅·요약·CTA 의 대신하기는 **남의\n        # 통을 그대로 빌리는 것**이다 — 「요약 자리」와 「요약으로 대신한\n        # CTA 자리」가 같은 서랍 칸(같은 통)을 나눠 쓴다. 그런데도 역할로\n        # 세면 두 자리가 각자 0번부터 세서 같은 디자인이 잇달아 나온다\n        # (재현: 서랍에 요약 두 벌·CTA 없이 훅·사례·요약·CTA 를 고르면 요약\n        # 자리와 CTA 자리가 둘 다 첫 번째 요약을 집는다 — 2026-08-26 재검토).\n        # 그래서 이 갈래는 쓸역할(실제로 연 통)로 세야 한다.\n        통열쇠 = 역할 if 역할 in 본문류 else 쓸역할\n        i = 쓴수.get(통열쇠, 0)\n        쓴수[통열쇠] = i + 1\n        고른것 = dict(후보[i % len(후보)])\n        # **다른 역할 디자인을 골랐으면 적어 둔다.** 조용히 바꿔치기하면 결과가\n        # 이상할 때 원인을 못 찾는다. 이 값은 `main` 이 쪽지로 옮기고 틀에는\n        # 안 실린다. 본문류는 대신표를 안 타고도 무리에서 다른 역할을 집을 수\n        # 있어서, 「대신표를 탔는가」가 아니라 「고른 디자인의 역할이 요청한\n        # 역할과 다른가」로 판단한다.\n        if 고른것.get(\"역할\") != 역할:\n            고른것[\"_대신\"] = 역할\n        난것.append(고른것)\n    return 난것\n\n\ndef 칸설명(슬라이드: list, 본보기끄기: bool = False) -> str:\n    \"\"\"「대본」 LLM 에게 줄 칸 설명 — 장마다 어떤 칸이 몇 줄·몇 자인지.\n\n    `main` 에서 뽑아 둔 것은 **말이 맞는지 따로 시험하기 위해서**다 — 틀을\n    통째로 고르지 않고도 칸 설명만 견줄 수 있다.\n    \"\"\"\n    # **장 수를 맨 앞에 숫자로 못 박는다.**\n    #\n    # 「1번 장 … 7번 장」 이 죽 적혀 있으니 개수는 «세면» 알 수 있다. 그런데\n    # 모델이 그걸 안 센다 — 실물(2026-08-28): 7장짜리 틀에 **9장을 써서** 두 판을\n    # 고쳐 쓰고도 막혔다. 세게 하지 말고 그냥 알려 준다.\n    골격줄 = \" → \".join(s[\"역할\"] for s in 슬라이드)\n    줄 = [f\"이 카드뉴스는 「정확히 {len(슬라이드)}장」이다. \"\n         f\"slides 를 {len(슬라이드)}개 낸다 — 더도 덜도 안 된다.\",\n         f\"차례: {골격줄}\",\n         \"\",\n         \"장마다 쓸 수 있는 칸:\"]\n    for s in 슬라이드:\n        줄.append(f\"{s['index']}번 장 ({s['역할']}):\")\n        for j, slot in enumerate(s[\"글자슬롯\"], start=1):\n            # **위계를 맨 앞에 적는다.** 「이 칸은 제목이다」를 알면 LLM 이 글을\n            # 그에 맞게 쓴다 — 굵기·자수만으로는 그 뜻이 전해지지 않는다.\n            # 틀에 위계가 없으면(옛 틀) 그 말만 빠지고 나머지는 그대로다.\n            #\n            # **별표로 감싸지 않는다.** 여기 `**제목**` 이 있으니 모델이 그걸\n            # 따라 써서 카드에 별표가 그대로 찍혀 나왔다(실물 2026-08-27:\n            # «**감성 인테리어 포토존 특화 카페**»). 낫표로 바꾸면 그 유혹이 없다.\n            머리 = f\"「{slot['위계']}」, \" if slot.get(\"위계\") else \"\"\n            # **줄 수를 안 시킨다 — 「통틀어 몇 자」 하나만 시킨다**(사람 결정\n            # 2026-09-16 본문, 2026-09-18 모든 칸: 「세로줄은 안 본다니까」).\n            #\n            # 「정확히 4줄, 줄마다 15~23자」를 시키면 모델이 그걸 «네 문장» 으로\n            # 읽고 문장마다 30자씩 쓴다(실물 2026-08-28). 짧게 끊어 상자 오른쪽이\n            # 빈 채로 나오기도 한다(실물: 파란 타임라인 5번 장, 오른쪽 35% 가 빔).\n            # 줄 나누기는 코드가 글꼴 폭을 재서 한다.\n            통최소, 통최대 = 자수.통자수(slot)\n            줄.append(f\"  블록{j}: {머리}{slot.get('weight')}, 줄 나누지 말고 \"\n                     f\"한 덩어리로, 통틀어 {통최소}~{통최대}자(서식 기호 제외, \"\n                     f\"영문·숫자·띄어쓰기는 반 자로 센다)\")\n            # **원래 있던 말을 같이 보여 준다.** 자리만 맞고 말투가 딴 사람이면\n            # 그건 그 디자인이 아니다. 결만 따르라고 프롬프트가 못 박는다.\n            #\n            # **제 말투를 골랐으면 끄지 않는다**(사람 결정 2026-08-29). 여태는\n            # 말투를 «고르기만 하면» 껐다 — 「키키 템플릿에 키키 말투」처럼 같은\n            # 게시물에서 나온 짝까지 원문이 사라졌다. 말투를 고르는 것은 「그\n            # 템플릿의 훅과 규칙을 다 배워 따라 써라」는 뜻인데, 정작 배울 글을\n            # 지워 버리니 모델이 스스로 지어내고 그래서 「AI 스럽다」가 됐다.\n            #\n            # 남의 말투(다른 게시물)일 때만 끈다 — 그때는 목소리가 둘이 된다.\n            if slot.get(\"본보기\") and not 본보기끄기:\n                # **줄마다 나눠 보여 준다**(사람 지적 2026-08-30).\n                #\n                # 한 덩이로 붙여 보내면 모델이 그걸 «산문» 으로 읽고 한 문장을\n                # 죽 쓴다. 그러면 코드가 폭에 맞춰 다시 감는데, 그 자리는 낱말\n                # 경계일 뿐 뜻의 경계가 아니다 — 원본은 「① 압도적인 광고\n                # 효율성 / 평균 1100%에 달하는… / 기업의…」처럼 첫 줄이\n                # 소제목인데, 우리 것은 「① 창의적 사고 없던 것을 / 만드는 인간\n                # 고유의 발상력 / …」로 문장 중간에서 잘렸다.\n                #\n                # 원본이 어디서 끊었는지와 **줄마다 몇 자였는지**를 그대로\n                # 보여 준다. 모델이 그 결로 쓰면 다시 감기가 아예 안 돈다.\n                조각 = [x.strip() for x in str(slot[\"본보기\"]).split(\"/\") if x.strip()]\n                if len(조각) > 1:\n                    줄.append(\"      원본은 줄마다 이렇게 끊었다 \"\n                              f\"({'·'.join(str(len(x)) for x in 조각)}자):\")\n                    줄 += [f\"        {k}줄: «{x}»\" for k, x in enumerate(조각, 1)]\n                else:\n                    줄.append(f\"      말투 본보기: «{slot['본보기']}»\")\n    return \"\\n\".join(줄)\n\n\n# 끝맺는 역할. **서랍에 있는 것만 골격에 넣는다**(사람 결정 2026-09-18: 「너 CTA\n# 2개 쓴 거 맞네, 애초에 대본을 템플릿에 맞춰서 작성했어야지」).\n#\n# 여태는 `[\"요약\", \"CTA\"]` 를 못 박아 서랍이 무엇을 갖고 있든 넣었다. 그래서\n# 없는 역할이 대신표(`대신표`)를 타고 **있는 역할의 디자인을 빌려 썼고**, 같은\n# 옷이 두 장 나왔다 — 실물 DYzN0Uzgaq6(AI소식 미니)의 서랍에는 요약이 없어서\n# 요약 자리가 CTA 를 빌렸다.\n#\n# 본문류(사례 등)는 그대로 둔다 — 그쪽은 서로 바꿔 입어도 어긋나지 않는 한 무리라\n# 빌려 쓰는 것이 뜻이 있다(`본문류` 참고).\n끝맺는역할 = (\"요약\", \"CTA\")\n\n\ndef _마무리(서랍: dict) -> list:\n    \"\"\"서랍에 있는 끝맺는 역할만. 둘 다 없으면 빈 목록 — 본문으로 끝난다.\"\"\"\n    return [역할 for 역할 in 끝맺는역할 if 서랍.get(역할)]\n\n\ndef main(틀_json: str, 사례_개수: str, 본보기끄기: bool = False) -> dict:\n    틀 = json.loads(틀_json)\n    서랍 = 틀.get(\"서랍\")\n    if not 서랍:\n        raise ValueError(\"이 틀에는 «서랍» 이 없다 — 옛 모양이다. \"\n                         \"make_dsl_cardnews.py 를 다시 돌려 기본.json 을 만들거나, \"\n                         \"작업대에서 「틀로 저장」한 파일을 써라\")\n    try:\n        n = max(1, min(6, int(str(사례_개수).strip())))\n    except (ValueError, TypeError):\n        n = 4\n    골격 = [\"훅\"] + [\"사례\"] * n + _마무리(서랍)\n    고른것 = 고르기(서랍, 골격)\n\n    슬라이드 = []\n    for i, 디자인 in enumerate(고른것, start=1):\n        슬라이드.append({\"index\": i, \"역할\": 디자인[\"역할\"],\n                      \"배경\": 디자인[\"배경\"],\n                      \"장식영역\": 디자인[\"장식영역\"],\n                      \"글자슬롯\": 디자인[\"글자슬롯\"]})\n    새틀 = dict(틀)\n    새틀[\"골격\"] = 골격\n    새틀[\"슬라이드\"] = 슬라이드\n    새틀.pop(\"서랍\", None)   # 뒤 노드는 서랍을 안 본다 — 깊이를 얕게 유지한다\n\n    설명 = 칸설명(슬라이드, 본보기끄기)\n    쪽지 = []\n    for s, 디자인 in zip(슬라이드, 고른것):\n        사진자리 = sum(1 for r in s[\"장식영역\"] if r.get(\"종류\") in (\"사진\", \"인물\"))\n        대신 = 디자인.get(\"_대신\")\n        꼬리 = f\" ← «{대신}» 자리에 대신 씀\" if 대신 else \"\"\n        쪽지.append(f\"{s['index']}번 장({s['역할']}) — 글자 {len(s['글자슬롯'])}덩이 · \"\n                  f\"사진자리 {사진자리}개{꼬리}\")\n    return {\"틀_json\": json.dumps(새틀, ensure_ascii=False),\n            \"few_shot\": 설명,\n            \"고른것\": \"\\n\".join(쪽지)}\n"
+        code_language: python3
+        variables:
+        - variable: 틀_json
+          value_selector:
+          - '2200000000024'
+          - body
+          value_type: string
+        - variable: 사례_개수
+          value_selector:
+          - '2200000000022'
+          - 사례_개수
+          value_type: string
+        outputs:
+          틀_json:
+            type: string
+            children: null
+          few_shot:
+            type: string
+            children: null
+          고른것:
+            type: string
+            children: null
+    - id: '2200000000003'
+      type: custom
+      position:
+        x: 1080
+        y: 300
+      positionAbsolute:
+        x: 1080
+        y: 300
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: llm
+        title: 대본
+        desc: 틀 고르기가 나온 뒤라야 few-shot 을 채워 줄 수 있다.
+        selected: false
+        model: *id001
+        prompt_template:
+        - role: system
+          text: '너는 카드뉴스 대본 작가다. 아래 레시피를 정확히 지켜 JSON 하나만 출력한다.
+
+
+            출력 모양 — 이 꼴 그대로만 낸다:
+
+            {"slides": [{"role": "훅", "blocks": ["첫 블록 글", "둘째 블록 글"]}]}
+
+
+            - `role` 은 아래 「N번 장 (…)」의 괄호 안 낱말을 **그대로** 쓴다.
+
+            - `slides` 의 차례와 개수는 아래 레시피의 장 차례·개수와 똑같다.
+
+            - `blocks` 는 그 장의 블록1·블록2… 차례대로다.
+
+            - 「정확히 N줄로」인 블록은 한 글자열 안에서 줄바꿈으로 N줄을 잇는다.
+
+            - 「한 덩어리로」인 블록은 줄바꿈을 넣지 않는다 — 줄은 코드가 나눈다.
+
+            - 다른 칸은 넣지 않는다.
+
+            - 밑줄 같은, 아래 [강조 표시] 이외의 서식 기호를 글에 넣지 않는다.
+
+
+            「말투 본보기」가 붙은 블록은 **그 자리에 원래 있던 말**이다. **내용을 베끼지 말고 말투·문장 결·끝맺음만 따라 써라** — 반말인지 존댓말인지, 가벼운지 딱딱한지, 감탄사를 쓰는지.
+
+
+            자수는 «이 네모에 들어가는 양» 이다. 상한은 꼭 지키고, 하한은 총량의 65% 라 조금 모자라는 것보다 **말이 되는 문장**이 먼저다.
+
+
+            **첫 글자가 `{` 여야 한다.** 세는 과정·계획·설명을 쓰지 마라 — 머릿속으로 세고 결과만 낸다.
+
+
+            [강조 표시]
+
+            - 중요한 낱말을 스스로 골라 **굵게** 로 감싼다. 몇 곳을 쓸지는 네가 정한다.
+
+            - 감싼 만큼 그대로 걸린다. 낱말 하나, 구절, 글자 하나도 된다.
+
+            - **강조는 아껴 쓴다.** 한 칸에서 정말 중요한 곳만 골라 표시한다. 여러 곳을 줄줄이 표시하면 강조가 아니라 배경이 된다.
+
+            - 같은 역할(위계)의 칸끼리는 되도록 고르게 쓴다.
+
+
+            {{#2200000000025.few_shot#}}'
+          id: 2200000000003-sys
+        - role: user
+          text: '주제: {{#2200000000001.topic#}}
+
+
+            사례별 배정표(「구조」가 미리 정한 것 — 이 순서·개수대로 사례 장들을 채운다, 정확한 문장이 아니라 참고용이다):
+
+            {{#2200000000022.outline#}}
+
+
+            사용자가 직접 쓴 원고(아래 칸이 비어 있지 않으면 이것을 최우선으로 따른다 — 새로 짓지 말고 표현을 최대한 그대로 살려 위 배정표에 맞게 골격·슬롯 형태의 JSON으로 옮겨 담아라. 비어 있으면 무시하고 주제로 새로 써라):
+
+            {{#2200000000001.user_script#}}
+
+
+            위 내용을 바탕으로 레시피의 골격·슬롯 그대로 대본을 써라. JSON 하나만 출력해라 — 다른 설명은 붙이지 마라.'
+          id: 2200000000003-usr
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        structured_output_enabled: false
+    - id: '2200000000004'
+      type: custom
+      position:
+        x: 1340
+        y: 300
+      positionAbsolute:
+        x: 1340
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 대본 검증
+        desc: 자수·골격·블록 수를 기계가 다시 센다.
+        selected: false
+        code: "# Dify 코드 노드 「대본 검증」 / 「대본 검증 2」   ← LLM 「대본」 뒤에 붙는다\n#\n# **이 노드가 하는 일: 대본이 규칙표(docs/규칙표_카드뉴스.md) §1(자수)·골격을\n# 지키는지 기계가 다시 센다.** 기준값은 전부 「레시피 꺼내기」 노드가 내놓는\n# `틀_json` 에서 온다 — 여기 손으로 적은 숫자는 하나도 없다. `틀_json` 은\n# `analyze/recipe.py` 의 `char_limit_rows()`·`role_quotes()` 실측을 그대로 담고\n# 있다(dify/make_dsl_cardnews.py 가 빌드할 때 박는다).\n#\n# 입력 변수:\n#     text     String   ← 대본 / text                (처음 쓴 것)\n#     틀_json   String   ← 레시피 꺼내기 / 틀_json      (골격·장마다 글자슬롯·자수 한계)\n#     고친것    String   ← 대본 다시 쓰기 / text        (안 돌았으면 빈 글자)\n#\n# **왜 «고친것» 을 받나.** 이 노드로 오는 길이 둘이다 — 막힌 게 없으면 갈래에서\n# 바로 오고, 막혔으면 «다시 쓰기» 를 거쳐 온다. 한 쪽만 읽게 하면 **안 돈 노드의\n# 결과를 읽으려다 죽는다**(dify-workflow 스킬, 06_본문검증.py 와 같은 이유).\n#\n# 출력 변수:\n#     slides   Array[Object]  파싱한 장들 [{\"role\":.., \"blocks\":[..]}] — 표시(`**`·`##`)\n#                              를 뗀 글. 사람이 점수표에서 읽기 좋게 남긴다.\n#     표시슬라이드 Array[Object]  같은 모양이지만 **표시가 살아 있는 글**.\n#                              배치가 받는 것은 이것이다 — 배치가 `**`·`##` 를\n#                              직접 찾아 굵기·형광펜을 만들기 때문이다\n#                              (표시를 뗀 `slides` 를 배치로 보내면 그 둘이 늘\n#                              빈 목록이 된다, 검토 지적 ①).\n#     count    Number\n#     blocked  String   **되돌려야 하는 잘못.** 비어 있으면 통과\n#                        칸 이름은 아스키다 — LLM 프롬프트가 {{#..#}} 로 이 값을\n#                        직접 읽는데, Dify 의 변수 참조 정규식이 아스키만 받는다\n#                        (한글 칸은 조용히 치환이 안 된 채로 간다. 오류모음 §22).\n#     점수표    String   사람이 보는 몫. 되돌리지 않는다 — {{#..#}} 로 안 읽혀서 그대로 둔다\n#     ok       String   \"1\" 이면 통과, \"0\" 이면 다시 쓰기로\n#                        **글자다.** Dify 의 갈래(`is`)가 글자끼리만 비교한다\n#     draft    String   **실제로 검증한 글**(고친것 이 있었으면 그것, 없었으면 text\n#                        그대로). 되돌리기를 여러 판 잇댈 때 다음 판의 `text` 입력이\n#                        이걸 받는다 — \"이번 판이 실제로 무엇을 검증했는지\"를 다음\n#                        판이 원본이 아니라 여기서 이어받아야, 이미 통과한 고친\n#                        글을 다음 판이 원본으로 되돌려 다시 검증하는 일이 없다.\n#\n# 자수 상·하한을 **둘 다** 막는 이유: 진행표 \"Task 9 규칙표에 사람이 오늘 정한 것\n# 셋\" (2) — \"아래 공백(하한)도 넘침(상한)만큼 중요하다\"(2026-08-20, 사람이 그림을\n# 보고 정함). 배치 단계에서도 같은 것을 다시 재지만(방어가 하나뿐이면 배치가\n# 상자·자수를 잘못 짝지어도 못 잡는다), 여기서 먼저 잡으면 LLM 이 고칠 기회가\n# 있다 — 배치 뒤에서는 코드로 자르는 것(넘침)만 가능하고 늘리는 건 못 한다.\n\nimport json\nimport re\nfrom functools import lru_cache\n\n# 통자수·한덩어리는 틀 설명·배치 검증과 **한 곳**에서 온다(카드뉴스_자수.py).\nimport 카드뉴스_자수 as 자수\n# 표시 떼기·세기는 배치·프롬프트와 **한 곳**에서 온다(카드뉴스_강조.py).\nimport 카드뉴스_강조 as 강조\n\n\ndef _다시감기(줄들, n, lo, hi, 끝줄하한=True, 표시줄들=None):\n    \"\"\"줄바꿈은 LLM 이 아니라 코드가 맡는다 — 실물 실행(2026-08-23, §27 후속)에서\n    \"정확히 N줄, 각 줄 M~M자\" 를 LLM 에게 직접 맞히라고 시켰더니 재작성을 여러\n    판 거쳐도 계속 틀렸다(줄 수만 8줄을 낸 적도 있다). 그런데 **낱말 순서만\n    지키면** 되는 줄바꿈은 코드가 항상 정확히 풀 수 있는 문제다 — 그러니 LLM\n    에게는 \"총 이 정도 분량으로 써라\" 만 맡기고, 몇 글자에서 끊을지는 여기서\n    낱말 경계를 그대로 두고 다시 감는다(의미·낱말 순서는 안 바뀐다, 띄어쓰기\n    위치만 줄바꿈으로 바뀐다). 원문 그대로도 이미 조건을 만족하면 이 함수는\n    안 불린다 — 만족 못 할 때만 마지막 구제책으로 쓴다.\n\n    `표시줄들`(선택) — **표시(`**`·`##`)가 살아 있는 같은 글의 줄들.** 줄 나눌\n    자리는 항상 `줄들`(표시를 뗀 글, 자수 기준)의 낱말 길이로 고른다. 낱말\n    수가 서로 같으면(거의 늘 같다 — 표시는 낱말 안에 붙지 띄어쓰기를 새로\n    만들지 않는다) 그 자리에 표시가 붙은 낱말을 끼워 돌려준다. 다르면(드문\n    엇갈림) 표시 없는 낱말로 물러선다 — 표시를 잃을 뿐 줄바꿈 자체는 그대로다.\n    \"\"\"\n    낱말들 = \" \".join(줄들).split()\n    if not 낱말들:\n        return None\n    표시낱말들 = \" \".join(표시줄들).split() if 표시줄들 is not None else None\n    쓸것 = 표시낱말들 if (표시낱말들 is not None and len(표시낱말들) == len(낱말들)) else 낱말들\n    N = len(낱말들)\n    길이들 = [len(w) for w in 낱말들]\n\n    @lru_cache(maxsize=None)\n    def 풀기(i, 남은줄):\n        if 남은줄 == 0:\n            return () if i == N else None\n        총 = -1\n        for j in range(i, N):\n            총 = 길이들[j] if 총 < 0 else 총 + 1 + 길이들[j]\n            if 총 > hi:\n                break\n            if 남은줄 == 1:\n                if j != N - 1:\n                    continue\n                if 끝줄하한 and 총 < lo:\n                    return None   # 마지막 줄도 최소 자수를 지켜야 한다 — 실물 2026-08-24,\n                                   # 여기가 빠져서 \"모두 확인이 됩니다.\"(11자, 최소 19자)\n                                   # 같은 너무 짧은 마지막 줄을 성공으로 잘못 승인했다.\n                return (\" \".join(쓸것[i:j + 1]),)\n            if 총 >= lo:\n                나머지 = 풀기(j + 1, 남은줄 - 1)\n                if 나머지 is not None:\n                    return (\" \".join(쓸것[i:j + 1]),) + 나머지\n        return None\n\n    풀린것 = 풀기(0, n)\n    풀기.cache_clear()\n    return list(풀린것) if 풀린것 else None\n\n\ndef _벗기기(글):\n    \"\"\"LLM 이 ```json 으로 감싸 보내는 일이 흔하다.\"\"\"\n    글 = (글 or \"\").strip()\n    글 = re.sub(r\"^```(?:json)?\\s*|\\s*```$\", \"\", 글, flags=re.M).strip()\n    처음, 끝 = 글.find(\"{\"), 글.rfind(\"}\")\n    return 글[처음:끝 + 1] if 처음 >= 0 and 끝 > 처음 else 글\n\n\n# 굵게·형광펜 표시. **재는 쪽과 그리는 쪽이 어긋나서 넣는다.**\n#\n# 레시피는 장마다 「마크다운 기호 제외」라고 적어 두고 자수를 정한다. 그런데\n# 그 말만 있고 **기호를 빼는 코드가 어디에도 없었다** — 세는 쪽은 `**`·`##` 를\n# 글자로 같이 세고, 그리는 쪽은 그것을 글자로 그렸다. 실물(2026-08-27 RITA 첫\n# 성공): 2번 장 제목이 «**감성 인테리어 포토존 특화 카페**» 로 별표까지 찍혀\n# 나왔다. `##` 도 같이 떼야 한다 — 안 그러면 형광펜 표시가 글자로 세어져 예산이\n# 어긋나고, 그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n#\n# 뗄 표시는 `카드뉴스_강조.떼기` 가 이미 안다 — **세는 쪽과 감는 쪽이 같이\n# 쓰는 한 곳**이라 여기서도 그걸 쓴다. 두 벌로 갈리면 검증과 배치가 서로 다른\n# 자리를 표시로 본다. 짝이 안 맞고 남은 별표(`_뜬별표`)도 `강조.떼기` 안에서\n# 같이 떼므로 여기서 따로 뗄 것이 없다.\n\n\ndef _기호빼기(글: str) -> str:\n    \"\"\"`**굵게**`·`##형광펜##` → 알맹이만. 짝이 안 맞는 별표도 떼어 낸다.\n\n    **자수는 표시를 뺀 길이로 센다.** 표시를 글자로 세면 예산이 어긋나고,\n    그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n    \"\"\"\n    return 강조.떼기(글)[0]\n\n\n# 원본 게시물의 «남의 이름» 을 찾는 자. 라틴 문자로 된 낱말만 본다.\n#\n# **왜 라틴 문자인가.** 실물 2026-09-01: 우리 카드뉴스 마지막 장에 「MOT 매거진\n# 팔로우!」가 그대로 찍혔다 — 원본 게시물의 브랜드다. 모델에게 「내용만 베끼지\n# 마라」고 이미 적어 두었는데도 CTA 장은 본보기를 그대로 옮긴다.\n#\n# 본보기에 든 라틴 낱말은 거의 다 브랜드·제품 이름이다(MOT · COSRX · 네이버\n# 쇼핑 커넥트의 영문 표기…). 한글 낱말까지 막으면 흔한 말이 걸려 다 된 대본을\n# 버리게 되므로 **여기까지만 한다.** 한글 브랜드는 못 잡는다 — 숨기지 않고 적어\n# 둔다(점검이 아니라 이 주석이 그 한계의 기록이다).\n_라틴낱말 = re.compile(r\"[A-Za-z][A-Za-z0-9]{2,}\")\n\n\ndef _남의이름들(틀: dict) -> set:\n    \"\"\"틀의 본보기에 든 라틴 낱말. 원본 게시물의 브랜드·제품 이름이다.\"\"\"\n    난것 = set()\n    for s in 틀.get(\"슬라이드\") or []:\n        for x in s.get(\"글자슬롯\") or []:\n            난것 |= {w.lower() for w in _라틴낱말.findall(x.get(\"본보기\") or \"\")}\n    return 난것\n\n\ndef _사람이_준_낱말(주제: str, 원고: str) -> set:\n    \"\"\"사람이 직접 쓴 라틴 낱말은 막지 않는다 — 그건 이번 글의 내용이다.\"\"\"\n    return {w.lower() for w in _라틴낱말.findall(f\"{주제 or ''} {원고 or ''}\")}\n\n\ndef _슬라이드뽑기(글):\n    \"\"\"LLM 출력에서 «slides» 목록을 꺼낸다. **조용한 0개를 만들지 않는다.**\n\n    `(json.loads(글) or {}).get(\"slides\") or []` 한 줄로 줄이면 파싱 실패·안 돈\n    노드의 `null`·칸 이름이 다른 경우가 전부 «0개» 로 뭉개진다 — 06_본문검증.py 의\n    `_꼭지뽑기` 가 이미 겪고 고친 것과 같은 함정이다.\n\n    돌려주는 것: (장 목록, 무슨 일이 있었나 — 아무 탈 없으면 빈 글자)\n    \"\"\"\n    벗긴것 = _벗기기(글)\n    if not (벗긴것 or \"\").strip():\n        return [], \"대본이 비어 있다 — 앞 노드가 아무것도 안 내놨다\"\n    try:\n        d = json.loads(벗긴것)\n    except Exception as e:\n        return [], f\"대본이 JSON 이 아니다 ({e}) — 앞 300자: «{벗긴것[:300]}»\"\n    if not isinstance(d, dict):\n        return [], f\"대본이 묶음이 아니라 {type(d).__name__} 다\"\n    if not isinstance(d.get(\"slides\"), list):\n        return [], f\"«slides» 칸이 없다 — 들어 있는 칸: {sorted(d)[:8]}\"\n    return d[\"slides\"], \"\"\n\n\ndef main(text: str, 틀_json: str, 고친것: str = \"\",\n         주제: str = \"\", 원고: str = \"\", 언어: str = \"한국어\") -> dict:\n    글 = 고친것 if (고친것 or \"\").strip() else text\n    틀 = json.loads(틀_json)\n    골격 = 틀[\"골격\"]\n    슬라이드틀 = {s[\"index\"]: s for s in 틀[\"슬라이드\"]}\n    # **남의 브랜드 이름이 새는 것을 막는다.** 사람이 제 주제에 적어 넣은\n    # 낱말은 뺀다 — 그건 이번 글의 내용이지 원본에서 베낀 것이 아니다.\n    #\n    # **영어로 쓸 때는 이 검사를 끈다**(사람 결정 2026-09-18: 「가 덩어리부터\n    # 해」). 이 검사는 «한국어 카드라서» 성립한다 — 한국어 글에 라틴 낱말이\n    # 나오면 드문 일이라 원본에서 베낀 것일 확률이 높다. 영어 글은 낱말이\n    # 전부 라틴이라 그 신호가 통째로 사라지고 오검만 남는다. 실측 2026-09-18:\n    # `templates/기본.json` 의 금칙어는 eting·mart·sns·visa·zip 다섯이고,\n    # 영어 게시물로 만든 틀이면 본보기의 모든 낱말이 금칙어가 되어 한 벌도\n    # 못 나온다. **한글 브랜드를 못 잡는 것과 같은 한계다** — 숨기지 않고\n    # 여기 적어 둔다.\n    남의이름 = (set() if 언어 == \"영어\"\n             else _남의이름들(틀) - _사람이_준_낱말(주제, 원고))\n\n    # **몇 곳을 쓸지는 안 막는다 — 쏠림만 막는다**(사람 결정 2026-09-17).\n    # 예전엔 위계별 최빈값(`강조.모으기()`)과 슬롯마다의 개수를 견줬는데,\n    # 실측(기본·DG0AA6PJ8s4·DHqCBQnRAjW)에서 「대부분 0」이 이겨 모든 틀의\n    # 형광펜이 0곳으로 뭉개졌다. 이제는 같은 위계 칸이 둘 이상일 때 «어느\n    # 칸엔 있고 어느 칸엔 없는지» 만 본다 — 아래 루프에서 칸마다\n    # `강조모음` 에 담고, 루프가 끝난 뒤 위계별로 한 번에 검사한다.\n    강조모음: dict = {}\n\n    슬라이드, 파싱탈 = _슬라이드뽑기(글)\n    blocked = []\n    if 파싱탈:\n        blocked.append(파싱탈)\n\n    n = len(슬라이드)\n    if n != len(골격):\n        blocked.append(f\"장이 {n}개인데 골격은 {len(골격)}장이다 \"\n                        f\"({' → '.join(골격)}) — 지어내지도 빼지도 마라\")\n\n    넘침, 미달 = 0, 0\n    무른것 = []   # 막을 것까지는 아닌 것 — 아래 「굳은 것과 무른 것」 참고\n    권고 = []     # **막지 않고 알려만 주는 것.** 자수 미달이 여기로 온다\n    정리된_슬라이드 = []\n    # **표시(`**`·`##`)가 살아 있는 같은 슬라이드.** `정리된_슬라이드` 는 이미\n    # `_기호빼기` 를 거친 글이라 배치가 찾을 표시가 하나도 안 남는다(검토\n    # 지적 ① — 배치의 `굵기`·`형광펜` 이 늘 빈 목록이 되는 원인). 배치는\n    # 이 목록을 받는다.\n    표시_슬라이드 = []\n    for i, 카드 in enumerate(슬라이드, start=1):\n        if i > len(골격):\n            break\n        기대역할 = 골격[i - 1]\n        # **여기서부터 반환하는 「slides」는 항상 {role, blocks} 뿐인 깔끔한\n        # 묶음이다.** LLM 이 붙인 딴 칸(예: \"characters\":[[13,14]])을 그대로\n        # 돌려주면 장마다 모양이 달라져 Dify 의 출력 형식 검사가 code 노드\n        # 자체를 죽인다(\"'list' object has no attribute 'items'\", 실물\n        # 2026-08-23) — try/except 밖이라 이 파일 안에서 못 잡는다. 카드가\n        # 묶음이 아니거나 블록 안에 글자 아닌 게 섞여도 여기서 먼저 걸러\n        # **막힘으로 보고하고, 깨진 모양 그대로는 절대 내보내지 않는다.**\n        if not isinstance(카드, dict):\n            blocked.append(f\"{i}번 장이 묶음이 아니라 {type(카드).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            continue\n        # **역할은 골격에서 온다 — 모델에게 안 묻는다.**\n        #\n        # 몇 번째 장이 무슨 역할인지는 골격이 이미 안다. 그런데 모델에게 그\n        # 낱말을 다시 써 내라 하고, 다르면 막았다. 그러면 «글은 잘 썼는데 이름을\n        # 잘못 붙였다» 는 이유로 다 된 대본을 버리게 된다 — 실물(2026-08-28):\n        # 사례 자리에 「정의」·「문제」라고 적었다고 두 판을 태우고 막혔다.\n        #\n        # 코드가 알 수 있는 것은 코드가 정한다. 줄 나누기를 코드가 맡은 것과\n        # 같은 결이다. 모델이 맞춰야 하는 것은 «차례대로 그 칸에 맞는 글» 이지\n        # 이름표가 아니다.\n        역할 = 기대역할\n        블록원본 = 카드.get(\"blocks\") or []\n        if not isinstance(블록원본,\
+          \ list):\n            blocked.append(f\"{i}번 장 blocks 가 목록이 아니라 {type(블록원본).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            continue\n        # 강조 수는 표시를 떼기 **전** 글에서 센다 — 뗀 뒤로는 `**`·`##` 가\n        # 이미 사라져 있어서 셀 것이 안 남는다.\n        원문블록 = [b if isinstance(b, str) else json.dumps(b, ensure_ascii=False)\n                for b in 블록원본]\n        블록 = [_기호빼기(t) for t in 원문블록]\n        정리된_슬라이드.append({\"role\": 역할, \"blocks\": 블록})\n        # 표시가 살아 있는 채로 시작해, 아래에서 다시 감긴 블록만 그 자리에서\n        # 표시가 붙은 낱말로 갈아 낀다(그대로 통과한 블록은 원문 그대로 둔다).\n        표시블록 = list(원문블록)\n        표시_슬라이드.append({\"role\": 역할, \"blocks\": 표시블록})\n        슬롯들 = 슬라이드틀.get(i, {}).get(\"글자슬롯\", [])\n        if len(블록) != len(슬롯들):\n            blocked.append(f\"{i}번 장({역할}) 블록이 {len(블록)}개인데 슬롯은 \"\n                        f\"{len(슬롯들)}개다\")\n            continue\n        for j, (슬롯, 블록글, 원문글) in enumerate(zip(슬롯들, 블록, 원문블록), start=1):\n            # **번호 칸은 안 본다**(사람 결정 2026-08-30). 그 자리는 대본이\n            # 아니라 장 차례로 채운다(`카드뉴스_배치._번호글`) — 모델이 무엇을\n            # 썼든 버려지므로, 여기서 자수를 따지면 안 쓸 글 때문에 다 된 대본이\n            # 막힌다.\n            if 슬롯.get(\"위계\") == \"번호\":\n                continue\n            # **강조는 아무것도 안 막는다**(사람 결정 2026-09-18).\n            #\n            # 형광펜 색이 없어도 안 막는다 — 배치가 게시물 강조색으로 그린다\n            # (`카드뉴스_배치`: `슬롯.get(\"형광펜색\") or 강조색`). 막을 기술적\n            # 이유가 없었다.\n            #\n            # 세기만 해서 점수표에 남긴다. 나중에 실물이 쌓이면 그 기록으로\n            # 「몇 대 몇부터 쏠림인가」를 잴 수 있다 — 지금은 근거가 없다.\n            센것 = 강조.세기(원문글)\n            위계 = 슬롯.get(\"위계\")\n            if 위계:\n                강조모음.setdefault(위계, []).append(\n                    {\"자리\": f\"{i}번 장\", \"굵게\": 센것[\"굵게\"] > 0,\n                     \"형광펜\": 센것[\"형광펜\"] > 0})\n            # **모든 칸을 통틀어 몇 자로 본다**(사람 결정 2026-09-16 본문,\n            # 2026-09-18 전부: 「세로줄은 안 본다니까」). 줄은 배치가 글꼴 폭을\n            # 재서 나누므로 여기서 줄 수·줄마다 자수를 따지면 «폭을 다 못 쓰는 짧은\n            # 줄» 을 통과시키고 «폭을 채운 긴 줄» 을 막는다 — 거꾸로다.\n            덩어리 = 자수.한덩어리(블록글)\n            블록[j - 1] = 덩어리\n            # 통자수 자리는 배치가 스스로 표시를 떼고 폭을 재서 감는다\n            # (`카드뉴스_배치.main` 의 `자수.한덩어리` → `강조.떼기` →\n            # `자수.폭감기` 순서) — 여기서는 줄만 한 덩어리로 고르고,\n            # 표시는 그대로 둔다.\n            표시블록[j - 1] = 자수.한덩어리(원문글)\n            통최소, 통최대 = 자수.통자수(슬롯)\n            # **글자 수가 아니라 «몇 자 분량» 으로 잰다**(사람 결정 2026-09-18) —\n            # 실제 글꼴 폭 ÷ 「가」 한 자 폭. 영문·숫자·띄어쓰기가 섞인 글이 글자\n            # 수로는 넘치고 폭으로는 들어가는 일이 예시 5개 중 3개에서 났다.\n            총 = 자수.자분량(슬롯, 덩어리)\n            분량 = f\"{round(총, 1):g}자 분량(글자 수 {len(덩어리)})\"\n            if 총 > 통최대:\n                blocked.append(f\"{i}번 장 블록{j} 은 통틀어 최대 {통최대}자인데 {분량}이다 \"\n                               f\"— 줄여서 다시 써라: «{덩어리}»\")\n            elif 총 < 통최소:\n                권고.append(f\"{i}번 장 블록{j} 은 통틀어 최소 {통최소}자인데 {분량}이다 \"\n                          f\"(모자라면 아래가 빈다)\")\n            샌것 = sorted({w for w in _라틴낱말.findall(덩어리) if w.lower() in 남의이름})\n            if 샌것:\n                blocked.append(\n                    f\"{i}번 장 블록{j} 에 원본 게시물의 이름이 그대로 있다\"\n                    f\"({' · '.join(샌것)}) — 그건 남의 브랜드다. 이번 글의 것으로 \"\n                    f\"바꾸거나 빼라: «{덩어리}»\")\n\n    # **쏠림을 안 막는다 — 점수표에만 적는다**(사람 결정 2026-09-18: 「그냥\n    # 알아서 강조할 부분에 강조하고, 형광펜 쓰고 싶은 부분에 형광펜 쓰고」).\n    #\n    # 여기까지 세 판이었다. ① 위계별 개수를 못 박았다 — 「대부분 0」이 이겨\n    # 실측 틀 전부에서 형광펜이 0곳으로 뭉개졌다. ② 개수를 빼고 «쓰거나 안\n    # 쓰거나가 같은지» 를 봤다 — 설계서엔 「쏠림을 막는다」고 써 놓고 코드는\n    # `any and not all`, 곧 «전부 아니면 전무» 였다. ③ 그 규칙으로 실물 다섯\n    # 벌을 만들어 보니 **한 벌도 안 나왔다**(2026-09-18 실측: 막은 것 19건 중\n    # 강조가 10건 — 22칸 중 6칸에 형광펜을 쓴 것까지 막혔다).\n    #\n    # 「몇 대 몇부터 쏠림인가」를 정할 실측 근거가 없다. 표본 넷(1/2·1/8·6/22)으로\n    # 문턱을 박으면 또 근거 없는 숫자를 넣는 것이다. 그래서 세기만 하고 남긴다.\n    강조적기 = []\n    for 위계, 자리들 in 강조모음.items():\n        for 갈래 in (\"굵게\", \"형광펜\"):\n            쓴수 = sum(1 for x in 자리들 if x[갈래])\n            if 쓴수:\n                강조적기.append(f\"{위계} {갈래} {쓴수}/{len(자리들)}칸\")\n\n    점수 = [f\"장 {n}개 (골격 {len(골격)}개)\",\n            f\"자수 넘침 {넘침}건 · 자수 미달 {미달}건(권고, 안 막음)\"]\n    if 강조적기:\n        점수.append(\"강조 \" + \" · \".join(강조적기) + \" (안 막음)\")\n    점수 += 권고[:12]\n\n    # **굳은 것과 무른 것을 갈라서 낸다.**\n    #\n    # 자수 미달은 «네모가 좀 헐렁해 보인다» 는 뜻이다 — 보기에 아쉬울 뿐 카드가\n    # 망가지지는 않는다. 넘침은 다르다: 글자가 네모 밖으로 나가거나 잘린다.\n    #\n    # 그런데 여태 둘을 똑같이 막았다. 그래서 **두 자밖에 안 모자란 제목 한 줄\n    # 때문에 다 된 일곱 장을 통째로 버리는** 일이 생겼다(실물 2026-08-27:\n    # «강남 카페 4대 트렌드 총정리» 16자, 하한 18자). 사람이 이미 「너무 빡빡하게\n    # 하면 글자수 때문에 제대로 못 한다」고 정해 준 자리다.\n    #\n    # 그래서 **고쳐 쓰라고는 하되, 마지막에 그것만 남았으면 통과시킨다.**\n    # `blocked`(다시 쓰기에게 줄 말)는 그대로 다 담고, `굳은막힘`(정말 막아야\n    # 하는 것)만 따로 낸다. 부르는 쪽이 어느 걸 볼지 고른다.\n    굳은것 = [x for x in blocked if x not in 무른것]\n\n    return {\"slides\": 정리된_슬라이드, \"표시슬라이드\": 표시_슬라이드, \"count\": n,\n            \"blocked\": \"\\n\".join(blocked), \"점수표\": \"\\n\".join(점수),\n            \"굳은막힘\": \"\\n\".join(굳은것), \"굳은ok\": \"0\" if 굳은것 else \"1\",\n            \"ok\": \"0\" if blocked else \"1\", \"draft\": 글}\n"
+        code_language: python3
+        variables:
+        - variable: text
+          value_selector:
+          - '2200000000003'
+          - text
+          value_type: string
+        - variable: 틀_json
+          value_selector:
+          - '2200000000025'
+          - 틀_json
+          value_type: string
+        outputs:
+          slides:
+            type: array[object]
+            children: null
+          표시슬라이드:
+            type: array[object]
+            children: null
+          count:
+            type: number
+            children: null
+          blocked:
+            type: string
+            children: null
+          점수표:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+          draft:
+            type: string
+            children: null
+          굳은막힘:
+            type: string
+            children: null
+          굳은ok:
+            type: string
+            children: null
+    - id: '2200000000007'
+      type: custom
+      position:
+        x: 1860
+        y: 300
+      positionAbsolute:
+        x: 1860
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 대본 검증 2
+        desc: 자수·골격·블록 수를 기계가 다시 센다.
+        selected: false
+        code: "# Dify 코드 노드 「대본 검증」 / 「대본 검증 2」   ← LLM 「대본」 뒤에 붙는다\n#\n# **이 노드가 하는 일: 대본이 규칙표(docs/규칙표_카드뉴스.md) §1(자수)·골격을\n# 지키는지 기계가 다시 센다.** 기준값은 전부 「레시피 꺼내기」 노드가 내놓는\n# `틀_json` 에서 온다 — 여기 손으로 적은 숫자는 하나도 없다. `틀_json` 은\n# `analyze/recipe.py` 의 `char_limit_rows()`·`role_quotes()` 실측을 그대로 담고\n# 있다(dify/make_dsl_cardnews.py 가 빌드할 때 박는다).\n#\n# 입력 변수:\n#     text     String   ← 대본 / text                (처음 쓴 것)\n#     틀_json   String   ← 레시피 꺼내기 / 틀_json      (골격·장마다 글자슬롯·자수 한계)\n#     고친것    String   ← 대본 다시 쓰기 / text        (안 돌았으면 빈 글자)\n#\n# **왜 «고친것» 을 받나.** 이 노드로 오는 길이 둘이다 — 막힌 게 없으면 갈래에서\n# 바로 오고, 막혔으면 «다시 쓰기» 를 거쳐 온다. 한 쪽만 읽게 하면 **안 돈 노드의\n# 결과를 읽으려다 죽는다**(dify-workflow 스킬, 06_본문검증.py 와 같은 이유).\n#\n# 출력 변수:\n#     slides   Array[Object]  파싱한 장들 [{\"role\":.., \"blocks\":[..]}] — 표시(`**`·`##`)\n#                              를 뗀 글. 사람이 점수표에서 읽기 좋게 남긴다.\n#     표시슬라이드 Array[Object]  같은 모양이지만 **표시가 살아 있는 글**.\n#                              배치가 받는 것은 이것이다 — 배치가 `**`·`##` 를\n#                              직접 찾아 굵기·형광펜을 만들기 때문이다\n#                              (표시를 뗀 `slides` 를 배치로 보내면 그 둘이 늘\n#                              빈 목록이 된다, 검토 지적 ①).\n#     count    Number\n#     blocked  String   **되돌려야 하는 잘못.** 비어 있으면 통과\n#                        칸 이름은 아스키다 — LLM 프롬프트가 {{#..#}} 로 이 값을\n#                        직접 읽는데, Dify 의 변수 참조 정규식이 아스키만 받는다\n#                        (한글 칸은 조용히 치환이 안 된 채로 간다. 오류모음 §22).\n#     점수표    String   사람이 보는 몫. 되돌리지 않는다 — {{#..#}} 로 안 읽혀서 그대로 둔다\n#     ok       String   \"1\" 이면 통과, \"0\" 이면 다시 쓰기로\n#                        **글자다.** Dify 의 갈래(`is`)가 글자끼리만 비교한다\n#     draft    String   **실제로 검증한 글**(고친것 이 있었으면 그것, 없었으면 text\n#                        그대로). 되돌리기를 여러 판 잇댈 때 다음 판의 `text` 입력이\n#                        이걸 받는다 — \"이번 판이 실제로 무엇을 검증했는지\"를 다음\n#                        판이 원본이 아니라 여기서 이어받아야, 이미 통과한 고친\n#                        글을 다음 판이 원본으로 되돌려 다시 검증하는 일이 없다.\n#\n# 자수 상·하한을 **둘 다** 막는 이유: 진행표 \"Task 9 규칙표에 사람이 오늘 정한 것\n# 셋\" (2) — \"아래 공백(하한)도 넘침(상한)만큼 중요하다\"(2026-08-20, 사람이 그림을\n# 보고 정함). 배치 단계에서도 같은 것을 다시 재지만(방어가 하나뿐이면 배치가\n# 상자·자수를 잘못 짝지어도 못 잡는다), 여기서 먼저 잡으면 LLM 이 고칠 기회가\n# 있다 — 배치 뒤에서는 코드로 자르는 것(넘침)만 가능하고 늘리는 건 못 한다.\n\nimport json\nimport re\nfrom functools import lru_cache\n\n# 통자수·한덩어리는 틀 설명·배치 검증과 **한 곳**에서 온다(카드뉴스_자수.py).\nimport 카드뉴스_자수 as 자수\n# 표시 떼기·세기는 배치·프롬프트와 **한 곳**에서 온다(카드뉴스_강조.py).\nimport 카드뉴스_강조 as 강조\n\n\ndef _다시감기(줄들, n, lo, hi, 끝줄하한=True, 표시줄들=None):\n    \"\"\"줄바꿈은 LLM 이 아니라 코드가 맡는다 — 실물 실행(2026-08-23, §27 후속)에서\n    \"정확히 N줄, 각 줄 M~M자\" 를 LLM 에게 직접 맞히라고 시켰더니 재작성을 여러\n    판 거쳐도 계속 틀렸다(줄 수만 8줄을 낸 적도 있다). 그런데 **낱말 순서만\n    지키면** 되는 줄바꿈은 코드가 항상 정확히 풀 수 있는 문제다 — 그러니 LLM\n    에게는 \"총 이 정도 분량으로 써라\" 만 맡기고, 몇 글자에서 끊을지는 여기서\n    낱말 경계를 그대로 두고 다시 감는다(의미·낱말 순서는 안 바뀐다, 띄어쓰기\n    위치만 줄바꿈으로 바뀐다). 원문 그대로도 이미 조건을 만족하면 이 함수는\n    안 불린다 — 만족 못 할 때만 마지막 구제책으로 쓴다.\n\n    `표시줄들`(선택) — **표시(`**`·`##`)가 살아 있는 같은 글의 줄들.** 줄 나눌\n    자리는 항상 `줄들`(표시를 뗀 글, 자수 기준)의 낱말 길이로 고른다. 낱말\n    수가 서로 같으면(거의 늘 같다 — 표시는 낱말 안에 붙지 띄어쓰기를 새로\n    만들지 않는다) 그 자리에 표시가 붙은 낱말을 끼워 돌려준다. 다르면(드문\n    엇갈림) 표시 없는 낱말로 물러선다 — 표시를 잃을 뿐 줄바꿈 자체는 그대로다.\n    \"\"\"\n    낱말들 = \" \".join(줄들).split()\n    if not 낱말들:\n        return None\n    표시낱말들 = \" \".join(표시줄들).split() if 표시줄들 is not None else None\n    쓸것 = 표시낱말들 if (표시낱말들 is not None and len(표시낱말들) == len(낱말들)) else 낱말들\n    N = len(낱말들)\n    길이들 = [len(w) for w in 낱말들]\n\n    @lru_cache(maxsize=None)\n    def 풀기(i, 남은줄):\n        if 남은줄 == 0:\n            return () if i == N else None\n        총 = -1\n        for j in range(i, N):\n            총 = 길이들[j] if 총 < 0 else 총 + 1 + 길이들[j]\n            if 총 > hi:\n                break\n            if 남은줄 == 1:\n                if j != N - 1:\n                    continue\n                if 끝줄하한 and 총 < lo:\n                    return None   # 마지막 줄도 최소 자수를 지켜야 한다 — 실물 2026-08-24,\n                                   # 여기가 빠져서 \"모두 확인이 됩니다.\"(11자, 최소 19자)\n                                   # 같은 너무 짧은 마지막 줄을 성공으로 잘못 승인했다.\n                return (\" \".join(쓸것[i:j + 1]),)\n            if 총 >= lo:\n                나머지 = 풀기(j + 1, 남은줄 - 1)\n                if 나머지 is not None:\n                    return (\" \".join(쓸것[i:j + 1]),) + 나머지\n        return None\n\n    풀린것 = 풀기(0, n)\n    풀기.cache_clear()\n    return list(풀린것) if 풀린것 else None\n\n\ndef _벗기기(글):\n    \"\"\"LLM 이 ```json 으로 감싸 보내는 일이 흔하다.\"\"\"\n    글 = (글 or \"\").strip()\n    글 = re.sub(r\"^```(?:json)?\\s*|\\s*```$\", \"\", 글, flags=re.M).strip()\n    처음, 끝 = 글.find(\"{\"), 글.rfind(\"}\")\n    return 글[처음:끝 + 1] if 처음 >= 0 and 끝 > 처음 else 글\n\n\n# 굵게·형광펜 표시. **재는 쪽과 그리는 쪽이 어긋나서 넣는다.**\n#\n# 레시피는 장마다 「마크다운 기호 제외」라고 적어 두고 자수를 정한다. 그런데\n# 그 말만 있고 **기호를 빼는 코드가 어디에도 없었다** — 세는 쪽은 `**`·`##` 를\n# 글자로 같이 세고, 그리는 쪽은 그것을 글자로 그렸다. 실물(2026-08-27 RITA 첫\n# 성공): 2번 장 제목이 «**감성 인테리어 포토존 특화 카페**» 로 별표까지 찍혀\n# 나왔다. `##` 도 같이 떼야 한다 — 안 그러면 형광펜 표시가 글자로 세어져 예산이\n# 어긋나고, 그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n#\n# 뗄 표시는 `카드뉴스_강조.떼기` 가 이미 안다 — **세는 쪽과 감는 쪽이 같이\n# 쓰는 한 곳**이라 여기서도 그걸 쓴다. 두 벌로 갈리면 검증과 배치가 서로 다른\n# 자리를 표시로 본다. 짝이 안 맞고 남은 별표(`_뜬별표`)도 `강조.떼기` 안에서\n# 같이 떼므로 여기서 따로 뗄 것이 없다.\n\n\ndef _기호빼기(글: str) -> str:\n    \"\"\"`**굵게**`·`##형광펜##` → 알맹이만. 짝이 안 맞는 별표도 떼어 낸다.\n\n    **자수는 표시를 뺀 길이로 센다.** 표시를 글자로 세면 예산이 어긋나고,\n    그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n    \"\"\"\n    return 강조.떼기(글)[0]\n\n\n# 원본 게시물의 «남의 이름» 을 찾는 자. 라틴 문자로 된 낱말만 본다.\n#\n# **왜 라틴 문자인가.** 실물 2026-09-01: 우리 카드뉴스 마지막 장에 「MOT 매거진\n# 팔로우!」가 그대로 찍혔다 — 원본 게시물의 브랜드다. 모델에게 「내용만 베끼지\n# 마라」고 이미 적어 두었는데도 CTA 장은 본보기를 그대로 옮긴다.\n#\n# 본보기에 든 라틴 낱말은 거의 다 브랜드·제품 이름이다(MOT · COSRX · 네이버\n# 쇼핑 커넥트의 영문 표기…). 한글 낱말까지 막으면 흔한 말이 걸려 다 된 대본을\n# 버리게 되므로 **여기까지만 한다.** 한글 브랜드는 못 잡는다 — 숨기지 않고 적어\n# 둔다(점검이 아니라 이 주석이 그 한계의 기록이다).\n_라틴낱말 = re.compile(r\"[A-Za-z][A-Za-z0-9]{2,}\")\n\n\ndef _남의이름들(틀: dict) -> set:\n    \"\"\"틀의 본보기에 든 라틴 낱말. 원본 게시물의 브랜드·제품 이름이다.\"\"\"\n    난것 = set()\n    for s in 틀.get(\"슬라이드\") or []:\n        for x in s.get(\"글자슬롯\") or []:\n            난것 |= {w.lower() for w in _라틴낱말.findall(x.get(\"본보기\") or \"\")}\n    return 난것\n\n\ndef _사람이_준_낱말(주제: str, 원고: str) -> set:\n    \"\"\"사람이 직접 쓴 라틴 낱말은 막지 않는다 — 그건 이번 글의 내용이다.\"\"\"\n    return {w.lower() for w in _라틴낱말.findall(f\"{주제 or ''} {원고 or ''}\")}\n\n\ndef _슬라이드뽑기(글):\n    \"\"\"LLM 출력에서 «slides» 목록을 꺼낸다. **조용한 0개를 만들지 않는다.**\n\n    `(json.loads(글) or {}).get(\"slides\") or []` 한 줄로 줄이면 파싱 실패·안 돈\n    노드의 `null`·칸 이름이 다른 경우가 전부 «0개» 로 뭉개진다 — 06_본문검증.py 의\n    `_꼭지뽑기` 가 이미 겪고 고친 것과 같은 함정이다.\n\n    돌려주는 것: (장 목록, 무슨 일이 있었나 — 아무 탈 없으면 빈 글자)\n    \"\"\"\n    벗긴것 = _벗기기(글)\n    if not (벗긴것 or \"\").strip():\n        return [], \"대본이 비어 있다 — 앞 노드가 아무것도 안 내놨다\"\n    try:\n        d = json.loads(벗긴것)\n    except Exception as e:\n        return [], f\"대본이 JSON 이 아니다 ({e}) — 앞 300자: «{벗긴것[:300]}»\"\n    if not isinstance(d, dict):\n        return [], f\"대본이 묶음이 아니라 {type(d).__name__} 다\"\n    if not isinstance(d.get(\"slides\"), list):\n        return [], f\"«slides» 칸이 없다 — 들어 있는 칸: {sorted(d)[:8]}\"\n    return d[\"slides\"], \"\"\n\n\ndef main(text: str, 틀_json: str, 고친것: str = \"\",\n         주제: str = \"\", 원고: str = \"\", 언어: str = \"한국어\") -> dict:\n    글 = 고친것 if (고친것 or \"\").strip() else text\n    틀 = json.loads(틀_json)\n    골격 = 틀[\"골격\"]\n    슬라이드틀 = {s[\"index\"]: s for s in 틀[\"슬라이드\"]}\n    # **남의 브랜드 이름이 새는 것을 막는다.** 사람이 제 주제에 적어 넣은\n    # 낱말은 뺀다 — 그건 이번 글의 내용이지 원본에서 베낀 것이 아니다.\n    #\n    # **영어로 쓸 때는 이 검사를 끈다**(사람 결정 2026-09-18: 「가 덩어리부터\n    # 해」). 이 검사는 «한국어 카드라서» 성립한다 — 한국어 글에 라틴 낱말이\n    # 나오면 드문 일이라 원본에서 베낀 것일 확률이 높다. 영어 글은 낱말이\n    # 전부 라틴이라 그 신호가 통째로 사라지고 오검만 남는다. 실측 2026-09-18:\n    # `templates/기본.json` 의 금칙어는 eting·mart·sns·visa·zip 다섯이고,\n    # 영어 게시물로 만든 틀이면 본보기의 모든 낱말이 금칙어가 되어 한 벌도\n    # 못 나온다. **한글 브랜드를 못 잡는 것과 같은 한계다** — 숨기지 않고\n    # 여기 적어 둔다.\n    남의이름 = (set() if 언어 == \"영어\"\n             else _남의이름들(틀) - _사람이_준_낱말(주제, 원고))\n\n    # **몇 곳을 쓸지는 안 막는다 — 쏠림만 막는다**(사람 결정 2026-09-17).\n    # 예전엔 위계별 최빈값(`강조.모으기()`)과 슬롯마다의 개수를 견줬는데,\n    # 실측(기본·DG0AA6PJ8s4·DHqCBQnRAjW)에서 「대부분 0」이 이겨 모든 틀의\n    # 형광펜이 0곳으로 뭉개졌다. 이제는 같은 위계 칸이 둘 이상일 때 «어느\n    # 칸엔 있고 어느 칸엔 없는지» 만 본다 — 아래 루프에서 칸마다\n    # `강조모음` 에 담고, 루프가 끝난 뒤 위계별로 한 번에 검사한다.\n    강조모음: dict = {}\n\n    슬라이드, 파싱탈 = _슬라이드뽑기(글)\n    blocked = []\n    if 파싱탈:\n        blocked.append(파싱탈)\n\n    n = len(슬라이드)\n    if n != len(골격):\n        blocked.append(f\"장이 {n}개인데 골격은 {len(골격)}장이다 \"\n                        f\"({' → '.join(골격)}) — 지어내지도 빼지도 마라\")\n\n    넘침, 미달 = 0, 0\n    무른것 = []   # 막을 것까지는 아닌 것 — 아래 「굳은 것과 무른 것」 참고\n    권고 = []     # **막지 않고 알려만 주는 것.** 자수 미달이 여기로 온다\n    정리된_슬라이드 = []\n    # **표시(`**`·`##`)가 살아 있는 같은 슬라이드.** `정리된_슬라이드` 는 이미\n    # `_기호빼기` 를 거친 글이라 배치가 찾을 표시가 하나도 안 남는다(검토\n    # 지적 ① — 배치의 `굵기`·`형광펜` 이 늘 빈 목록이 되는 원인). 배치는\n    # 이 목록을 받는다.\n    표시_슬라이드 = []\n    for i, 카드 in enumerate(슬라이드, start=1):\n        if i > len(골격):\n            break\n        기대역할 = 골격[i - 1]\n        # **여기서부터 반환하는 「slides」는 항상 {role, blocks} 뿐인 깔끔한\n        # 묶음이다.** LLM 이 붙인 딴 칸(예: \"characters\":[[13,14]])을 그대로\n        # 돌려주면 장마다 모양이 달라져 Dify 의 출력 형식 검사가 code 노드\n        # 자체를 죽인다(\"'list' object has no attribute 'items'\", 실물\n        # 2026-08-23) — try/except 밖이라 이 파일 안에서 못 잡는다. 카드가\n        # 묶음이 아니거나 블록 안에 글자 아닌 게 섞여도 여기서 먼저 걸러\n        # **막힘으로 보고하고, 깨진 모양 그대로는 절대 내보내지 않는다.**\n        if not isinstance(카드, dict):\n            blocked.append(f\"{i}번 장이 묶음이 아니라 {type(카드).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            continue\n        # **역할은 골격에서 온다 — 모델에게 안 묻는다.**\n        #\n        # 몇 번째 장이 무슨 역할인지는 골격이 이미 안다. 그런데 모델에게 그\n        # 낱말을 다시 써 내라 하고, 다르면 막았다. 그러면 «글은 잘 썼는데 이름을\n        # 잘못 붙였다» 는 이유로 다 된 대본을 버리게 된다 — 실물(2026-08-28):\n        # 사례 자리에 「정의」·「문제」라고 적었다고 두 판을 태우고 막혔다.\n        #\n        # 코드가 알 수 있는 것은 코드가 정한다. 줄 나누기를 코드가 맡은 것과\n        # 같은 결이다. 모델이 맞춰야 하는 것은 «차례대로 그 칸에 맞는 글» 이지\n        # 이름표가 아니다.\n        역할 = 기대역할\n        블록원본 = 카드.get(\"blocks\") or []\n        if not isinstance(블록원본,\
+          \ list):\n            blocked.append(f\"{i}번 장 blocks 가 목록이 아니라 {type(블록원본).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            continue\n        # 강조 수는 표시를 떼기 **전** 글에서 센다 — 뗀 뒤로는 `**`·`##` 가\n        # 이미 사라져 있어서 셀 것이 안 남는다.\n        원문블록 = [b if isinstance(b, str) else json.dumps(b, ensure_ascii=False)\n                for b in 블록원본]\n        블록 = [_기호빼기(t) for t in 원문블록]\n        정리된_슬라이드.append({\"role\": 역할, \"blocks\": 블록})\n        # 표시가 살아 있는 채로 시작해, 아래에서 다시 감긴 블록만 그 자리에서\n        # 표시가 붙은 낱말로 갈아 낀다(그대로 통과한 블록은 원문 그대로 둔다).\n        표시블록 = list(원문블록)\n        표시_슬라이드.append({\"role\": 역할, \"blocks\": 표시블록})\n        슬롯들 = 슬라이드틀.get(i, {}).get(\"글자슬롯\", [])\n        if len(블록) != len(슬롯들):\n            blocked.append(f\"{i}번 장({역할}) 블록이 {len(블록)}개인데 슬롯은 \"\n                        f\"{len(슬롯들)}개다\")\n            continue\n        for j, (슬롯, 블록글, 원문글) in enumerate(zip(슬롯들, 블록, 원문블록), start=1):\n            # **번호 칸은 안 본다**(사람 결정 2026-08-30). 그 자리는 대본이\n            # 아니라 장 차례로 채운다(`카드뉴스_배치._번호글`) — 모델이 무엇을\n            # 썼든 버려지므로, 여기서 자수를 따지면 안 쓸 글 때문에 다 된 대본이\n            # 막힌다.\n            if 슬롯.get(\"위계\") == \"번호\":\n                continue\n            # **강조는 아무것도 안 막는다**(사람 결정 2026-09-18).\n            #\n            # 형광펜 색이 없어도 안 막는다 — 배치가 게시물 강조색으로 그린다\n            # (`카드뉴스_배치`: `슬롯.get(\"형광펜색\") or 강조색`). 막을 기술적\n            # 이유가 없었다.\n            #\n            # 세기만 해서 점수표에 남긴다. 나중에 실물이 쌓이면 그 기록으로\n            # 「몇 대 몇부터 쏠림인가」를 잴 수 있다 — 지금은 근거가 없다.\n            센것 = 강조.세기(원문글)\n            위계 = 슬롯.get(\"위계\")\n            if 위계:\n                강조모음.setdefault(위계, []).append(\n                    {\"자리\": f\"{i}번 장\", \"굵게\": 센것[\"굵게\"] > 0,\n                     \"형광펜\": 센것[\"형광펜\"] > 0})\n            # **모든 칸을 통틀어 몇 자로 본다**(사람 결정 2026-09-16 본문,\n            # 2026-09-18 전부: 「세로줄은 안 본다니까」). 줄은 배치가 글꼴 폭을\n            # 재서 나누므로 여기서 줄 수·줄마다 자수를 따지면 «폭을 다 못 쓰는 짧은\n            # 줄» 을 통과시키고 «폭을 채운 긴 줄» 을 막는다 — 거꾸로다.\n            덩어리 = 자수.한덩어리(블록글)\n            블록[j - 1] = 덩어리\n            # 통자수 자리는 배치가 스스로 표시를 떼고 폭을 재서 감는다\n            # (`카드뉴스_배치.main` 의 `자수.한덩어리` → `강조.떼기` →\n            # `자수.폭감기` 순서) — 여기서는 줄만 한 덩어리로 고르고,\n            # 표시는 그대로 둔다.\n            표시블록[j - 1] = 자수.한덩어리(원문글)\n            통최소, 통최대 = 자수.통자수(슬롯)\n            # **글자 수가 아니라 «몇 자 분량» 으로 잰다**(사람 결정 2026-09-18) —\n            # 실제 글꼴 폭 ÷ 「가」 한 자 폭. 영문·숫자·띄어쓰기가 섞인 글이 글자\n            # 수로는 넘치고 폭으로는 들어가는 일이 예시 5개 중 3개에서 났다.\n            총 = 자수.자분량(슬롯, 덩어리)\n            분량 = f\"{round(총, 1):g}자 분량(글자 수 {len(덩어리)})\"\n            if 총 > 통최대:\n                blocked.append(f\"{i}번 장 블록{j} 은 통틀어 최대 {통최대}자인데 {분량}이다 \"\n                               f\"— 줄여서 다시 써라: «{덩어리}»\")\n            elif 총 < 통최소:\n                권고.append(f\"{i}번 장 블록{j} 은 통틀어 최소 {통최소}자인데 {분량}이다 \"\n                          f\"(모자라면 아래가 빈다)\")\n            샌것 = sorted({w for w in _라틴낱말.findall(덩어리) if w.lower() in 남의이름})\n            if 샌것:\n                blocked.append(\n                    f\"{i}번 장 블록{j} 에 원본 게시물의 이름이 그대로 있다\"\n                    f\"({' · '.join(샌것)}) — 그건 남의 브랜드다. 이번 글의 것으로 \"\n                    f\"바꾸거나 빼라: «{덩어리}»\")\n\n    # **쏠림을 안 막는다 — 점수표에만 적는다**(사람 결정 2026-09-18: 「그냥\n    # 알아서 강조할 부분에 강조하고, 형광펜 쓰고 싶은 부분에 형광펜 쓰고」).\n    #\n    # 여기까지 세 판이었다. ① 위계별 개수를 못 박았다 — 「대부분 0」이 이겨\n    # 실측 틀 전부에서 형광펜이 0곳으로 뭉개졌다. ② 개수를 빼고 «쓰거나 안\n    # 쓰거나가 같은지» 를 봤다 — 설계서엔 「쏠림을 막는다」고 써 놓고 코드는\n    # `any and not all`, 곧 «전부 아니면 전무» 였다. ③ 그 규칙으로 실물 다섯\n    # 벌을 만들어 보니 **한 벌도 안 나왔다**(2026-09-18 실측: 막은 것 19건 중\n    # 강조가 10건 — 22칸 중 6칸에 형광펜을 쓴 것까지 막혔다).\n    #\n    # 「몇 대 몇부터 쏠림인가」를 정할 실측 근거가 없다. 표본 넷(1/2·1/8·6/22)으로\n    # 문턱을 박으면 또 근거 없는 숫자를 넣는 것이다. 그래서 세기만 하고 남긴다.\n    강조적기 = []\n    for 위계, 자리들 in 강조모음.items():\n        for 갈래 in (\"굵게\", \"형광펜\"):\n            쓴수 = sum(1 for x in 자리들 if x[갈래])\n            if 쓴수:\n                강조적기.append(f\"{위계} {갈래} {쓴수}/{len(자리들)}칸\")\n\n    점수 = [f\"장 {n}개 (골격 {len(골격)}개)\",\n            f\"자수 넘침 {넘침}건 · 자수 미달 {미달}건(권고, 안 막음)\"]\n    if 강조적기:\n        점수.append(\"강조 \" + \" · \".join(강조적기) + \" (안 막음)\")\n    점수 += 권고[:12]\n\n    # **굳은 것과 무른 것을 갈라서 낸다.**\n    #\n    # 자수 미달은 «네모가 좀 헐렁해 보인다» 는 뜻이다 — 보기에 아쉬울 뿐 카드가\n    # 망가지지는 않는다. 넘침은 다르다: 글자가 네모 밖으로 나가거나 잘린다.\n    #\n    # 그런데 여태 둘을 똑같이 막았다. 그래서 **두 자밖에 안 모자란 제목 한 줄\n    # 때문에 다 된 일곱 장을 통째로 버리는** 일이 생겼다(실물 2026-08-27:\n    # «강남 카페 4대 트렌드 총정리» 16자, 하한 18자). 사람이 이미 「너무 빡빡하게\n    # 하면 글자수 때문에 제대로 못 한다」고 정해 준 자리다.\n    #\n    # 그래서 **고쳐 쓰라고는 하되, 마지막에 그것만 남았으면 통과시킨다.**\n    # `blocked`(다시 쓰기에게 줄 말)는 그대로 다 담고, `굳은막힘`(정말 막아야\n    # 하는 것)만 따로 낸다. 부르는 쪽이 어느 걸 볼지 고른다.\n    굳은것 = [x for x in blocked if x not in 무른것]\n\n    return {\"slides\": 정리된_슬라이드, \"표시슬라이드\": 표시_슬라이드, \"count\": n,\n            \"blocked\": \"\\n\".join(blocked), \"점수표\": \"\\n\".join(점수),\n            \"굳은막힘\": \"\\n\".join(굳은것), \"굳은ok\": \"0\" if 굳은것 else \"1\",\n            \"ok\": \"0\" if blocked else \"1\", \"draft\": 글}\n"
+        code_language: python3
+        variables:
+        - variable: text
+          value_selector:
+          - '2200000000004'
+          - draft
+          value_type: string
+        - variable: 틀_json
+          value_selector:
+          - '2200000000025'
+          - 틀_json
+          value_type: string
+        - variable: 고친것
+          value_selector:
+          - '2200000000006'
+          - text
+          value_type: string
+        outputs:
+          slides:
+            type: array[object]
+            children: null
+          표시슬라이드:
+            type: array[object]
+            children: null
+          count:
+            type: number
+            children: null
+          blocked:
+            type: string
+            children: null
+          점수표:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+          draft:
+            type: string
+            children: null
+          굳은막힘:
+            type: string
+            children: null
+          굳은ok:
+            type: string
+            children: null
+    - id: '2200000000018'
+      type: custom
+      position:
+        x: 2120
+        y: 300
+      positionAbsolute:
+        x: 2120
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 대본 검증 3
+        desc: 자수·골격·블록 수를 기계가 다시 센다.
+        selected: false
+        code: "# Dify 코드 노드 「대본 검증」 / 「대본 검증 2」   ← LLM 「대본」 뒤에 붙는다\n#\n# **이 노드가 하는 일: 대본이 규칙표(docs/규칙표_카드뉴스.md) §1(자수)·골격을\n# 지키는지 기계가 다시 센다.** 기준값은 전부 「레시피 꺼내기」 노드가 내놓는\n# `틀_json` 에서 온다 — 여기 손으로 적은 숫자는 하나도 없다. `틀_json` 은\n# `analyze/recipe.py` 의 `char_limit_rows()`·`role_quotes()` 실측을 그대로 담고\n# 있다(dify/make_dsl_cardnews.py 가 빌드할 때 박는다).\n#\n# 입력 변수:\n#     text     String   ← 대본 / text                (처음 쓴 것)\n#     틀_json   String   ← 레시피 꺼내기 / 틀_json      (골격·장마다 글자슬롯·자수 한계)\n#     고친것    String   ← 대본 다시 쓰기 / text        (안 돌았으면 빈 글자)\n#\n# **왜 «고친것» 을 받나.** 이 노드로 오는 길이 둘이다 — 막힌 게 없으면 갈래에서\n# 바로 오고, 막혔으면 «다시 쓰기» 를 거쳐 온다. 한 쪽만 읽게 하면 **안 돈 노드의\n# 결과를 읽으려다 죽는다**(dify-workflow 스킬, 06_본문검증.py 와 같은 이유).\n#\n# 출력 변수:\n#     slides   Array[Object]  파싱한 장들 [{\"role\":.., \"blocks\":[..]}] — 표시(`**`·`##`)\n#                              를 뗀 글. 사람이 점수표에서 읽기 좋게 남긴다.\n#     표시슬라이드 Array[Object]  같은 모양이지만 **표시가 살아 있는 글**.\n#                              배치가 받는 것은 이것이다 — 배치가 `**`·`##` 를\n#                              직접 찾아 굵기·형광펜을 만들기 때문이다\n#                              (표시를 뗀 `slides` 를 배치로 보내면 그 둘이 늘\n#                              빈 목록이 된다, 검토 지적 ①).\n#     count    Number\n#     blocked  String   **되돌려야 하는 잘못.** 비어 있으면 통과\n#                        칸 이름은 아스키다 — LLM 프롬프트가 {{#..#}} 로 이 값을\n#                        직접 읽는데, Dify 의 변수 참조 정규식이 아스키만 받는다\n#                        (한글 칸은 조용히 치환이 안 된 채로 간다. 오류모음 §22).\n#     점수표    String   사람이 보는 몫. 되돌리지 않는다 — {{#..#}} 로 안 읽혀서 그대로 둔다\n#     ok       String   \"1\" 이면 통과, \"0\" 이면 다시 쓰기로\n#                        **글자다.** Dify 의 갈래(`is`)가 글자끼리만 비교한다\n#     draft    String   **실제로 검증한 글**(고친것 이 있었으면 그것, 없었으면 text\n#                        그대로). 되돌리기를 여러 판 잇댈 때 다음 판의 `text` 입력이\n#                        이걸 받는다 — \"이번 판이 실제로 무엇을 검증했는지\"를 다음\n#                        판이 원본이 아니라 여기서 이어받아야, 이미 통과한 고친\n#                        글을 다음 판이 원본으로 되돌려 다시 검증하는 일이 없다.\n#\n# 자수 상·하한을 **둘 다** 막는 이유: 진행표 \"Task 9 규칙표에 사람이 오늘 정한 것\n# 셋\" (2) — \"아래 공백(하한)도 넘침(상한)만큼 중요하다\"(2026-08-20, 사람이 그림을\n# 보고 정함). 배치 단계에서도 같은 것을 다시 재지만(방어가 하나뿐이면 배치가\n# 상자·자수를 잘못 짝지어도 못 잡는다), 여기서 먼저 잡으면 LLM 이 고칠 기회가\n# 있다 — 배치 뒤에서는 코드로 자르는 것(넘침)만 가능하고 늘리는 건 못 한다.\n\nimport json\nimport re\nfrom functools import lru_cache\n\n# 통자수·한덩어리는 틀 설명·배치 검증과 **한 곳**에서 온다(카드뉴스_자수.py).\nimport 카드뉴스_자수 as 자수\n# 표시 떼기·세기는 배치·프롬프트와 **한 곳**에서 온다(카드뉴스_강조.py).\nimport 카드뉴스_강조 as 강조\n\n\ndef _다시감기(줄들, n, lo, hi, 끝줄하한=True, 표시줄들=None):\n    \"\"\"줄바꿈은 LLM 이 아니라 코드가 맡는다 — 실물 실행(2026-08-23, §27 후속)에서\n    \"정확히 N줄, 각 줄 M~M자\" 를 LLM 에게 직접 맞히라고 시켰더니 재작성을 여러\n    판 거쳐도 계속 틀렸다(줄 수만 8줄을 낸 적도 있다). 그런데 **낱말 순서만\n    지키면** 되는 줄바꿈은 코드가 항상 정확히 풀 수 있는 문제다 — 그러니 LLM\n    에게는 \"총 이 정도 분량으로 써라\" 만 맡기고, 몇 글자에서 끊을지는 여기서\n    낱말 경계를 그대로 두고 다시 감는다(의미·낱말 순서는 안 바뀐다, 띄어쓰기\n    위치만 줄바꿈으로 바뀐다). 원문 그대로도 이미 조건을 만족하면 이 함수는\n    안 불린다 — 만족 못 할 때만 마지막 구제책으로 쓴다.\n\n    `표시줄들`(선택) — **표시(`**`·`##`)가 살아 있는 같은 글의 줄들.** 줄 나눌\n    자리는 항상 `줄들`(표시를 뗀 글, 자수 기준)의 낱말 길이로 고른다. 낱말\n    수가 서로 같으면(거의 늘 같다 — 표시는 낱말 안에 붙지 띄어쓰기를 새로\n    만들지 않는다) 그 자리에 표시가 붙은 낱말을 끼워 돌려준다. 다르면(드문\n    엇갈림) 표시 없는 낱말로 물러선다 — 표시를 잃을 뿐 줄바꿈 자체는 그대로다.\n    \"\"\"\n    낱말들 = \" \".join(줄들).split()\n    if not 낱말들:\n        return None\n    표시낱말들 = \" \".join(표시줄들).split() if 표시줄들 is not None else None\n    쓸것 = 표시낱말들 if (표시낱말들 is not None and len(표시낱말들) == len(낱말들)) else 낱말들\n    N = len(낱말들)\n    길이들 = [len(w) for w in 낱말들]\n\n    @lru_cache(maxsize=None)\n    def 풀기(i, 남은줄):\n        if 남은줄 == 0:\n            return () if i == N else None\n        총 = -1\n        for j in range(i, N):\n            총 = 길이들[j] if 총 < 0 else 총 + 1 + 길이들[j]\n            if 총 > hi:\n                break\n            if 남은줄 == 1:\n                if j != N - 1:\n                    continue\n                if 끝줄하한 and 총 < lo:\n                    return None   # 마지막 줄도 최소 자수를 지켜야 한다 — 실물 2026-08-24,\n                                   # 여기가 빠져서 \"모두 확인이 됩니다.\"(11자, 최소 19자)\n                                   # 같은 너무 짧은 마지막 줄을 성공으로 잘못 승인했다.\n                return (\" \".join(쓸것[i:j + 1]),)\n            if 총 >= lo:\n                나머지 = 풀기(j + 1, 남은줄 - 1)\n                if 나머지 is not None:\n                    return (\" \".join(쓸것[i:j + 1]),) + 나머지\n        return None\n\n    풀린것 = 풀기(0, n)\n    풀기.cache_clear()\n    return list(풀린것) if 풀린것 else None\n\n\ndef _벗기기(글):\n    \"\"\"LLM 이 ```json 으로 감싸 보내는 일이 흔하다.\"\"\"\n    글 = (글 or \"\").strip()\n    글 = re.sub(r\"^```(?:json)?\\s*|\\s*```$\", \"\", 글, flags=re.M).strip()\n    처음, 끝 = 글.find(\"{\"), 글.rfind(\"}\")\n    return 글[처음:끝 + 1] if 처음 >= 0 and 끝 > 처음 else 글\n\n\n# 굵게·형광펜 표시. **재는 쪽과 그리는 쪽이 어긋나서 넣는다.**\n#\n# 레시피는 장마다 「마크다운 기호 제외」라고 적어 두고 자수를 정한다. 그런데\n# 그 말만 있고 **기호를 빼는 코드가 어디에도 없었다** — 세는 쪽은 `**`·`##` 를\n# 글자로 같이 세고, 그리는 쪽은 그것을 글자로 그렸다. 실물(2026-08-27 RITA 첫\n# 성공): 2번 장 제목이 «**감성 인테리어 포토존 특화 카페**» 로 별표까지 찍혀\n# 나왔다. `##` 도 같이 떼야 한다 — 안 그러면 형광펜 표시가 글자로 세어져 예산이\n# 어긋나고, 그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n#\n# 뗄 표시는 `카드뉴스_강조.떼기` 가 이미 안다 — **세는 쪽과 감는 쪽이 같이\n# 쓰는 한 곳**이라 여기서도 그걸 쓴다. 두 벌로 갈리면 검증과 배치가 서로 다른\n# 자리를 표시로 본다. 짝이 안 맞고 남은 별표(`_뜬별표`)도 `강조.떼기` 안에서\n# 같이 떼므로 여기서 따로 뗄 것이 없다.\n\n\ndef _기호빼기(글: str) -> str:\n    \"\"\"`**굵게**`·`##형광펜##` → 알맹이만. 짝이 안 맞는 별표도 떼어 낸다.\n\n    **자수는 표시를 뺀 길이로 센다.** 표시를 글자로 세면 예산이 어긋나고,\n    그리는 쪽은 그 표시를 안 그리므로 상자가 헐거워진다.\n    \"\"\"\n    return 강조.떼기(글)[0]\n\n\n# 원본 게시물의 «남의 이름» 을 찾는 자. 라틴 문자로 된 낱말만 본다.\n#\n# **왜 라틴 문자인가.** 실물 2026-09-01: 우리 카드뉴스 마지막 장에 「MOT 매거진\n# 팔로우!」가 그대로 찍혔다 — 원본 게시물의 브랜드다. 모델에게 「내용만 베끼지\n# 마라」고 이미 적어 두었는데도 CTA 장은 본보기를 그대로 옮긴다.\n#\n# 본보기에 든 라틴 낱말은 거의 다 브랜드·제품 이름이다(MOT · COSRX · 네이버\n# 쇼핑 커넥트의 영문 표기…). 한글 낱말까지 막으면 흔한 말이 걸려 다 된 대본을\n# 버리게 되므로 **여기까지만 한다.** 한글 브랜드는 못 잡는다 — 숨기지 않고 적어\n# 둔다(점검이 아니라 이 주석이 그 한계의 기록이다).\n_라틴낱말 = re.compile(r\"[A-Za-z][A-Za-z0-9]{2,}\")\n\n\ndef _남의이름들(틀: dict) -> set:\n    \"\"\"틀의 본보기에 든 라틴 낱말. 원본 게시물의 브랜드·제품 이름이다.\"\"\"\n    난것 = set()\n    for s in 틀.get(\"슬라이드\") or []:\n        for x in s.get(\"글자슬롯\") or []:\n            난것 |= {w.lower() for w in _라틴낱말.findall(x.get(\"본보기\") or \"\")}\n    return 난것\n\n\ndef _사람이_준_낱말(주제: str, 원고: str) -> set:\n    \"\"\"사람이 직접 쓴 라틴 낱말은 막지 않는다 — 그건 이번 글의 내용이다.\"\"\"\n    return {w.lower() for w in _라틴낱말.findall(f\"{주제 or ''} {원고 or ''}\")}\n\n\ndef _슬라이드뽑기(글):\n    \"\"\"LLM 출력에서 «slides» 목록을 꺼낸다. **조용한 0개를 만들지 않는다.**\n\n    `(json.loads(글) or {}).get(\"slides\") or []` 한 줄로 줄이면 파싱 실패·안 돈\n    노드의 `null`·칸 이름이 다른 경우가 전부 «0개» 로 뭉개진다 — 06_본문검증.py 의\n    `_꼭지뽑기` 가 이미 겪고 고친 것과 같은 함정이다.\n\n    돌려주는 것: (장 목록, 무슨 일이 있었나 — 아무 탈 없으면 빈 글자)\n    \"\"\"\n    벗긴것 = _벗기기(글)\n    if not (벗긴것 or \"\").strip():\n        return [], \"대본이 비어 있다 — 앞 노드가 아무것도 안 내놨다\"\n    try:\n        d = json.loads(벗긴것)\n    except Exception as e:\n        return [], f\"대본이 JSON 이 아니다 ({e}) — 앞 300자: «{벗긴것[:300]}»\"\n    if not isinstance(d, dict):\n        return [], f\"대본이 묶음이 아니라 {type(d).__name__} 다\"\n    if not isinstance(d.get(\"slides\"), list):\n        return [], f\"«slides» 칸이 없다 — 들어 있는 칸: {sorted(d)[:8]}\"\n    return d[\"slides\"], \"\"\n\n\ndef main(text: str, 틀_json: str, 고친것: str = \"\",\n         주제: str = \"\", 원고: str = \"\", 언어: str = \"한국어\") -> dict:\n    글 = 고친것 if (고친것 or \"\").strip() else text\n    틀 = json.loads(틀_json)\n    골격 = 틀[\"골격\"]\n    슬라이드틀 = {s[\"index\"]: s for s in 틀[\"슬라이드\"]}\n    # **남의 브랜드 이름이 새는 것을 막는다.** 사람이 제 주제에 적어 넣은\n    # 낱말은 뺀다 — 그건 이번 글의 내용이지 원본에서 베낀 것이 아니다.\n    #\n    # **영어로 쓸 때는 이 검사를 끈다**(사람 결정 2026-09-18: 「가 덩어리부터\n    # 해」). 이 검사는 «한국어 카드라서» 성립한다 — 한국어 글에 라틴 낱말이\n    # 나오면 드문 일이라 원본에서 베낀 것일 확률이 높다. 영어 글은 낱말이\n    # 전부 라틴이라 그 신호가 통째로 사라지고 오검만 남는다. 실측 2026-09-18:\n    # `templates/기본.json` 의 금칙어는 eting·mart·sns·visa·zip 다섯이고,\n    # 영어 게시물로 만든 틀이면 본보기의 모든 낱말이 금칙어가 되어 한 벌도\n    # 못 나온다. **한글 브랜드를 못 잡는 것과 같은 한계다** — 숨기지 않고\n    # 여기 적어 둔다.\n    남의이름 = (set() if 언어 == \"영어\"\n             else _남의이름들(틀) - _사람이_준_낱말(주제, 원고))\n\n    # **몇 곳을 쓸지는 안 막는다 — 쏠림만 막는다**(사람 결정 2026-09-17).\n    # 예전엔 위계별 최빈값(`강조.모으기()`)과 슬롯마다의 개수를 견줬는데,\n    # 실측(기본·DG0AA6PJ8s4·DHqCBQnRAjW)에서 「대부분 0」이 이겨 모든 틀의\n    # 형광펜이 0곳으로 뭉개졌다. 이제는 같은 위계 칸이 둘 이상일 때 «어느\n    # 칸엔 있고 어느 칸엔 없는지» 만 본다 — 아래 루프에서 칸마다\n    # `강조모음` 에 담고, 루프가 끝난 뒤 위계별로 한 번에 검사한다.\n    강조모음: dict = {}\n\n    슬라이드, 파싱탈 = _슬라이드뽑기(글)\n    blocked = []\n    if 파싱탈:\n        blocked.append(파싱탈)\n\n    n = len(슬라이드)\n    if n != len(골격):\n        blocked.append(f\"장이 {n}개인데 골격은 {len(골격)}장이다 \"\n                        f\"({' → '.join(골격)}) — 지어내지도 빼지도 마라\")\n\n    넘침, 미달 = 0, 0\n    무른것 = []   # 막을 것까지는 아닌 것 — 아래 「굳은 것과 무른 것」 참고\n    권고 = []     # **막지 않고 알려만 주는 것.** 자수 미달이 여기로 온다\n    정리된_슬라이드 = []\n    # **표시(`**`·`##`)가 살아 있는 같은 슬라이드.** `정리된_슬라이드` 는 이미\n    # `_기호빼기` 를 거친 글이라 배치가 찾을 표시가 하나도 안 남는다(검토\n    # 지적 ① — 배치의 `굵기`·`형광펜` 이 늘 빈 목록이 되는 원인). 배치는\n    # 이 목록을 받는다.\n    표시_슬라이드 = []\n    for i, 카드 in enumerate(슬라이드, start=1):\n        if i > len(골격):\n            break\n        기대역할 = 골격[i - 1]\n        # **여기서부터 반환하는 「slides」는 항상 {role, blocks} 뿐인 깔끔한\n        # 묶음이다.** LLM 이 붙인 딴 칸(예: \"characters\":[[13,14]])을 그대로\n        # 돌려주면 장마다 모양이 달라져 Dify 의 출력 형식 검사가 code 노드\n        # 자체를 죽인다(\"'list' object has no attribute 'items'\", 실물\n        # 2026-08-23) — try/except 밖이라 이 파일 안에서 못 잡는다. 카드가\n        # 묶음이 아니거나 블록 안에 글자 아닌 게 섞여도 여기서 먼저 걸러\n        # **막힘으로 보고하고, 깨진 모양 그대로는 절대 내보내지 않는다.**\n        if not isinstance(카드, dict):\n            blocked.append(f\"{i}번 장이 묶음이 아니라 {type(카드).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 기대역할, \"blocks\": []})\n            continue\n        # **역할은 골격에서 온다 — 모델에게 안 묻는다.**\n        #\n        # 몇 번째 장이 무슨 역할인지는 골격이 이미 안다. 그런데 모델에게 그\n        # 낱말을 다시 써 내라 하고, 다르면 막았다. 그러면 «글은 잘 썼는데 이름을\n        # 잘못 붙였다» 는 이유로 다 된 대본을 버리게 된다 — 실물(2026-08-28):\n        # 사례 자리에 「정의」·「문제」라고 적었다고 두 판을 태우고 막혔다.\n        #\n        # 코드가 알 수 있는 것은 코드가 정한다. 줄 나누기를 코드가 맡은 것과\n        # 같은 결이다. 모델이 맞춰야 하는 것은 «차례대로 그 칸에 맞는 글» 이지\n        # 이름표가 아니다.\n        역할 = 기대역할\n        블록원본 = 카드.get(\"blocks\") or []\n        if not isinstance(블록원본,\
+          \ list):\n            blocked.append(f\"{i}번 장 blocks 가 목록이 아니라 {type(블록원본).__name__} 다\")\n            정리된_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            표시_슬라이드.append({\"role\": 역할, \"blocks\": []})\n            continue\n        # 강조 수는 표시를 떼기 **전** 글에서 센다 — 뗀 뒤로는 `**`·`##` 가\n        # 이미 사라져 있어서 셀 것이 안 남는다.\n        원문블록 = [b if isinstance(b, str) else json.dumps(b, ensure_ascii=False)\n                for b in 블록원본]\n        블록 = [_기호빼기(t) for t in 원문블록]\n        정리된_슬라이드.append({\"role\": 역할, \"blocks\": 블록})\n        # 표시가 살아 있는 채로 시작해, 아래에서 다시 감긴 블록만 그 자리에서\n        # 표시가 붙은 낱말로 갈아 낀다(그대로 통과한 블록은 원문 그대로 둔다).\n        표시블록 = list(원문블록)\n        표시_슬라이드.append({\"role\": 역할, \"blocks\": 표시블록})\n        슬롯들 = 슬라이드틀.get(i, {}).get(\"글자슬롯\", [])\n        if len(블록) != len(슬롯들):\n            blocked.append(f\"{i}번 장({역할}) 블록이 {len(블록)}개인데 슬롯은 \"\n                        f\"{len(슬롯들)}개다\")\n            continue\n        for j, (슬롯, 블록글, 원문글) in enumerate(zip(슬롯들, 블록, 원문블록), start=1):\n            # **번호 칸은 안 본다**(사람 결정 2026-08-30). 그 자리는 대본이\n            # 아니라 장 차례로 채운다(`카드뉴스_배치._번호글`) — 모델이 무엇을\n            # 썼든 버려지므로, 여기서 자수를 따지면 안 쓸 글 때문에 다 된 대본이\n            # 막힌다.\n            if 슬롯.get(\"위계\") == \"번호\":\n                continue\n            # **강조는 아무것도 안 막는다**(사람 결정 2026-09-18).\n            #\n            # 형광펜 색이 없어도 안 막는다 — 배치가 게시물 강조색으로 그린다\n            # (`카드뉴스_배치`: `슬롯.get(\"형광펜색\") or 강조색`). 막을 기술적\n            # 이유가 없었다.\n            #\n            # 세기만 해서 점수표에 남긴다. 나중에 실물이 쌓이면 그 기록으로\n            # 「몇 대 몇부터 쏠림인가」를 잴 수 있다 — 지금은 근거가 없다.\n            센것 = 강조.세기(원문글)\n            위계 = 슬롯.get(\"위계\")\n            if 위계:\n                강조모음.setdefault(위계, []).append(\n                    {\"자리\": f\"{i}번 장\", \"굵게\": 센것[\"굵게\"] > 0,\n                     \"형광펜\": 센것[\"형광펜\"] > 0})\n            # **모든 칸을 통틀어 몇 자로 본다**(사람 결정 2026-09-16 본문,\n            # 2026-09-18 전부: 「세로줄은 안 본다니까」). 줄은 배치가 글꼴 폭을\n            # 재서 나누므로 여기서 줄 수·줄마다 자수를 따지면 «폭을 다 못 쓰는 짧은\n            # 줄» 을 통과시키고 «폭을 채운 긴 줄» 을 막는다 — 거꾸로다.\n            덩어리 = 자수.한덩어리(블록글)\n            블록[j - 1] = 덩어리\n            # 통자수 자리는 배치가 스스로 표시를 떼고 폭을 재서 감는다\n            # (`카드뉴스_배치.main` 의 `자수.한덩어리` → `강조.떼기` →\n            # `자수.폭감기` 순서) — 여기서는 줄만 한 덩어리로 고르고,\n            # 표시는 그대로 둔다.\n            표시블록[j - 1] = 자수.한덩어리(원문글)\n            통최소, 통최대 = 자수.통자수(슬롯)\n            # **글자 수가 아니라 «몇 자 분량» 으로 잰다**(사람 결정 2026-09-18) —\n            # 실제 글꼴 폭 ÷ 「가」 한 자 폭. 영문·숫자·띄어쓰기가 섞인 글이 글자\n            # 수로는 넘치고 폭으로는 들어가는 일이 예시 5개 중 3개에서 났다.\n            총 = 자수.자분량(슬롯, 덩어리)\n            분량 = f\"{round(총, 1):g}자 분량(글자 수 {len(덩어리)})\"\n            if 총 > 통최대:\n                blocked.append(f\"{i}번 장 블록{j} 은 통틀어 최대 {통최대}자인데 {분량}이다 \"\n                               f\"— 줄여서 다시 써라: «{덩어리}»\")\n            elif 총 < 통최소:\n                권고.append(f\"{i}번 장 블록{j} 은 통틀어 최소 {통최소}자인데 {분량}이다 \"\n                          f\"(모자라면 아래가 빈다)\")\n            샌것 = sorted({w for w in _라틴낱말.findall(덩어리) if w.lower() in 남의이름})\n            if 샌것:\n                blocked.append(\n                    f\"{i}번 장 블록{j} 에 원본 게시물의 이름이 그대로 있다\"\n                    f\"({' · '.join(샌것)}) — 그건 남의 브랜드다. 이번 글의 것으로 \"\n                    f\"바꾸거나 빼라: «{덩어리}»\")\n\n    # **쏠림을 안 막는다 — 점수표에만 적는다**(사람 결정 2026-09-18: 「그냥\n    # 알아서 강조할 부분에 강조하고, 형광펜 쓰고 싶은 부분에 형광펜 쓰고」).\n    #\n    # 여기까지 세 판이었다. ① 위계별 개수를 못 박았다 — 「대부분 0」이 이겨\n    # 실측 틀 전부에서 형광펜이 0곳으로 뭉개졌다. ② 개수를 빼고 «쓰거나 안\n    # 쓰거나가 같은지» 를 봤다 — 설계서엔 「쏠림을 막는다」고 써 놓고 코드는\n    # `any and not all`, 곧 «전부 아니면 전무» 였다. ③ 그 규칙으로 실물 다섯\n    # 벌을 만들어 보니 **한 벌도 안 나왔다**(2026-09-18 실측: 막은 것 19건 중\n    # 강조가 10건 — 22칸 중 6칸에 형광펜을 쓴 것까지 막혔다).\n    #\n    # 「몇 대 몇부터 쏠림인가」를 정할 실측 근거가 없다. 표본 넷(1/2·1/8·6/22)으로\n    # 문턱을 박으면 또 근거 없는 숫자를 넣는 것이다. 그래서 세기만 하고 남긴다.\n    강조적기 = []\n    for 위계, 자리들 in 강조모음.items():\n        for 갈래 in (\"굵게\", \"형광펜\"):\n            쓴수 = sum(1 for x in 자리들 if x[갈래])\n            if 쓴수:\n                강조적기.append(f\"{위계} {갈래} {쓴수}/{len(자리들)}칸\")\n\n    점수 = [f\"장 {n}개 (골격 {len(골격)}개)\",\n            f\"자수 넘침 {넘침}건 · 자수 미달 {미달}건(권고, 안 막음)\"]\n    if 강조적기:\n        점수.append(\"강조 \" + \" · \".join(강조적기) + \" (안 막음)\")\n    점수 += 권고[:12]\n\n    # **굳은 것과 무른 것을 갈라서 낸다.**\n    #\n    # 자수 미달은 «네모가 좀 헐렁해 보인다» 는 뜻이다 — 보기에 아쉬울 뿐 카드가\n    # 망가지지는 않는다. 넘침은 다르다: 글자가 네모 밖으로 나가거나 잘린다.\n    #\n    # 그런데 여태 둘을 똑같이 막았다. 그래서 **두 자밖에 안 모자란 제목 한 줄\n    # 때문에 다 된 일곱 장을 통째로 버리는** 일이 생겼다(실물 2026-08-27:\n    # «강남 카페 4대 트렌드 총정리» 16자, 하한 18자). 사람이 이미 「너무 빡빡하게\n    # 하면 글자수 때문에 제대로 못 한다」고 정해 준 자리다.\n    #\n    # 그래서 **고쳐 쓰라고는 하되, 마지막에 그것만 남았으면 통과시킨다.**\n    # `blocked`(다시 쓰기에게 줄 말)는 그대로 다 담고, `굳은막힘`(정말 막아야\n    # 하는 것)만 따로 낸다. 부르는 쪽이 어느 걸 볼지 고른다.\n    굳은것 = [x for x in blocked if x not in 무른것]\n\n    return {\"slides\": 정리된_슬라이드, \"표시슬라이드\": 표시_슬라이드, \"count\": n,\n            \"blocked\": \"\\n\".join(blocked), \"점수표\": \"\\n\".join(점수),\n            \"굳은막힘\": \"\\n\".join(굳은것), \"굳은ok\": \"0\" if 굳은것 else \"1\",\n            \"ok\": \"0\" if blocked else \"1\", \"draft\": 글}\n"
+        code_language: python3
+        variables:
+        - variable: text
+          value_selector:
+          - '2200000000007'
+          - draft
+          value_type: string
+        - variable: 틀_json
+          value_selector:
+          - '2200000000025'
+          - 틀_json
+          value_type: string
+        - variable: 고친것
+          value_selector:
+          - '2200000000017'
+          - text
+          value_type: string
+        outputs:
+          slides:
+            type: array[object]
+            children: null
+          표시슬라이드:
+            type: array[object]
+            children: null
+          count:
+            type: number
+            children: null
+          blocked:
+            type: string
+            children: null
+          점수표:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+          draft:
+            type: string
+            children: null
+          굳은막힘:
+            type: string
+            children: null
+          굳은ok:
+            type: string
+            children: null
+    - id: '2200000000005'
+      type: custom
+      position:
+        x: 1600
+        y: 300
+      positionAbsolute:
+        x: 1600
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: if-else
+        title: 대본 막혔나
+        desc: ''
+        selected: false
+        cases:
+        - id: case-blocked
+          case_id: case-blocked
+          logical_operator: and
+          conditions:
+          - id: c1
+            varType: string
+            variable_selector:
+            - '2200000000004'
+            - ok
+            comparison_operator: is
+            value: '0'
+    - id: '2200000000006'
+      type: custom
+      position:
+        x: 1600
+        y: 490
+      positionAbsolute:
+        x: 1600
+        y: 490
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: llm
+        title: 대본 다시 쓰기
+        desc: ''
+        selected: false
+        model: *id001
+        prompt_template:
+        - role: system
+          text: '너는 카드뉴스 대본 작가다. 아래 레시피를 정확히 지켜 JSON 하나만 출력한다.
+
+
+            출력 모양 — 이 꼴 그대로만 낸다:
+
+            {"slides": [{"role": "훅", "blocks": ["첫 블록 글", "둘째 블록 글"]}]}
+
+
+            - `role` 은 아래 「N번 장 (…)」의 괄호 안 낱말을 **그대로** 쓴다.
+
+            - `slides` 의 차례와 개수는 아래 레시피의 장 차례·개수와 똑같다.
+
+            - `blocks` 는 그 장의 블록1·블록2… 차례대로다.
+
+            - 「정확히 N줄로」인 블록은 한 글자열 안에서 줄바꿈으로 N줄을 잇는다.
+
+            - 「한 덩어리로」인 블록은 줄바꿈을 넣지 않는다 — 줄은 코드가 나눈다.
+
+            - 다른 칸은 넣지 않는다.
+
+            - 밑줄 같은, 아래 [강조 표시] 이외의 서식 기호를 글에 넣지 않는다.
+
+
+            「말투 본보기」가 붙은 블록은 **그 자리에 원래 있던 말**이다. **내용을 베끼지 말고 말투·문장 결·끝맺음만 따라 써라** — 반말인지 존댓말인지, 가벼운지 딱딱한지, 감탄사를 쓰는지.
+
+
+            자수는 «이 네모에 들어가는 양» 이다. 상한은 꼭 지키고, 하한은 총량의 65% 라 조금 모자라는 것보다 **말이 되는 문장**이 먼저다.
+
+
+            **첫 글자가 `{` 여야 한다.** 세는 과정·계획·설명을 쓰지 마라 — 머릿속으로 세고 결과만 낸다.
+
+
+            [강조 표시]
+
+            - 중요한 낱말을 스스로 골라 **굵게** 로 감싼다. 몇 곳을 쓸지는 네가 정한다.
+
+            - 감싼 만큼 그대로 걸린다. 낱말 하나, 구절, 글자 하나도 된다.
+
+            - **강조는 아껴 쓴다.** 한 칸에서 정말 중요한 곳만 골라 표시한다. 여러 곳을 줄줄이 표시하면 강조가 아니라 배경이 된다.
+
+            - 같은 역할(위계)의 칸끼리는 되도록 고르게 쓴다.
+
+
+            {{#2200000000025.few_shot#}}'
+          id: 2200000000006-sys
+        - role: user
+          text: '아래는 네가 방금 쓴 대본이다.
+
+            {{#2200000000003.text#}}
+
+
+            **아래가 규칙을 어겼다. 이것만 고쳐라.**
+
+            {{#2200000000004.blocked#}}
+
+
+            지적된 것만 손보고 나머지는 그대로 둬라. JSON 하나만 출력한다.'
+          id: 2200000000006-usr
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        structured_output_enabled: false
+    - id: '2200000000015'
+      type: custom
+      position:
+        x: 1990
+        y: 395
+      positionAbsolute:
+        x: 1990
+        y: 395
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: if-else
+        title: 대본 그래도 막혔나
+        desc: ''
+        selected: false
+        cases:
+        - id: case-blocked
+          case_id: case-blocked
+          logical_operator: and
+          conditions:
+          - id: c1
+            varType: string
+            variable_selector:
+            - '2200000000007'
+            - ok
+            comparison_operator: is
+            value: '0'
+    - id: '2200000000017'
+      type: custom
+      position:
+        x: 1990
+        y: 585
+      positionAbsolute:
+        x: 1990
+        y: 585
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: llm
+        title: 대본 다시 쓰기 2
+        desc: ''
+        selected: false
+        model: *id001
+        prompt_template:
+        - role: system
+          text: '너는 카드뉴스 대본 작가다. 아래 레시피를 정확히 지켜 JSON 하나만 출력한다.
+
+
+            출력 모양 — 이 꼴 그대로만 낸다:
+
+            {"slides": [{"role": "훅", "blocks": ["첫 블록 글", "둘째 블록 글"]}]}
+
+
+            - `role` 은 아래 「N번 장 (…)」의 괄호 안 낱말을 **그대로** 쓴다.
+
+            - `slides` 의 차례와 개수는 아래 레시피의 장 차례·개수와 똑같다.
+
+            - `blocks` 는 그 장의 블록1·블록2… 차례대로다.
+
+            - 「정확히 N줄로」인 블록은 한 글자열 안에서 줄바꿈으로 N줄을 잇는다.
+
+            - 「한 덩어리로」인 블록은 줄바꿈을 넣지 않는다 — 줄은 코드가 나눈다.
+
+            - 다른 칸은 넣지 않는다.
+
+            - 밑줄 같은, 아래 [강조 표시] 이외의 서식 기호를 글에 넣지 않는다.
+
+
+            「말투 본보기」가 붙은 블록은 **그 자리에 원래 있던 말**이다. **내용을 베끼지 말고 말투·문장 결·끝맺음만 따라 써라** — 반말인지 존댓말인지, 가벼운지 딱딱한지, 감탄사를 쓰는지.
+
+
+            자수는 «이 네모에 들어가는 양» 이다. 상한은 꼭 지키고, 하한은 총량의 65% 라 조금 모자라는 것보다 **말이 되는 문장**이 먼저다.
+
+
+            **첫 글자가 `{` 여야 한다.** 세는 과정·계획·설명을 쓰지 마라 — 머릿속으로 세고 결과만 낸다.
+
+
+            [강조 표시]
+
+            - 중요한 낱말을 스스로 골라 **굵게** 로 감싼다. 몇 곳을 쓸지는 네가 정한다.
+
+            - 감싼 만큼 그대로 걸린다. 낱말 하나, 구절, 글자 하나도 된다.
+
+            - **강조는 아껴 쓴다.** 한 칸에서 정말 중요한 곳만 골라 표시한다. 여러 곳을 줄줄이 표시하면 강조가 아니라 배경이 된다.
+
+            - 같은 역할(위계)의 칸끼리는 되도록 고르게 쓴다.
+
+
+            {{#2200000000025.few_shot#}}'
+          id: 2200000000017-sys
+        - role: user
+          text: '아래는 네가 방금 쓴 대본이다.
+
+            {{#2200000000007.draft#}}
+
+
+            **아래가 규칙을 어겼다. 이것만 고쳐라.**
+
+            {{#2200000000007.blocked#}}
+
+
+            지적된 것만 손보고 나머지는 그대로 둬라. JSON 하나만 출력한다.'
+          id: 2200000000017-usr
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        structured_output_enabled: false
+    - id: '2200000000019'
+      type: custom
+      position:
+        x: 2250
+        y: 300
+      positionAbsolute:
+        x: 2250
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: if-else
+        title: 대본 그래도 또 막혔나
+        desc: ''
+        selected: false
+        cases:
+        - id: case-blocked
+          case_id: case-blocked
+          logical_operator: and
+          conditions:
+          - id: c1
+            varType: string
+            variable_selector:
+            - '2200000000018'
+            - 굳은ok
+            comparison_operator: is
+            value: '0'
+    - id: '2200000000008'
+      type: custom
+      position:
+        x: 2510
+        y: 300
+      positionAbsolute:
+        x: 2510
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 배치
+        desc: §2 고정 자리·색·글꼴 위에 새 글자를 얹는다. 형광펜은 §4 참고 통계의 간단한 규칙. 사진 주소가 있으면 사진·인물·로고 자리에 그대로 채운다.
+        selected: false
+        code: "# Dify 코드 노드 「배치」   ← 「대본 검증 2」 뒤에 붙는다\n#\n# 검증을 통과한 대본(장마다 역할+블록 목록)을 §2 고정 자리·색·글꼴 위에 얹는다.\n# 자리·글꼴·굵기·정렬·색은 전부 그 게시물(`DHqCBQnRAjW`) 라벨에서 그대로 가져온\n# 값이다 — 사람이 「자리는 쉽다」고 확인했다(진행표 2026-08-20, \"자리·크기는 고정,\n# 형광펜 등 강조는 생성 시점 판단으로 가른다\"). 여기서 새로 정하는 건 형광펜뿐이다.\n#\n# **형광펜·굵게는 이제 §4 참고 통계가 아니라 LLM 이 글 안에 직접 찍는다**\n# (`**굵게**`·`##형광펜##`, 카드뉴스_강조.py). 그 표시는 «감기 전 글» 의 글자\n# 번호로 붙어 있는데 여기서는 «감은 뒤 줄» 로 그려야 해서, 감기 전에 표시를\n# 떼고 감은 뒤 자리를 다시 셈한다(`_구간으로`) — §4 통계 기반 자리 추정(28%\n# 근사)은 문장 한가운데를 잘랐다(실물 \"있습니다. 진정성\") 그래서 뺐다.\n#\n# **왜 카드를 JSON 문자열 하나로 접나.** Dify 코드 노드는 출력 객체를 5층까지만\n# 받는다(«Depth limit 5 reached, object too deep»). 카드 하나가 장식영역+글자영역을\n# 품고 그 글자영역이 다시 box(리스트)를 담으면 6층을 넘는다. 그래서 카드 전체를\n# JSON 문자열로 접어 맨 위 칸(`cards_json`) 하나에 담는다 — 굽는 노드는 이 글자를\n# 본문 **맨 위**에서 그대로 끼워 넣는다(장 안에 파묻으면 Dify 가 이스케이프를\n# 하다 만다 — dify-workflow 스킬).\n#\n# 입력 변수:\n#     slides       Array[Object]  ← 대본 검증 2 / slides\n#     틀_json       String         ← 레시피 꺼내기 / 틀_json\n#     photo_urls   String     (선택) ← 시작 / photo_urls — 손으로 붙여넣은 사진 주소,\n#                              줄마다 하나. \"사진\"·\"인물\" 장식영역에 나오는 순서 그대로\n#                              하나씩 채운다. 사진은 이제 결과를 보고 «작업대»에서\n#                              넣는다(설계 §1) — 여기 붙여넣기는 자동화로 미리 주소를\n#                              아는 경우에 쓴다. 개수가 모자라면 남은 자리는 그냥\n#                              자리표시로 남는다(\"?\").\n#     logo_url     String     (선택) ← 시작 / logo_url — 손으로 붙여넣은 로고 주소.\n#                              \"로고\" 장식영역 전부 같은 사진으로 채운다.\n#\n# 출력 변수:\n#     cards_json  String   장마다 배경·장식영역·글자영역을 다 얹은 목록(JSON 문자열)\n#     count     Number\n\nimport json\nimport re\n\n# 통자수 자리의 «한 덩어리 → 폭 재서 감기» 는 대본 검증·틀 설명과 **한 곳**에서 온다.\nimport 카드뉴스_자수 as 자수\n# 표시 떼기·세기는 대본 검증·프롬프트와 **한 곳**에서 온다(카드뉴스_강조.py).\nimport 카드뉴스_강조 as 강조\n\n\ndef _구간으로(줄들: list, 자리들: list) -> list:\n    \"\"\"감기 «전» 글자 번호를 감은 «뒤» 줄·칸으로 옮긴다.\n\n    한 강조가 줄을 건너뛰면 줄마다 한 토막씩 낸다 — 굽는 쪽이 줄 단위로\n    그리기 때문이다. 줄바꿈 자리의 글자 하나는 어느 줄에도 안 센다.\n    \"\"\"\n    난것 = []\n    흐른것 = 0\n    for 번호, 줄 in enumerate(줄들, 1):\n        줄끝 = 흐른것 + len(줄)\n        for 자리 in 자리들:\n            시작 = max(자리[\"시작\"], 흐른것)\n            끝 = min(자리[\"끝\"], 줄끝)\n            if 시작 < 끝:\n                난것.append({\"종류\": 자리[\"종류\"], \"줄번호\": 번호,\n                           \"시작\": 시작 - 흐른것, \"끝\": 끝 - 흐른것})\n        흐른것 = 줄끝 + 1      # 줄바꿈 한 글자\n    return 난것\n\n\ndef _구조굵기(슬롯: dict, 줄들: list) -> list:\n    \"\"\"틀이 「첫 줄은 소제목」이라고 적었으면 그 줄을 통째로 굵게.\"\"\"\n    if not 슬롯.get(\"소제목첫줄\") or not 줄들:\n        return []\n    return [{\"줄번호\": 1, \"시작\": 0, \"끝\": len(줄들[0])}]\n\n\ndef _출처입히기(슬롯: dict, 줄들: list) -> list:\n    \"\"\"마지막 줄이 출처면 그 줄에만 색·정렬을 준다. 돌려주는 것은 줄마다의 사전.\"\"\"\n    난것 = [{\"글\": 줄} for 줄 in 줄들]\n    출처 = 슬롯.get(\"출처줄\")\n    if 출처 and len(난것) >= 2:\n        난것[-1][\"색\"] = 출처.get(\"색\")\n        난것[-1][\"align\"] = 출처.get(\"align\")\n    return 난것\n\n\ndef _사진_채운(장식영역: list, 사진순번, 로고: str) -> list:\n    \"\"\"장식영역 목록을 그대로 두되, \"사진\"·\"인물\"은 사진 주소 큐에서 하나씩,\n    \"로고\"는 고정 주소 하나를 `media_url` 로 얹는다. 주소가 없으면(큐가 비었거나\n    아예 안 왔으면) 아무것도 안 얹는다 — 굽는 쪽(`cardnews_compose.py`)이 이미\n    `media_url` 없으면 회색 자리표시로 그리게 돼 있다.\"\"\"\n    결과 = []\n    for r in 장식영역:\n        r = dict(r)\n        if r.get(\"종류\") in (\"사진\", \"인물\"):\n            url = next(사진순번, None)\n            if url:\n                r[\"media_url\"] = url\n        elif r.get(\"종류\") == \"로고\" and 로고:\n            r[\"media_url\"] = 로고\n        결과.append(r)\n    return 결과\n\n\n번호위계 = \"번호\"\n\n\ndef _번호글(차례: int, 전체: int, 본보기: str = \"\") -> str:\n    \"\"\"이 장에 찍을 번호. **원본이 쓰던 꼴을 그대로 따른다.**\n\n    원본이 「03」이면 「05」로, 「3」이면 「5」로, 「3/10」이면 「5/7」로 찍는다.\n    본보기가 없거나 못 읽으면 두 자리로 채운다 — 카드뉴스에서 가장 흔한 꼴이다.\n    \"\"\"\n    본 = (본보기 or \"\").strip()\n    빗금 = re.match(r\"^\\s*(\\d+)\\s*/\\s*(\\d+)\\s*$\", 본)\n    # **「몇 분의 몇」으로 말이 될 때만 빗금 꼴로 본다.** 앞이 뒤보다 크면 그건\n    # 차례/전체가 아니라 잘못 읽은 것이다 — 실물 2026-09-01: 원본의 「08」을\n    # OCR 이 「8 / 0」 으로 읽어, 일곱 장짜리 여섯째 장에 「6/7」이 찍혔다\n    # (다른 장은 전부 「02」·「03」 꼴이었다).\n    if 빗금 and int(빗금.group(1)) <= int(빗금.group(2)):\n        폭 = len(빗금.group(1))\n        return f\"{차례:0{폭}d}/{전체:0{폭}d}\"\n    낱 = re.match(r\"^\\s*(\\d+)\\s*$\", 본)\n    폭 = len(낱.group(1)) if 낱 else 2\n    return f\"{차례:0{폭}d}\"\n\n\n숫자넓이비 = 0.6\n\"\"\"숫자 한 자의 폭 ≈ pt × 이 값(프리텐다드 굵게 「0」 실측 0.58). 번호를 찍을 네모의\n폭을 잡는 데만 쓴다 — 실제 폭은 굽는 쪽이 글꼴로 잰다.\"\"\"\n\n\ndef 찍을네모(번호판: dict, 글자수: int) -> list:\n    \"\"\"번호판 위에 숫자를 찍을 글자 네모(1080 공간). 잰 중심에 가운데 맞춘다 —\n    폭은 숫자 수 × pt × 0.6 에 한 자 여유, 높이는 줄높이(pt × 1.32).\"\"\"\n    x0, y0, x1, y1 = 번호판[\"box\"]\n    숫 = 번호판.get(\"숫자\") or {}\n    pt = float(숫.get(\"pt\") or max(12, (y1 - y0) * 0.5))\n    중심 = 숫.get(\"중심\") or [0.5, 0.5]\n    cx = x0 + (x1 - x0) * float(중심[0])\n    cy = y0 + (y1 - y0) * float(중심[1])\n    w = pt * 숫자넓이비 * max(1, 글자수) + pt * 0.8\n    h = pt * 1.32\n    return [int(round(cx - w / 2)), int(round(cy - h / 2)), int(round(cx + w / 2)), int(round(cy + h / 2))]\n\n\ndef _번호판얹기(카드들: list, 번호판: dict) -> None:\n    \"\"\"**표지 뺀 모든 장**에 번호판 그림을 얹고 장 차례(1·2·3…)를 찍는다(사람 결정\n    2026-09-19). 원본 마지막 장에 번호가 없었으면(`마지막장` 거짓) 마지막 장은 뺀다.\n\n    번호판 그림은 «장식» 으로, 숫자는 «번호» 위계의 글자칸으로 싣는다 — 굽는 쪽과\n    작업대가 이미 아는 두 가지라 새로 배울 것이 없다.\n    \"\"\"\n    if not 번호판 or not 번호판.get(\"그림\") or len(카드들) < 2:\n        return\n    대상 = 카드들[1:]\n    if not 번호판.get(\"마지막장\", True) and len(대상) > 1:\n        대상 = 대상[:-1]\n    숫 = 번호판.get(\"숫자\") or {}\n    본 = 숫.get(\"본보기\") or \"01\"\n    for 차례, 카드 in enumerate(대상, start=1):\n        글 = _번호글(차례, len(대상), 본)\n        카드[\"장식영역\"] = list(카드.get(\"장식영역\") or []) + [\n            {\"종류\": \"장식\", \"box\": list(번호판[\"box\"]), \"그림\": 번호판[\"그림\"], \"번호판\": True}]\n        네모 = 찍을네모(번호판, len(글))\n        pt = 숫.get(\"pt\") or max(12, int((번호판[\"box\"][3] - 번호판[\"box\"][1]) * 0.5))\n        카드[\"글자영역\"] = list(카드.get(\"글자영역\") or []) + [{\n            \"종류\": \"글자\", \"box\": 네모, \"pt\": pt, \"weight\": 숫.get(\"weight\") or \"Bold\",\n            \"align\": \"가운데\", \"font\": 숫.get(\"font\") or \"프리텐다드\",\n            \"글자색\": 숫.get(\"글자색\") or \"#FFFFFF\", \"최소\": 1, \"최대\": max(2, len(글)),\n            \"lines\": [글], \"형광펜\": [], \"굵기\": [], \"위계\": 번호위계, \"세로가운데\": True,\n            \"번호판\": True}]\n\n\ndef main(slides: list, 틀_json: str, photo_urls: str = \"\", logo_url: str = \"\",\n         재기만들기=None) -> dict:\n    틀 = json.loads(틀_json)\n    슬라이드틀 = {s[\"index\"]: s for s in 틀[\"슬라이드\"]}\n    골격 = 틀[\"골격\"]\n    강조색 = 틀.get(\"강조색\") or \"#C9FC95\"\n\n    if len(slides) != len(골격):\n        raise ValueError(f\"장이 {len(slides)}개인데 골격은 {len(골격)}장이다 — \"\n                          f\"대본 검증을 통과했어야 하는 값이 안 맞는다\")\n\n    # 사진은 결과를 보고 «작업대»에서 넣는다(설계 §1). 여기서는 손으로 붙여넣은\n    # 주소만 받는다 — 자동화로 미리 주소를 아는 경우에 쓴다.\n    사진목록 = [u.strip() for u in (photo_urls or \"\").splitlines() if u.strip()]\n    사진순번 = iter(사진목록)\n    로고 = (logo_url or \"\").strip()\n\n    카드들 = []\n    for i, (기대역할, 카드) in enumerate(zip(골격, slides), start=1):\n        틀장 = 슬라이드틀[i]\n        블록 = (카드 or {}).get(\"blocks\") or []\n        슬롯들 = 틀장[\"글자슬롯\"]\n        if len(블록) != len(슬롯들):\n            raise ValueError(f\"{i}번 장 블록 {len(블록)}개, 슬롯 {len(슬롯들)}개 — \"\n                              f\"대본 검증을 통과했어야 하는 값이 안 맞는다\")\n\n        글자영역 = []\n        for 슬롯, 블록글 in zip(슬롯들, 블록):\n            # **감는 것은 표시를 뗀 글이다.** 표시(`**굵게**`·`##형광펜##`)를 단\n            # 채로 폭을 재면 그 표시 글자까지 폭에 들어가 상자가 헐거워진다.\n            # **띄어쓰기를 고르고 나서 표시를 뗀다.** `자수.폭감기` 는 안에서\n            # `한덩어리()` 를 불러 겹친 띄어쓰기·앞뒤 공백을 지운다 — 표시를\n            # 뗀 «뒤» 자리로 고르면 그 자리가 뒤로 밀려 감은 줄과 안 맞는다\n            # (검토 지적, 실측: \"앞  단어 **강조** 뒤\" 에서 자리가 「강조」\n            # 대신 「조 」를 가리켰다). `한덩어리` 를 먼저 걸어 두면 `폭감기`\n            # 안의 호출은 이미 고른 글에 다시 걸리는 것이라 안 바뀐다.\n            순수글, 자리들 = 강조.떼기(자수.한덩어리(블록글 or \"\"))\n            # **본문은 폭을 재서 감는다**(사람 결정 2026-09-16). LLM 이 어디서 끊었든\n            # 지우고, 이 슬롯의 글꼴로 낱말을 이어 붙이다 상자 폭을 넘으면 줄을 바꾼다.\n            # 그래야 원본처럼 오른쪽까지 찬다. 넘쳐도 안 자른다 — 배치 검증이 잡는다.\n            재기 = (재기만들기 or 자수.글꼴재기)(슬롯)\n            줄들 = 자수.폭감기(순수글, 재기, 슬롯[\"box\"][2] - 슬롯[\"box\"][0])\n            # **번호는 대본이 아니라 셈이다**(사람 결정 2026-08-30).\n            #\n            # 원본의 01·02·03 은 여태 배경판에 그림으로 박혀 딸려 왔다. 그래서\n            # 일곱 장짜리에 07 이 여섯 번째로 나왔다. 사람이 그 자리를 「번호」로\n            # 라벨하면 배경판에서 구멍으로 빠지고, 여기서 **장 차례**로 다시\n            # 찍는다. 모델이 무엇을 썼든 버린다 — 번호는 지어낼 것이 아니다.\n            if 슬롯.get(\"위계\") == 번호위계:\n                줄들 = [_번호글(i, len(골격), 슬롯.get(\"본보기\"))]\n                자리들 = []   # 줄을 갈아치웠으니 옛 자리는 이 줄과 안 맞는다\n\n            # 감기 전 글자 번호(`자리들`)를 감은 뒤 줄·칸으로 옮긴다.\n            강조구간 = _구간으로(줄들, 자리들)\n            # **형광펜은 우리가 안 찍는다**(사람 결정 2026-09-18). 잰 색을 못\n            # 믿는다 — 어두운 배경 디자인에서는 글자 사이로 비친 배경이 띠로\n            # 잡혀 형광펜색이 거의 검정으로 나온다(실물 DYzN0Uzgaq6: #0E0C0D ·\n            # #0F0C0A · #1E1F1E). 검은 글자 위에 검은 띠가 깔렸다.\n            # 사람이 작업대에서 긁어 칠한다 — 그 단추는 이미 있다.\n            형광펜 = []\n            굵기 = [{\"줄번호\": s[\"줄번호\"], \"시작\": s[\"시작\"], \"끝\": s[\"끝\"]}\n                     for s in 강조구간 if s[\"종류\"] == \"굵게\"] + _구조굵기(슬롯, 줄들)\n\n            글자영역.append({\n                \"종류\": \"글자\", \"box\": 슬롯[\"box\"], \"pt\": 슬롯[\"pt\"],\n                \"weight\": 슬롯[\"weight\"], \"align\": 슬롯[\"align\"],\n                \"font\": 슬롯[\"font\"], \"글자색\": 슬롯[\"글자색\"],\n                \"최소\": 슬롯[\"최소\"], \"최대\": 슬롯[\"최대\"],\n                \"lines\": 줄들,\n                \"형광펜\": 형광펜,\n                \"굵기\": 굵기,\n            })\n            # 출처(마지막 줄)만 색·정렬이 다르면 그 줄에만 얹는다 — 틀에 없으면\n            # `_출처입히기` 가 아무것도 안 보태므로 칸 자체를 안 싣는다.\n            출처 = _출처입히기(슬롯, 줄들)[-1]\n            if \"색\" in 출처:\n                글자영역[-1][\"출처\"] = {\"색\": 출처[\"색\"], \"align\": 출처[\"align\"]}\n            # **틀에 있을 때만 옮긴다.** 안 잰 값을 기본값으로 채우면 굽는 쪽이\n            # 그걸 「잰 값」으로 착각한다 — 줄간격이 특히 그렇다(붙박이 1.32 와\n            # 재어 온 1.32 는 뜻이 다르다). `줄색`·`줄굵기` 는 이제 배치가 안 낸다\n            # (형광펜·굵게는 `굵기`·`형광펜` 이 대신한다) — 옛 틀에 남아 있어도\n            # 옮기면 굽는 쪽이 줄 단위 굵기로 되돌아간다.\n            for 이름 in (\"위계\", \"줄간격\", \"효과\", \"각도\", \"세로가운데\"):\n\
+          \                if 이름 in 슬롯:\n                    값 = 슬롯[이름]\n                    # `슬롯` 은 한 틀의 글자슬롯 하나다 — 같은 역할(사례 등)의\n                    # 카드가 여러 장이면 이 슬롯 하나를 장마다 돌려 쓴다. 목록\n                    # (`효과`)을 그대로 물려주면 한 장에서 고친 목록이 다른\n                    # 장에도 그대로 걸친다 — `list(...)` 로 떠서 끊는다.\n                    글자영역[-1][이름] = list(값) if isinstance(값, list) else 값\n\n        카드들.append({\n            \"index\": i, \"역할\": 기대역할, \"배경\": 틀장[\"배경\"],\n            \"장식영역\": _사진_채운(틀장[\"장식영역\"], 사진순번, 로고), \"글자영역\": 글자영역,\n        })\n\n    _번호판얹기(카드들, 틀.get(\"번호판\"))\n    return {\"cards_json\": json.dumps(카드들, ensure_ascii=False), \"count\": len(카드들)}\n"
+        code_language: python3
+        variables:
+        - variable: slides
+          value_selector:
+          - '2200000000018'
+          - 표시슬라이드
+          value_type: array[object]
+        - variable: 틀_json
+          value_selector:
+          - '2200000000025'
+          - 틀_json
+          value_type: string
+        - variable: photo_urls
+          value_selector:
+          - '2200000000001'
+          - photo_urls
+          value_type: string
+        - variable: logo_url
+          value_selector:
+          - '2200000000001'
+          - logo_url
+          value_type: string
+        outputs:
+          cards_json:
+            type: string
+            children: null
+          count:
+            type: number
+            children: null
+    - id: '2200000000009'
+      type: custom
+      position:
+        x: 2770
+        y: 300
+      positionAbsolute:
+        x: 2770
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: code
+        title: 배치 검증
+        desc: 넘침·미달·겹침·화면 밖을 다 본다(2026-08-20 사람이 정함).
+        selected: false
+        code: "# Dify 코드 노드 「배치 검증」   ← 「배치」 뒤에 붙는다\n#\n# **막는 것은 겹침과 화면 밖뿐이다.** 자수는 대본 검증에서 이미 쟀고, 세로로\n# 밀려 나간 것은 세기만 한다(사람 결정 2026-09-18: 「세로줄은 안 본다니까」).\n# 상자가 화면 밖으로 나가거나 글자끼리 겹치는 건 대본 검증 단계에서는 볼 수\n# 없다 — 그건 글이 아니라 자리의 탈이라 여기서만 잡힌다.\n#\n# **겹침은 «글자 대 글자» 와 «글자 대 로고» 만 본다.** 실물(DHqCBQnRAjW)에서\n# 사진·인물 네모는 서로 겹치는 게 정상이다(콜라주) — 1번 장 인물 네모\n# [39,256,587,1127] 이 사진 네모 셋과 다 겹친다. 사진 위에 글자를 얹는 것도\n# 정상이다 — 그게 이 템플릿의 실제 디자인이다(1번 장 헤드라인이 인물 사진\n# 위에 얹혀 있다). **깨지는 건 글자끼리 겹치는 것과, 글자가 로고를 가리는\n# 것뿐이다** — 둘 다 실측 데이터에는 없다(사진·인물끼리, 사진·글자는 겹치되\n# 글자·글자, 글자·로고는 안 겹친다는 걸 실물로 확인함). 여기서 사진·인물끼리\n# 겹침을 «막힘» 으로 잡으면 원본 그대로 배치해도 배치 검증이 못 통과한다.\n#\n# 입력 변수:\n#     카드_json  String  ← 배치 / cards_json               (처음 배치한 것)\n#     틀_json    String  ← 레시피 꺼내기 / 틀_json          (캔버스 크기)\n#\n# 출력 변수:\n#     cards_json  String   최종 카드(다음 노드 — 굽기 — 가 이걸 읽는다). 굽기의\n#                          HTTP 본문이 {{#..#}} 로 이 값을 직접 읽으므로 칸\n#                          이름이 아스키여야 한다(Dify 변수 참조 정규식, 오류모음 §22)\n#     막힘        String\n#     점수표      String\n#     ok         String   \"1\"/\"0\"\n\nimport json\n\n줄간격기본 = 1.32\n\"\"\"줄 간격 — `make_dsl_cardnews.줄간격기본`·`cardnews_compose.LINE_SPACING` 과 같은 값.\"\"\"\n\n\ndef _겹침넓이(a: list, b: list) -> float:\n    ax0, ay0, ax1, ay1 = a\n    bx0, by0, bx1, by1 = b\n    ox = max(0, min(ax1, bx1) - max(ax0, bx0))\n    oy = max(0, min(ay1, by1) - max(ay0, by0))\n    return ox * oy\n\n\ndef main(카드_json: str, 틀_json: str) -> dict:\n    글 = 카드_json\n    카드들 = json.loads(글)\n    틀 = json.loads(틀_json)\n    W, H = 틀[\"캔버스\"][\"w\"], 틀[\"캔버스\"][\"h\"]\n\n    막힘, 권고 = [], []\n    밀림 = 겹침 = 화면밖 = 로고가림 = 0\n    for 카드 in 카드들:\n        i = 카드[\"index\"]\n        장식영역 = 카드.get(\"장식영역\") or []\n        글자영역 = 카드.get(\"글자영역\") or []\n        전체영역 = [r[\"box\"] for r in 장식영역] + [r[\"box\"] for r in 글자영역]\n\n        # **세로로 밀려 나간 것은 세기만 한다 — 안 막는다**(사람 결정 2026-09-18:\n        # 「세로줄은 안 본다니까」). 자수 한계가 네모 «넓이» 를 글자 한 개 넓이로\n        # 나눈 값이라(`make_dsl_cardnews._자수매기기`) 한계껏 쓴 글은 낱말 경계\n        # 때문에 줄 끝이 조금씩 비어 한 줄을 더 잡아먹는다 — 여기서 막으면 규칙\n        # 그대로 쓴 대본이 막힌다(실물 2026-09-18: 시험대본이 1·6번 장에서 막혔다).\n        for r in 글자영역:\n            줄높이 = float(r.get(\"pt\") or 0) * float(r.get(\"줄간격\") or 줄간격기본)\n            높이 = (r[\"box\"][3] - r[\"box\"][1]) if r.get(\"box\") else 0\n            들어갈줄 = int(높이 / 줄높이) if 줄높이 > 0 else 0\n            if 들어갈줄 and len(r.get(\"lines\") or []) > 들어갈줄:\n                밀림 += 1\n                권고.append(f\"{i}번 장 글이 폭에 맞춰 감으니 {len(r['lines'])}줄인데 \"\n                          f\"자리는 {들어갈줄}줄이다\")\n\n        # **글자가 «도형» 안에 있는 것은 세지도 않는다.** 그게 글자그릇이다 —\n        # 검은 알약 안의 소제목, 초록 하트 옆의 글자. 겹치라고 있는 자리를\n        # 「겹침」으로 세면 알약 디자인이 통째로 막힌다(2026-08-26).\n        # 로고 겹침은 «경고» 로만 센다(2026-08-25). 글자끼리는 그대로 막는다 —\n        # 그건 읽을 수가 없다.\n        글자박스 = [r[\"box\"] for r in 글자영역]\n        로고박스 = [r[\"box\"] for r in 장식영역 if r.get(\"종류\") == \"로고\"]\n        for a in range(len(글자박스)):\n            for b in range(a + 1, len(글자박스)):\n                if _겹침넓이(글자박스[a], 글자박스[b]) > 0:\n                    겹침 += 1\n                    막힘.append(f\"{i}번 장 글자가 글자와 겹친다 — {글자박스[a]} 와 {글자박스[b]}\")\n        # **글자가 로고를 가리는 것은 «경고» 다 — 막지 않는다.**\n        # 처음엔 막았다. 실측 게시물이 하나(DHqCBQnRAjW)뿐이었고 거기서는 한 번도\n        # 안 겹쳤기 때문이다. 둘째 게시물(DG0AA6PJ8s4)을 재 보니 일곱 장 중\n        # **다섯 장**에서 본문 글자 네모가 구석 로고를 문다 — 디자이너가 늘 그렇게\n        # 긋는다는 뜻이지 잘못 그은 게 아니다. 표본 하나로 정한 규칙이었다.\n        # 사람이 「로고 덮어도 괜찮다」고 정했다(2026-08-25).\n        # 글자끼리 겹치는 것은 그대로 막는다 — 그건 읽을 수가 없다.\n        for gb in 글자박스:\n            for lb in 로고박스:\n                if _겹침넓이(gb, lb) > 0:\n                    로고가림 += 1\n\n        for box in 전체영역:\n            x0, y0, x1, y1 = box\n            if x0 < 0 or y0 < 0 or x1 > W or y1 > H:\n                화면밖 += 1\n                막힘.append(f\"{i}번 장 영역이 화면({W}x{H}) 밖이다 — {box}\")\n\n    점수 = [f\"장 {len(카드들)}개\",\n            f\"겹침 {겹침}건 · 화면밖 {화면밖}건\",\n            f\"경고 — 아래로 밀림 {밀림}건 · 글자가 로고를 가림 {로고가림}건 (둘 다 안 막는다)\",\n            *권고[:12]]\n\n    return {\"cards_json\": 글, \"막힘\": \"\\n\".join(막힘), \"점수표\": \"\\n\".join(점수),\n            \"ok\": \"0\" if 막힘 else \"1\"}\n"
+        code_language: python3
+        variables:
+        - variable: 카드_json
+          value_selector:
+          - '2200000000008'
+          - cards_json
+          value_type: string
+        - variable: 틀_json
+          value_selector:
+          - '2200000000025'
+          - 틀_json
+          value_type: string
+        outputs:
+          cards_json:
+            type: string
+            children: null
+          막힘:
+            type: string
+            children: null
+          점수표:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+    - id: '2200000000010'
+      type: custom
+      position:
+        x: 3030
+        y: 300
+      positionAbsolute:
+        x: 3030
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: if-else
+        title: 배치 막혔나
+        desc: ''
+        selected: false
+        cases:
+        - id: case-blocked
+          case_id: case-blocked
+          logical_operator: and
+          conditions:
+          - id: c1
+            varType: string
+            variable_selector:
+            - '2200000000009'
+            - ok
+            comparison_operator: is
+            value: '0'
+    - id: '2200000000013'
+      type: custom
+      position:
+        x: 3550
+        y: 300
+      positionAbsolute:
+        x: 3550
+        y: 300
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: http-request
+        title: 굽기
+        desc: cardnews/render 로 굽는다. 시작 노드에 사진 주소를 안 넣으면 자리표시(물음표)로 나간다 — 이 판에는 사진을 자동으로 구해오는 단계는 없다(사람이 직접 주소를 넣어야 한다).
+        selected: false
+        method: post
+        url: https://l26m3zzcjd.execute-api.ap-northeast-2.amazonaws.com/render/cardnews
+        authorization:
+          type: no-auth
+          config: null
+        headers: Content-Type:application/json
+        params: ''
+        body:
+          type: json
+          data:
+          - id: 2200000000013b
+            type: text
+            key: ''
+            value: '{"slides": {{#2200000000009.cards_json#}}}'
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        ssl_verify: true
+    - id: '2200000000020'
+      type: custom
+      position:
+        x: 3810
+        y: 300
+      positionAbsolute:
+        x: 3810
+        y: 300
+      width: 244
+      height: 120
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: http-request
+        title: 뷰어
+        desc: 구운 PNG 와 설계도를 같이 보낸다. 설계도가 있으면 서버가 «작업대»(사진 넣기·자리 고치기)를 내주고 0판으로 쌓는다.
+        selected: false
+        method: post
+        url: https://l26m3zzcjd.execute-api.ap-northeast-2.amazonaws.com/workbench
+        authorization:
+          type: no-auth
+          config: null
+        headers: Content-Type:application/json
+        params: ''
+        body:
+          type: json
+          data:
+          - id: 2200000000020b
+            type: text
+            key: ''
+            value: '{"slides": {{#2200000000013.body#}}, "cards": {{#2200000000009.cards_json#}}}'
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        ssl_verify: true
+    - id: '2200000000014'
+      type: custom
+      position:
+        x: 4070
+        y: 300
+      positionAbsolute:
+        x: 4070
+        y: 300
+      width: 244
+      height: 100
+      sourcePosition: right
+      targetPosition: left
+      selected: false
+      zIndex: 0
+      data:
+        type: end
+        title: 출력
+        desc: 카드뉴스 스와이퍼 URL + 점수표 + 막힘 이유. 주소를 브라우저에 넣으면 손가락으로 넘겨 볼 수 있다.
+        selected: false
+        outputs:
+        - variable: 카드뉴스
+          value_selector:
+          - '2200000000020'
+          - body
+          value_type: string
+        - variable: 대본점수표
+          value_selector:
+          - '2200000000018'
+          - 점수표
+          value_type: string
+        - variable: 배치점수표
+          value_selector:
+          - '2200000000009'
+          - 점수표
+          value_type: string
+        - variable: 대본막힘
+          value_selector:
+          - '2200000000018'
+          - blocked
+          value_type: string
+        - variable: 배치막힘
+          value_selector:
+          - '2200000000009'
+          - 막힘
+          value_type: string
+    edges:
+    - id: 2200000000001-source-2200000000021-target
+      type: custom
+      source: '2200000000001'
+      sourceHandle: source
+      target: '2200000000021'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: start
+        targetType: llm
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000021-source-2200000000022-target
+      type: custom
+      source: '2200000000021'
+      sourceHandle: source
+      target: '2200000000022'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000022-source-2200000000024-target
+      type: custom
+      source: '2200000000022'
+      sourceHandle: source
+      target: '2200000000024'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: http-request
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000024-source-2200000000025-target
+      type: custom
+      source: '2200000000024'
+      sourceHandle: source
+      target: '2200000000025'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: http-request
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000025-source-2200000000003-target
+      type: custom
+      source: '2200000000025'
+      sourceHandle: source
+      target: '2200000000003'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: llm
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000003-source-2200000000004-target
+      type: custom
+      source: '2200000000003'
+      sourceHandle: source
+      target: '2200000000004'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000004-source-2200000000005-target
+      type: custom
+      source: '2200000000004'
+      sourceHandle: source
+      target: '2200000000005'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: if-else
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000005-case-blocked-2200000000006-target
+      type: custom
+      source: '2200000000005'
+      sourceHandle: case-blocked
+      target: '2200000000006'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: llm
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000005-false-2200000000007-target
+      type: custom
+      source: '2200000000005'
+      sourceHandle: 'false'
+      target: '2200000000007'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000006-source-2200000000007-target
+      type: custom
+      source: '2200000000006'
+      sourceHandle: source
+      target: '2200000000007'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000007-source-2200000000015-target
+      type: custom
+      source: '2200000000007'
+      sourceHandle: source
+      target: '2200000000015'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: if-else
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000015-case-blocked-2200000000017-target
+      type: custom
+      source: '2200000000015'
+      sourceHandle: case-blocked
+      target: '2200000000017'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: llm
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000015-false-2200000000018-target
+      type: custom
+      source: '2200000000015'
+      sourceHandle: 'false'
+      target: '2200000000018'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000017-source-2200000000018-target
+      type: custom
+      source: '2200000000017'
+      sourceHandle: source
+      target: '2200000000018'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000018-source-2200000000019-target
+      type: custom
+      source: '2200000000018'
+      sourceHandle: source
+      target: '2200000000019'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: if-else
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000019-case-blocked-2200000000014-target
+      type: custom
+      source: '2200000000019'
+      sourceHandle: case-blocked
+      target: '2200000000014'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: end
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000019-false-2200000000008-target
+      type: custom
+      source: '2200000000019'
+      sourceHandle: 'false'
+      target: '2200000000008'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000008-source-2200000000009-target
+      type: custom
+      source: '2200000000008'
+      sourceHandle: source
+      target: '2200000000009'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: code
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000009-source-2200000000010-target
+      type: custom
+      source: '2200000000009'
+      sourceHandle: source
+      target: '2200000000010'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: if-else
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000010-case-blocked-2200000000014-target
+      type: custom
+      source: '2200000000010'
+      sourceHandle: case-blocked
+      target: '2200000000014'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: end
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000010-false-2200000000013-target
+      type: custom
+      source: '2200000000010'
+      sourceHandle: 'false'
+      target: '2200000000013'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: if-else
+        targetType: http-request
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000013-source-2200000000020-target
+      type: custom
+      source: '2200000000013'
+      sourceHandle: source
+      target: '2200000000020'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: http-request
+        targetType: http-request
+        isInIteration: false
+        isInLoop: false
+    - id: 2200000000020-source-2200000000014-target
+      type: custom
+      source: '2200000000020'
+      sourceHandle: source
+      target: '2200000000014'
+      targetHandle: target
+      selected: false
+      zIndex: 0
+      data:
+        sourceType: http-request
+        targetType: end
+        isInIteration: false
+        isInLoop: false
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.5
