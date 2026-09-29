@@ -15,6 +15,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, salt TEXT NOT NULL, hash TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL, version INTEGER NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS work_items(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), kind TEXT NOT NULL, title TEXT NOT NULL, data TEXT NOT NULL, created TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS brands(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
   }
@@ -52,7 +53,7 @@ export class CoraStore {
         const current = this.get(userId, id);
         if (!current) { this.db.exec('ROLLBACK'); return null; }
         if (current.version !== version) throw new Error('CONFLICT');
-        if(current.workStatus==='ready' && JSON.stringify([current.brief,current.slides,current.caption])!==JSON.stringify([body.brief,body.slides,body.caption])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
+        if(current.workStatus==='ready' && JSON.stringify([current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
         this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded, time, id, userId);
       } else {
         id = randomUUID(); this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id, userId, encoded, 1, time, time);
@@ -62,6 +63,12 @@ export class CoraStore {
       this.db.exec('COMMIT'); return result;
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
+  items(userId:string):{id:string;kind:string;title:string;data:Record<string,unknown>;createdAt:string}[]{return (this.db.prepare('SELECT * FROM work_items WHERE user_id=? ORDER BY rowid DESC LIMIT 500').all(userId) as {id:string;kind:string;title:string;data:string;created:string}[]).map(r=>({id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}));}
+  addItem(userId:string,kind:string,title:string,data:Record<string,unknown>){const id=randomUUID(),createdAt=new Date().toISOString();this.db.prepare('INSERT INTO work_items VALUES (?,?,?,?,?,?)').run(id,userId,kind,title,JSON.stringify(data),createdAt);return {id,kind,title,data,createdAt};}
+  updateItem(userId:string,id:string,data:Record<string,unknown>){this.db.prepare('UPDATE work_items SET data=? WHERE id=? AND user_id=?').run(JSON.stringify(data),id,userId);}
+  item(userId:string,id:string){const r=this.db.prepare('SELECT * FROM work_items WHERE id=? AND user_id=?').get(id,userId) as {id:string;kind:string;title:string;data:string;created:string}|undefined;return r?{id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}:null;}
+  removeItem(userId:string,id:string){return this.db.prepare('DELETE FROM work_items WHERE id=? AND user_id=?').run(id,userId).changes>0;}
+  generationCount(userId:string){return Number((this.db.prepare("SELECT COUNT(*) as n FROM work_items WHERE user_id=? AND kind='run' AND created>=?").get(userId,new Date(Date.now()-86400000).toISOString()) as {n:number}).n);}
   brands(userId:string):BrandProfile[] {return (this.db.prepare('SELECT id,body FROM brands WHERE user_id=? ORDER BY rowid DESC').all(userId) as {id:string;body:string}[]).map(r=>({...JSON.parse(String(r.body)),id:String(r.id)}));}
   saveBrand(userId:string,body:Omit<BrandProfile,'id'>):BrandProfile {const id=randomUUID();this.db.prepare('INSERT INTO brands VALUES (?,?,?)').run(id,userId,JSON.stringify(body));return {...body,id};}
   delete(userId:string,id:string,version:number):boolean {

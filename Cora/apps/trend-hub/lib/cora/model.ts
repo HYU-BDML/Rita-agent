@@ -4,7 +4,9 @@ export interface Brief { brand: string; audience: string; goal: string; material
 export interface Idea { id: string; title: string; description: string; structure: string }
 export interface Slide { id: string; headline: string; body: string; image?: string }
 export type WorkStatus = 'draft' | 'review' | 'ready';
-export interface Draft { brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
+export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
+export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
+export interface Draft { design?:Design; brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline' | 'llmgw'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
 export interface Project extends Draft { id: string; version: number; createdAt: string; updatedAt: string }
 export const blankBrief: Brief = { brand: '', audience: '', goal: '저장하고 다시 보는 콘텐츠', material: '', sourceUrl: '', accent: '#205b4a' };
 export const sampleBrief: Brief = { ...blankBrief, brand: '모퉁이 책방', audience: '퇴근 후 조용한 시간을 찾는 직장인', material: '모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.\n책을 읽은 뒤 마음에 남은 문장을 나누는 시간을 갖습니다.', goal: '책 모임을 소개하고 참여를 안내하기' };
@@ -39,7 +41,7 @@ export function validateDraft(value: unknown): Draft {
   const str = (x: unknown, max: number, label: string) => { if (typeof x !== 'string' || x.length > max) throw new Error(`${label} 형식을 확인해 주세요.`); return x; };
   if (!v || typeof v !== 'object' || !v.brief || !Array.isArray(v.slides) || v.slides.length < 2 || v.slides.length > 12) throw new Error('카드는 2~12장이어야 합니다.');
   const b = v.brief;
-  const brief: Brief = { brand: str(b.brand, 80, '브랜드'), audience: str(b.audience, 160, '대상'), goal: str(b.goal, 200, '목표'), material: str(b.material, 3000, '자료'), sourceUrl: str(b.sourceUrl, 1500, '출처'), accent: str(b.accent, 7, '색상') };
+  const brief: Brief = { brand: str(b.brand, 80, '브랜드'), audience: str(b.audience, 160, '대상'), goal: str(b.goal, 200, '목표'), material: str(b.material, 20000, '자료'), sourceUrl: str(b.sourceUrl, 1500, '출처'), accent: str(b.accent, 7, '색상') };
   if (!brief.brand.trim() || !brief.material.trim() || !/^#[\da-f]{6}$/i.test(brief.accent)) throw new Error('브랜드·자료·색상을 확인해 주세요.');
   for (const url of [brief.sourceUrl, v.postedUrl]) { if (url && (typeof url !== 'string' || !/^https?:\/\//i.test(url))) throw new Error('링크는 http 또는 https 주소여야 합니다.'); }
   const ids = new Set<string>();
@@ -51,7 +53,8 @@ export function validateDraft(value: unknown): Draft {
     return slide;
   });
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
-  return { workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: 'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
+  const design={...defaultDesign,...v.design};if(!['4:5','1:1','9:16'].includes(design.ratio)||!['editorial','minimal','bold'].includes(design.template)||!['sans','serif'].includes(design.font)||![.85,1,1.15].includes(design.textScale))throw new Error('디자인 설정을 확인해 주세요.');
+  return { design, workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: v.origin==='llmgw'?'llmgw':'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
 }
 
 export interface BrandProfile { id:string; name:string; audience:string; goal:string; accent:string; notes:string }
