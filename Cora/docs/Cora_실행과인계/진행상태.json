@@ -4,48 +4,55 @@
     "task": "기존 자료·코드·GitHub 점검",
     "status": "완료",
     "acceptance": "구현·계획·미확인 사항 분리",
-    "evidence": "기존 마스터플랜·현재 코드 대조, GitHub main 카드뉴스 README만 존재 확인"
+    "evidence": "기존 마스터플랜·현재 코드 대조, GitHub main 카드뉴스 README만 존재 확인",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "02",
     "task": "타겟·STP·가치 제안·BM",
     "status": "완료",
     "acceptance": "고객 업무·구매 이유·수익 가설",
-    "evidence": "01_사업과제품_실행계획.md 2~4절: STP·가치·가격·원가"
+    "evidence": "01_사업과제품_실행계획.md 2~4절: STP·가치·가격·원가",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "03",
     "task": "벤치마크·MVP 범위",
     "status": "완료",
     "acceptance": "근거·채택 기능·후순위 연결",
-    "evidence": "같은 문서 5~6절, 공식 출처 재확인 및 공개화면 4개 캡처"
+    "evidence": "같은 문서 5~6절, 공식 출처 재확인 및 공개화면 4개 캡처",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "04",
     "task": "12주 개발·검증·출시 계획",
     "status": "완료",
     "acceptance": "담당·산출물·통과 기준",
-    "evidence": "같은 문서 7~11절: 12주·54시간·검증·출시·Rita"
+    "evidence": "같은 문서 7~11절: 12주·54시간·검증·출시·Rita",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "05",
     "task": "제품 개선과 검증",
     "status": "완료",
     "acceptance": "브라우저 및 데이터 검증",
-    "evidence": "증거/operations-proof.json 및 proof.json, 327 통과·1 제외"
+    "evidence": "증거/operations-proof.json 및 proof.json, 327 통과·1 제외",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "06",
     "task": "유경이 인계 패키지",
     "status": "완료",
     "acceptance": "전체 그림·실행법·검수 기록표",
-    "evidence": "먼저읽기·역할 가이드·기능 16개 표·실험표·HTML 검색/계산/모바일 검사"
+    "evidence": "먼저읽기·역할 가이드·기능 16개 표·실험표·HTML 검색/계산/모바일 검사",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   },
   {
     "id": "07",
     "task": "최종 점검·GitHub 저장",
-    "status": "진행 중",
+    "status": "완료",
     "acceptance": "증거 연결·미해결 목록·커밋",
-    "evidence": "최종 문서 감사·Git 커밋/업로드 준비"
+    "evidence": "코드·인계 패키지 6482afc GitHub 업로드, 문서/브라우저/ZIP 검증 통과",
+    "updatedAt": "2026-09-29T23:53:55+09:00"
   }
 ]
