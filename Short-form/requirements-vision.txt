@@ -1,0 +1,10 @@
+# 선택 — 디졸브·모프까지 잡으려면 이것도 설치한다 (약 300MB).
+# 없으면 신경망 신호만 빠지고 나머지 여섯 개로 그대로 돈다.
+#
+#   pip install -r requirements-vision.txt
+#
+# ※ torch 는 CPU 판이면 충분하다. GPU 가 있으면 더 빠르다:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+torch>=1.9.0
+transnetv2-pytorch

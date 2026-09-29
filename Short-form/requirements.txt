@@ -1,0 +1,7 @@
+httpx
+fal-client
+
+# 씬 분할 (agent/detectors.py, agent/scenecut.py)
+opencv-python
+numpy
+yt-dlp
