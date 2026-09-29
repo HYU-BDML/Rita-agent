@@ -1,3 +1,4 @@
+import{experimentMaterial}from'@/lib/cora/experiment';
 import{rm}from'node:fs/promises';import{videoPath}from'@/lib/cora/video';
 import {NextRequest} from 'next/server';
 import {store} from '@/lib/cora/store';import{json,user,sameOrigin,body}from '@/lib/cora/http';
@@ -11,6 +12,7 @@ export async function POST(req:NextRequest){
   if(b.action==='save'){if(!['blog','script','material','calendar','automation'].includes(b.kind)||!b.data||typeof b.data!=='object'||Array.isArray(b.data)||JSON.stringify(b.data).length>100000)throw new Error('저장 형식을 확인해 주세요.');if(b.kind==='calendar'&&(!Number.isFinite(Date.parse(b.data.scheduledAt))||b.data.status!=='planned'))throw new Error('유효한 일정과 planned 상태가 필요합니다.');return json({item:store().addItem(u.id,b.kind,text(b.title,200),b.data)},201);}
   if(b.action==='fetch')return json(await fetchPublic(text(b.url,1500)));
   if(b.action==='discover'){const q=text(b.query??'',100).toLocaleLowerCase();const r=await fetchAll(SOURCES,8000);const seen=new Set<string>();const articles=r.articles.filter(a=>{if(seen.has(a.url))return false;seen.add(a.url);return!q||`${a.title} ${a.summary}`.toLocaleLowerCase().includes(q);}).slice(0,80);return json({articles,failed:r.failed});}
+  if(b.action==='experiment'){const id=text(b.analysisId,80),analysis=store().item(u.id,id);if(!analysis||analysis.kind!=='analysis')return json({error:'진단 자료를 찾을 수 없습니다.'},404);const material=experimentMaterial(analysis.data,b.hypothesis);return json({item:store().addItem(u.id,'material','진단에서 만든 콘텐츠 실험',{...material,analysisId:id,analysisCreatedAt:analysis.createdAt})},201);}
   if(b.action==='analyze'){const result=analyzeCSV(text(b.csv,200000));return json({item:store().addItem(u.id,'analysis','수동 자료 진단',result)},201);}
   if(b.action==='generate'){
    if(!['blog','script','ideas'].includes(b.format))throw new Error('지원 형식: blog, script, ideas');const material=text(b.material);if(material.trim().length<10)throw new Error('10자 이상의 자료가 필요합니다.');

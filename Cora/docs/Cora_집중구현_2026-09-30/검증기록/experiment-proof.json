@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "CSV UI exposes duplicate exclusion, missingness and corrected weighted rate",
+    "Quality metadata persists after reload",
+    "Malformed column counts rejected by server API",
+    "Saved diagnostic hypothesis and provenance reach the production brief without AI calls",
+    "Another account cannot build a brief from the owner diagnostic"
+  ],
+  "passed": true
+}
