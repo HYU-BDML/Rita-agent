@@ -809,7 +809,7 @@
     "status": "부분 구현",
     "acceptance": "사용자 경로→실제 저장/외부 결과→실패 복구까지 테스트",
     "external_condition": "실제 권한·자료·공급사 계약이 필요한 항목 별도",
-    "evidence": "06_게시준비와_어댑터.md; 검증기록/publication-proof.json; 승인본 고정·중복 준비 방지·원본 변경/검토 회수 감지. Blotato 접수/예약/게시/unknown 계약 모의 시험 통과. 실제 전송·영구 큐·결과 대조 연결 대기."
+    "evidence": "07_게시큐와_결과대조.md; 검증기록/queue-proof.json; SQLite 모의 큐·동시 실행 잠금·재시작 유지·unknown 무재전송·접수 ID 대조·전환 이력 구현/검증. 실제 공급자 연결과 주기적 스케줄러 대기."
   },
   {
     "id": "F067",

@@ -43,3 +43,7 @@ Sabrina의 옛 템플릿/API 주소가 이동됐다. 현재 공개 문서는 아
 공식 계약: https://help.blotato.com/rest-api-reference/publish-post · https://help.blotato.com/rest-api-reference/publish-post/get-post · https://help.blotato.com/rest-api-reference/accounts
 
 사용자별 자격 증명과 실제 계정 소유권 연결, 승인 미디어 호스팅, 영구 실행 큐 및 결과 대조는 후속 구현이다. 상세 검증과 제한은 `docs/Cora_집중구현_2026-09-30/06_게시준비와_어댑터.md`를 따른다.
+
+## 모의 실행 큐 추가
+
+`lib/cora/publishing/queue.ts`가 승인본 준비에 연결된 SQLite 모의 실행·잠금·대조·전환 이력을 제공한다. UI/API는 외부 호출 없는 공급자만 사용한다. 실제 Blotato 어댑터와 연결하지 않았고 주기적 스케줄러는 없다. 동시 실행·응답 유실 시 재전송 금지·접수 ID 대조를 검증했다. `docs/Cora_집중구현_2026-09-30/07_게시큐와_결과대조.md`에 재현과 한계를 기록한다.

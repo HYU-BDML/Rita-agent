@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "UI saves approved snapshot and converts Korean local time to UTC; explicitly no live sending",
+    "Repeated preparation returns same job without duplicate",
+    "Other account cannot access preparation; sending action is unavailable",
+    "Simulation enqueue is idempotent and UI starts exactly one network-free submission",
+    "Queue persists across page reload; another account cannot advance or read job history",
+    "After polling interval UI reconciles to explicit simulated completion and keeps audit events",
+    "Editing source requires re-review and preserves prepared caption",
+    "Owner cancels prepared job through UI"
+  ],
+  "errors": [],
+  "passed": true
+}
