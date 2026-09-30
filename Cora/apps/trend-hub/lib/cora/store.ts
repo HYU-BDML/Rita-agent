@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { PublicationQueue } from './publishing/queue';
+import { JobScheduler } from './scheduler';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -11,6 +12,7 @@ const digest = (value: string) => createHash('sha256').update(value).digest('hex
 export class CoraStore {
   private db: DatabaseSync;
   readonly publicationQueue: PublicationQueue;
+  readonly scheduler: JobScheduler;
   constructor(file: string) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.db = new DatabaseSync(file);
@@ -24,6 +26,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS publication_drafts(id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, review_id TEXT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE, version INTEGER NOT NULL, account_label TEXT NOT NULL, scheduled_at TEXT NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL, UNIQUE(project_id,version,account_label,scheduled_at));
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
     this.publicationQueue = new PublicationQueue(this.db);
+    this.scheduler = new JobScheduler(this.db);
   }
   signup(email: string, password: string) {
     const salt = randomBytes(16).toString('hex'); const hash = scryptSync(password, salt, 64).toString('hex');

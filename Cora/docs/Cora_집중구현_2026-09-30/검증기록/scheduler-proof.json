@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "UI schedules publication auto-progress; repeated schedule is idempotent; background flag reported off",
+    "Other account cannot list, cancel, read history or schedule; cross-origin POST rejected",
+    "Run-now submits exactly once; running again before the slot does nothing",
+    "Job persists across reload, reconciles to simulated completion and stops itself; run log visible in UI",
+    "Recipe schedule without AI permission is skipped to next weekly slot; no generation run recorded",
+    "Owner toggles AI permission, pauses, resumes and cancels the recipe schedule through the UI"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -20,6 +20,7 @@ export class PublicationQueue {
   private event(id:string,state:State,event:string,now:number){this.db.prepare('INSERT INTO publication_events(job_id,state,event,created) VALUES(?,?,?,?)').run(id,state,event,now);}
   private valid(user:string,draft:string|null){if(!draft)return false;return !!this.db.prepare("SELECT d.id FROM publication_drafts d JOIN projects p ON p.id=d.project_id JOIN reviews r ON r.id=d.review_id WHERE d.id=? AND d.user_id=? AND d.status='awaiting_connection' AND d.version=p.version AND r.status='approved'").get(draft,user);}
   list(user:string){return (this.db.prepare('SELECT id,draft_id,state,submission_id,attempts,public_url,created,updated FROM publication_queue WHERE user_id=? ORDER BY created DESC LIMIT 50').all(user) as Pick<Row,'id'|'draft_id'|'state'|'submission_id'|'attempts'|'public_url'|'created'|'updated'>[]).map(r=>({...r,mode:'simulation'}));}
+  get(user:string,id:string){const r=this.row(user,id);return r?{id:r.id,draft_id:r.draft_id,state:r.state,submission_id:r.submission_id,attempts:r.attempts,public_url:r.public_url,next_poll:r.next_poll,mode:'simulation' as const}:null;}
   history(user:string,id:string){if(!this.row(user,id))throw new Error('NOT_FOUND');return this.db.prepare('SELECT state,event,created FROM publication_events WHERE job_id=? ORDER BY id').all(id);}
   enqueue(user:string,draft:string,now=Date.now()){
     this.db.exec('BEGIN IMMEDIATE');try{
