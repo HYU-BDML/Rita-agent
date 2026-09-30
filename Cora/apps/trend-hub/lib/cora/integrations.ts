@@ -20,10 +20,10 @@ export const INTEGRATIONS: Integration[] = [
   { id: 'apify', label: 'Apify(인기 게시물·광고 수집)', env: ['APIFY_API_TOKEN'], features: ['F008', 'F009'], note: 'llmgw 설정에 이미 있는 토큰을 실행 스크립트가 이름으로 전달' },
   { id: 'youtube', label: 'YouTube Data API 키', env: ['YOUTUBE_API_KEY'], features: ['F005'], note: 'llmgw 설정에 이미 있는 키를 실행 스크립트가 이름으로 전달' },
 ];
-export function integrationStatus(env: NodeJS.ProcessEnv = process.env) {
+export function integrationStatus(env: Record<string, string | undefined> = process.env) {
   return INTEGRATIONS.map(i => ({ id: i.id, label: i.label, features: i.features, note: i.note, via: i.via ?? 'cora', configured: i.via === 'llmgw' ? null : i.env.every(k => typeof env[k] === 'string' && env[k]!.trim() !== ''), missing: i.via === 'llmgw' ? [] : i.env.filter(k => !env[k]?.trim()) }));
 }
-export function requireIntegration(id: string, env: NodeJS.ProcessEnv = process.env) {
+export function requireIntegration(id: string, env: Record<string, string | undefined> = process.env) {
   const s = integrationStatus(env).find(x => x.id === id); if (!s) throw new Error('알 수 없는 연결입니다.');
   if (s.configured === false) throw Object.assign(new Error(`${s.label} 연결 정보가 없습니다. 발급 목록 문서(18_API_발급목록.md)를 참고해 설정해 주세요.`), { code: 'NOT_CONFIGURED', missing: s.missing });
   return s;
