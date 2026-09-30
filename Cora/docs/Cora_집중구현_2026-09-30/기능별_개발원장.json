@@ -50,10 +50,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/social-accounts/new",
     "reuse": "현재 SQLite/auth 확장, 멤버/역할 분리",
-    "status": "미구현",
+    "status": "부분 구현",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 연결할 플랫폼 선택→해당 서비스 승인 경로로 이동하는 UI.",
     "external_condition": "실제 연결은 미실행. 비활성 원인이 요금제·지역·일시 중단 중 무엇인지는 미확인.",
-    "evidence": ""
+    "evidence": "15_Instagram_공식API_연결.md; Instagram 공식 API(Instagram Login) 게시 어댑터와 계약 시험 6개. 계정 연결(OAuth) 화면·토큰 저장·공개 이미지 보관 장소·실제 계정 시험은 미완."
   },
   {
     "id": "F094",
@@ -809,7 +809,7 @@
     "status": "부분 검증",
     "acceptance": "사용자 경로→실제 저장/외부 결과→실패 복구까지 테스트",
     "external_condition": "실제 권한·자료·공급사 계약이 필요한 항목 별도",
-    "evidence": "07_게시큐와_결과대조.md; 검증기록/queue-proof.json; SQLite 모의 큐·동시 실행 잠금·재시작 유지·unknown 무재전송·접수 ID 대조·전환 이력 구현/검증.; 13_예약작업_스케줄러.md: 모의 게시 자동 진행 예약(10초 간격 대조, 종료 상태에서 자동 중단), 실패 3회 후 중단·재개, 임대 만료 처리, 백그라운드 루프(CORA_SCHEDULER=1) 실제 진행 확인. 실제 공급자 연결은 대기."
+    "evidence": "07_게시큐와_결과대조.md; 검증기록/queue-proof.json; SQLite 모의 큐·동시 실행 잠금·재시작 유지·unknown 무재전송·접수 ID 대조·전환 이력 구현/검증.; 13_예약작업_스케줄러.md: 모의 게시 자동 진행 예약(10초 간격 대조, 종료 상태에서 자동 중단), 실패 3회 후 중단·재개, 임대 만료 처리, 백그라운드 루프(CORA_SCHEDULER=1) 실제 진행 확인. 실제 공급자 연결은 대기.; 15_Instagram_공식API_연결.md: Instagram 컨테이너 방식으로 게시 응답 유실 시에도 중복 게시가 없도록 접수와 게시를 분리(계약 시험)."
   },
   {
     "id": "F067",
@@ -890,10 +890,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/api-reference",
     "reuse": "Sabrina n8n/Blotato 어댑터·idempotency·결과 대조",
-    "status": "미구현",
+    "status": "부분 구현",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 게시물에 플랫폼별 옵션을 붙인다.",
     "external_condition": "문서 필드 존재만 확인. 실제 지원 조건은 API 실행 미검증.",
-    "evidence": ""
+    "evidence": "15_Instagram_공식API_연결.md: 단일 이미지·카루셀(최대 10장) 컨테이너, JPEG·공개 HTTPS·캡션 2,200자·해시태그 30개 검증, 24시간 게시 한도 조회. 릴스·위치·사용자 태그 옵션과 실제 게시 검증은 미완."
   },
   {
     "id": "F073",
