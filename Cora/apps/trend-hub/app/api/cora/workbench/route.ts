@@ -2,7 +2,7 @@ import{experimentMaterial}from'@/lib/cora/experiment';
 import{rm}from'node:fs/promises';import{videoPath}from'@/lib/cora/video';
 import {NextRequest} from 'next/server';
 import {store} from '@/lib/cora/store';import{json,user,sameOrigin,body}from '@/lib/cora/http';
-import{generateText}from '@/lib/cora/gateway';import{RECIPE_FORMATS}from '@/lib/cora/scheduler-handlers';import{fetchAll,SOURCES}from '@/lib/collect/rss';import{fetchPublic}from '@/lib/cora/source';import{analyzeCSV}from '@/lib/cora/analytics';
+import{generateText}from '@/lib/cora/gateway';import{RECIPE_FORMATS}from '@/lib/cora/scheduler-handlers';import{createOutline,approveOutline,reopenOutline,writeFromOutline}from '@/lib/cora/blog-outline';import{fetchAll,SOURCES}from '@/lib/collect/rss';import{fetchPublic}from '@/lib/cora/source';import{analyzeCSV}from '@/lib/cora/analytics';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=180;
 export function GET(req:NextRequest){const u=user(req);return u?json({items:store().items(u.id).filter(x=>x.kind!=='run'),capabilities:{llm:true,posting:false},llmStatus:'로컬 게이트웨이 설정 필요. 실행 결과로 연결을 확인합니다.'}):json({error:'로그인이 필요합니다.'},401);}
 export async function POST(req:NextRequest){
@@ -15,6 +15,13 @@ export async function POST(req:NextRequest){
   if(b.action==='discover'){const q=text(b.query??'',100).toLocaleLowerCase();const r=await fetchAll(SOURCES,8000);const seen=new Set<string>();const articles=r.articles.filter(a=>{if(seen.has(a.url))return false;seen.add(a.url);return!q||`${a.title} ${a.summary}`.toLocaleLowerCase().includes(q);}).slice(0,80);return json({articles,failed:r.failed});}
   if(b.action==='experiment'){const id=text(b.analysisId,80),analysis=store().item(u.id,id);if(!analysis||analysis.kind!=='analysis')return json({error:'진단 자료를 찾을 수 없습니다.'},404);const material=experimentMaterial(analysis.data,b.hypothesis);return json({item:store().addItem(u.id,'material','진단에서 만든 콘텐츠 실험',{...material,analysisId:id,analysisCreatedAt:analysis.createdAt})},201);}
   if(b.action==='analyze'){const result=analyzeCSV(text(b.csv,200000));return json({item:store().addItem(u.id,'analysis','수동 자료 진단',result)},201);}
+  if(['outline','write-from-outline'].includes(b.action)){
+   // Each paid call counts toward the same local daily limit and is logged as a run before calling the gateway.
+   const limited=async(userId:string,prompt:string)=>{if(store().generationCount(userId)>=10)throw Object.assign(new Error('로컬 시험용 하루 10회 한도입니다. 실패도 실행 기록에 포함합니다.'),{status:429});store().addItem(userId,'run','AI 실행 요청',{format:b.action});return generateText(userId,prompt);};
+   try{if(b.action==='outline')return json({item:await createOutline(store(),u.id,b,limited)},201);return json({item:await writeFromOutline(store(),u.id,text(b.id,80),limited)},201);}
+   catch(e){const m=(e as Error).message;const map:Record<string,[string,number]>={NOT_FOUND:['개요를 찾을 수 없습니다.',404],WRITING:['이미 이 개요로 본문을 쓰는 중입니다. 결과를 기다려 주세요.',409],WRITTEN:['이 개요로는 이미 본문을 만들었습니다. 개요를 복사해 새로 승인해 주세요.',409],NOT_APPROVED:['승인한 개요만 본문으로 만들 수 있습니다.',409]};if(map[m])return json({error:map[m][0]},map[m][1]);if((e as {status?:number}).status===429)return json({error:m},429);throw e;}
+  }
+  if(b.action==='approve-outline'||b.action==='reopen-outline'){try{return json({item:b.action==='approve-outline'?approveOutline(store(),u.id,text(b.id,80),b.expectedText,b.text):reopenOutline(store(),u.id,text(b.id,80))});}catch(e){const m=(e as Error).message;const map:Record<string,[string,number]>={NOT_FOUND:['개요를 찾을 수 없습니다.',404],ALREADY_APPROVED:['이미 승인된 개요입니다. 다시 고치려면 승인 취소 후 수정해 주세요.',409],STALE:['다른 창에서 개요가 바뀌었습니다. 최신 개요를 다시 열어 확인해 주세요.',409],CONFLICT:['승인된 개요만 승인 취소할 수 있습니다.',409]};if(map[m])return json({error:map[m][0]},map[m][1]);throw e;}}
   if(b.action==='generate'){
    if(!['blog','script','ideas'].includes(b.format))throw new Error('지원 형식: blog, script, ideas');const material=text(b.material);if(material.trim().length<10)throw new Error('10자 이상의 자료가 필요합니다.');
    if(store().generationCount(u.id)>=10)return json({error:'로컬 시험용 하루 10회 한도입니다. 실패도 실행 기록에 포함합니다.'},429);
