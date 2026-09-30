@@ -91,12 +91,12 @@ export class JobScheduler {
   /** One worker pass: claim, run each handler, finish. Handler errors never leak provider details into the run log. */
   async runDue(handlers:Partial<Record<JobKind,Handler>>,opts:{now?:number;user?:string}={}){
     const clock=()=>opts.now??Date.now();const started=clock();
-    const claims=this.claimDue(started,10,opts.user);const results:{id:string;outcome:string}[]=[];
+    const claims=this.claimDue(started,10,opts.user);const results:{id:string;outcome:string;userId:string;kind:string}[]=[];
     for(const claim of claims){
       const handler=handlers[claim.kind];let outcome:HandlerOutcome='failed',detail='';
       if(!handler)detail='이 작업 종류를 실행할 처리기가 없습니다.';
       else try{const v=await handler(claim,started);if(typeof v==='string'){outcome=v;}else{outcome=v.outcome;detail=v.detail??'';}}catch(e){outcome='failed';detail=e instanceof Error?e.message:'실행 실패';}
-      this.finish(claim,{outcome,detail},started,clock());results.push({id:claim.id,outcome});
+      this.finish(claim,{outcome,detail},started,clock());results.push({id:claim.id,outcome,userId:claim.userId,kind:claim.kind});
     }
     return results;
   }

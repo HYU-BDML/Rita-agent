@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Library view is mounted; applying a saved template from the UI changes the open draft design and saves as v2",
+    "Review request and decision create in-app notifications for the other account; settings view shows them",
+    "Team invitation creates an in-app notification for the invitee",
+    "Ideas, billing and settings views render without page errors"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Template saved from project, built-in copied, favorited, edited; stale edit returns 409",
+    "apply-template keeps user text and applies design and styles",
+    "Second account sees nothing and gets 404 on every template action against the first account",
+    "Invalid logo 400, 6th logo 400, default per brand switches, other account 404, delete works",
+    "CTA length 400, brand filter, usage count 2, other account 404, cross-origin POST 403"
+  ],
+  "errors": [],
+  "uiMounted": false,
+  "note": "UI mounting pending: LibraryDesk not reachable from studio yet; verified through API in logged-in browser contexts.",
+  "passed": true
+}

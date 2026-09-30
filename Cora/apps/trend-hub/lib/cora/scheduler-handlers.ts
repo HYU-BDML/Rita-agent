@@ -1,6 +1,7 @@
 import type { CoraStore } from './store';
 import type { Claim, Handler, JobKind } from './scheduler';
 import { localSimulation, type SimulationProvider } from './publishing/queue';
+import { notifyUser } from './notifier';
 
 /** Queue states after which polling stops. 'unknown' without a submission id is a send ambiguity and is never retried. */
 const TERMINAL=new Set(['published','failed','blocked','cancelled']);
@@ -19,7 +20,7 @@ export function schedulerHandlers(store:CoraStore,deps:{provider?:SimulationProv
       if(TERMINAL.has(before.state)||(before.state==='unknown'&&!before.submission_id))return{outcome:'completed',detail:`이미 종료 상태(${before.state})입니다.`};
       await q.tick(claim.userId,claim.refId,provider,now);
       const after=q.get(claim.userId,claim.refId)!;
-      if(TERMINAL.has(after.state)||(after.state==='unknown'&&!after.submission_id))return{outcome:'completed',detail:`모의 게시 ${after.state} 상태로 종료 (실제 게시 아님)`};
+      if(TERMINAL.has(after.state)||(after.state==='unknown'&&!after.submission_id)){notifyUser(claim.userId,'publish_result',{title:`모의 게시 결과: ${after.state}`,body:'실제 게시가 아닌 모의 결과입니다.',link:'/studio'},store);return{outcome:'completed',detail:`모의 게시 ${after.state} 상태로 종료 (실제 게시 아님)`};}
       return{outcome:'ok',detail:`모의 상태 ${after.state}`};
     },
     async recipe_run(claim:Claim){

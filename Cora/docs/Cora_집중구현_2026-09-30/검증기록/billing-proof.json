@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "GET returns free plan, 14-day trial, 50 trial credits, 6 prices, 1 ledger row, test mode",
+    "quote card_ai = 10 credits",
+    "unknown feature 400, cross-origin/no-origin 403, anonymous 401",
+    "pack order created server-side with amount 5000",
+    "confirm without Toss test keys -> 503 NOT_CONFIGURED (Korean message), balance unchanged",
+    "wrong amount 400; another user confirming this order 404",
+    "upgrade creates an order (9900) and does not change the plan before payment",
+    "set-price is 403 for a non-admin user",
+    "user B sees no orders of user A"
+  ],
+  "errors": [],
+  "uiMounted": false,
+  "passed": true
+}
