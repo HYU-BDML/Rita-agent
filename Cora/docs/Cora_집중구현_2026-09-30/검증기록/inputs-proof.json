@@ -1,0 +1,94 @@
+{
+  "checks": [
+    {
+      "name": "signup two accounts"
+    },
+    {
+      "name": "pdf ascii to draft",
+      "cards": 3,
+      "paragraphs": 1,
+      "firstBody": "Cora imports text from PDF files. Each sentence becomes card"
+    },
+    {
+      "name": "pdf CJK ToUnicode to draft",
+      "body": "한글 한글"
+    },
+    {
+      "name": "scanned pdf refused",
+      "error": "이 PDF에서 글자를 찾지 못했습니다. 스캔한 이미지 PDF는 글자 인식(OCR)을 지원하지 않습니다. 글자를 드래그해 선택할 수 있는 PDF를 올리거나 본문을 직접 붙여 넣어 주세요."
+    },
+    {
+      "name": ">5MB refused",
+      "error": "PDF는 5MB 이내여야 합니다."
+    },
+    {
+      "name": "import needs same origin"
+    },
+    {
+      "name": "import needs login"
+    },
+    {
+      "name": "youtube foreign host refused",
+      "error": "youtube.com 또는 youtu.be 주소만 사용할 수 있습니다."
+    },
+    {
+      "name": "youtube without key gives Korean setup error",
+      "error": "YouTube API 키(YOUTUBE_API_KEY)가 설정되지 않았습니다. 제목과 설명을 직접 붙여 넣어 주세요."
+    },
+    {
+      "name": "javascript: link refused"
+    },
+    {
+      "name": "reserved slug refused"
+    },
+    {
+      "name": "slug already taken by another account"
+    },
+    {
+      "name": "public link page anonymous, escaped, strict CSP, no script",
+      "csp": "default-src 'none'; img-src data: https:; style-src 'unsafe-inline'",
+      "buttons": 2,
+      "title": "<script>window.__x=1</script>제목"
+    },
+    {
+      "name": "click counter",
+      "clicks": {
+        "9b43348a": 2,
+        "a2be3c42": 1
+      }
+    },
+    {
+      "name": "owner-only edit API"
+    },
+    {
+      "name": "click rate limit per IP -> 429"
+    },
+    {
+      "name": "help page renders and contact form submits"
+    },
+    {
+      "name": "honeypot answers success but is not stored (unit test verifies storage)"
+    },
+    {
+      "name": "Bearer key lists owner projects",
+      "count": 1,
+      "remaining": "59"
+    },
+    {
+      "name": "other account key sees none of the owner projects"
+    },
+    {
+      "name": "revoked key -> 401"
+    },
+    {
+      "name": "60/min per key then 429 (1 call already used above)"
+    },
+    {
+      "name": "api-docs renders"
+    }
+  ],
+  "errors": [],
+  "passed": true,
+  "base": "http://127.0.0.1:3211",
+  "note": "UI mounting of ImportDesk/LinkPageEditor/ApiKeysPanel in studio is pending; proof drives the routes and public pages. YouTube is only exercised on guard paths (no real API call)."
+}
