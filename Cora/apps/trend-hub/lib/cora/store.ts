@@ -162,6 +162,11 @@ export class CoraStore {
     return rows.map(r=>({id:r.id,projectId:r.project_id,reviewId:r.review_id,version:r.version,currentVersion:r.current_version,accountLabel:r.account_label,scheduledAt:r.scheduled_at,status:r.status,effectiveStatus:r.status==='cancelled'?'cancelled':r.version!==r.current_version||r.review_status!=='approved'?'needs_review':r.status,title:(JSON.parse(r.snapshot) as Project).idea,brand:(JSON.parse(r.snapshot) as Project).brief.brand,caption:(JSON.parse(r.snapshot) as Project).caption,createdAt:r.created}));
   }
   cancelPublication(userId:string,id:string){return this.db.prepare("UPDATE publication_drafts SET status='cancelled' WHERE id=? AND user_id=? AND status='awaiting_connection'").run(id,userId).changes>0;}
+  private modules = new Map<string, unknown>();
+  /** Feature modules own their tables: store().module('name', db => new Feature(db)) creates once per connection. */
+  module<T>(name: string, factory: (db: DatabaseSync) => T): T { if (!this.modules.has(name)) this.modules.set(name, factory(this.db)); return this.modules.get(name) as T; }
+  /** User id for an existing account email, or null. For feature modules that address other accounts. */
+  userIdByEmail(email: string) { return (this.db.prepare('SELECT id FROM users WHERE email=?').get(String(email).trim().toLowerCase()) as { id: string } | undefined)?.id ?? null; }
   close() { this.db.close(); }
 }
 const globalStore = globalThis as typeof globalThis & { coraStore?: CoraStore };
