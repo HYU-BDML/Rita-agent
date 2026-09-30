@@ -1,0 +1,37 @@
+{
+  "checks": [
+    "Composer UI saved one draft; Seoul 2026-10-10T17:20 stored as UTC 2026-10-10T08:20:00.000Z; livePublishing=false",
+    "Calendar item (kind calendar, planned) and scheduler publication_tick job (runAt = scheduled time, state active) exist",
+    "Repeating the composer creates no second draft, calendar item or job",
+    "Past time refused (400); other account gets 404 for this review",
+    "Month grid API merges calendar item + draft + job on the right Seoul day; bad month 400; other account sees 0 entries",
+    "3 recipe templates; save creates one automation item (repeat is idempotent); other account has none",
+    "Thread draft: 1 post and 501-char post rejected, exports text/json as attachments, attached to a calendar date, hidden from other account",
+    "Normalized metrics (missing != 0, n shown), period comparison with sample sizes and no p-values, follower trend +300; other account 404; overlapping periods 400",
+    "Report downloads as .md and .html attachments with escaped user text and CSP; other account 404",
+    "Republish UI: new draft + history old->new; old simulated job stays published",
+    "Republish refused (409) after the source content changed since approval; other account 404"
+  ],
+  "errors": [],
+  "numbers": {
+    "calendarEntriesInMonth": 1,
+    "normalized": {
+      "sample": {
+        "inputRows": 7,
+        "duplicateRows": 0,
+        "uniqueRows": 7,
+        "reachMissingOrZero": 1,
+        "reachEligibleRows": 6
+      },
+      "likesMedian": 0.1,
+      "commentsN": 5,
+      "sharesN": 4
+    },
+    "followerChange": 300,
+    "reportBytes": {
+      "md": 2615,
+      "html": 4627
+    }
+  },
+  "passed": true
+}

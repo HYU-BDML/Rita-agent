@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Calendar tab shows the thread composer; a 2-post draft with quote flag saves and exports as text",
+    "Recipe template saved from the automation tab becomes an automation recipe",
+    "Saved CSV analysis shows normalized rates with blank/zero reach excluded and follower change",
+    "Period comparison renders; HTML report downloads; AI question stays disabled until a question is typed (not called)"
+  ],
+  "errors": [],
+  "passed": true
+}
