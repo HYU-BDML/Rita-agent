@@ -12,3 +12,6 @@
 - Validate actual behavior before claiming functionality. Current local studio has build, unit and browser checks; see docs/Cora_실행과인계/04_검증결과.md for scope.
 
 - API cost policy (2026-09-30): default Cora generation to the dedicated llmgw cora_test route (verified deepseek-flash). Use cache, no automatic expensive fallback or retry. Select cora_quality explicitly only when the user requests higher-quality production use. Credential reference RTF remains outside the repo; never copy keys. Model routes live in ~/.config/llmgw/models.json; setup script adds only Cora routes.
+
+## Shared Claude / Codex handoff
+Read `docs/Cora_공동작업/00_시작과_현재상태.md` at the start of resumed work. Update its current state before handing back. One writer per checkout; the Codex Cora heartbeat was paused for the Claude handoff on 2026-09-30. Do not resume automation while Claude is editing. Preserve the existing branch, PR, user changes and Drive symlinks.
