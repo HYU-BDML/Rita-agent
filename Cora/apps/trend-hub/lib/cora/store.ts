@@ -73,6 +73,10 @@ export class CoraStore {
   addItem(userId:string,kind:string,title:string,data:Record<string,unknown>){const id=randomUUID(),createdAt=new Date().toISOString();this.db.prepare('INSERT INTO work_items VALUES (?,?,?,?,?,?)').run(id,userId,kind,title,JSON.stringify(data),createdAt);return {id,kind,title,data,createdAt};}
   updateItem(userId:string,id:string,data:Record<string,unknown>){this.db.prepare('UPDATE work_items SET data=? WHERE id=? AND user_id=?').run(JSON.stringify(data),id,userId);}
   item(userId:string,id:string){const r=this.db.prepare('SELECT * FROM work_items WHERE id=? AND user_id=?').get(id,userId) as {id:string;kind:string;title:string;data:string;created:string}|undefined;return r?{id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}:null;}
+  editItemText(userId:string,id:string,expectedText:string,text:string){
+    if(typeof expectedText!=='string'||typeof text!=='string'||!text.trim()||text.length>50000||expectedText.length>50000)throw new Error('본문은 1~50,000자입니다.');
+    this.db.exec('BEGIN IMMEDIATE');try{const item=this.item(userId,id);if(!item||!['blog','script','material'].includes(item.kind))throw new Error('NOT_FOUND');if(typeof item.data.text!=='string')throw new Error('편집할 본문이 없습니다.');if(item.data.text!==expectedText)throw new Error('CONFLICT');this.updateItem(userId,id,{...item.data,text,editedAt:new Date().toISOString(),humanEdited:true});const result=this.item(userId,id)!;this.db.exec('COMMIT');return result;}catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
   removeItem(userId:string,id:string){return this.db.prepare('DELETE FROM work_items WHERE id=? AND user_id=?').run(id,userId).changes>0;}
   generationCount(userId:string){return Number((this.db.prepare("SELECT COUNT(*) as n FROM work_items WHERE user_id=? AND kind='run' AND created>=?").get(userId,new Date(Date.now()-86400000).toISOString()) as {n:number}).n);}
   brands(userId:string):BrandProfile[] {return (this.db.prepare('SELECT id,body FROM brands WHERE user_id=? ORDER BY rowid DESC').all(userId) as {id:string;body:string}[]).map(r=>({...JSON.parse(String(r.body)),id:String(r.id)}));}
