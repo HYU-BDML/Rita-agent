@@ -2,7 +2,10 @@ import { deckFromCards } from '../producers/deck';
 
 export interface Brief { brand: string; audience: string; goal: string; material: string; sourceUrl: string; accent: string }
 export interface Idea { id: string; title: string; description: string; structure: string }
-export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string }
+/** Per-card text and photo settings. Every field is optional so older saved projects stay valid. */
+export interface SlideStyle { align?:'left'|'center'|'right'; emphasis?:string; letterSpacing?:number; lineHeight?:number; imageFit?:'cover'|'contain'; imagePosition?:'top'|'center'|'bottom'; imageBrightness?:number }
+export const LINE_HEIGHTS=[1.3,1.45,1.55,1.75,2] as const;
+export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; style?:SlideStyle }
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
@@ -36,6 +39,20 @@ export function outline(b: Brief, idea: Idea): Draft {
 export function rendererContract(d: Draft) {
   return deckFromCards(d.slides.map((s, i) => ({ no: i + 1, kind: i === 0 ? '표지' : i === d.slides.length - 1 ? '마지막장' : '본문', headline: s.headline, body: s.body })), { template: 'explain_box', style: 'gogumafarm', account: d.brief.brand, kicker: '순서' });
 }
+export function validateStyle(value:unknown):SlideStyle{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');
+ const v=value as Record<string,unknown>,out:SlideStyle={};
+ const oneOf=<T extends string>(k:string,allowed:readonly T[])=>{if(v[k]===undefined)return;if(!allowed.includes(v[k] as T))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');return v[k] as T;};
+ const num=(k:string,ok:(n:number)=>boolean)=>{if(v[k]===undefined)return;const n=v[k];if(typeof n!=='number'||!Number.isFinite(n)||!ok(n))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');return n;};
+ const align=oneOf('align',['left','center','right'] as const);if(align)out.align=align;
+ if(v.emphasis!==undefined){if(typeof v.emphasis!=='string'||v.emphasis.length>40)throw new Error('강조할 단어는 40자 이내입니다.');if(v.emphasis.trim())out.emphasis=v.emphasis.trim();}
+ const ls=num('letterSpacing',n=>Number.isInteger(n)&&n>=-2&&n<=8);if(ls!==undefined)out.letterSpacing=ls;
+ const lh=num('lineHeight',n=>(LINE_HEIGHTS as readonly number[]).includes(n));if(lh!==undefined)out.lineHeight=lh;
+ const fit=oneOf('imageFit',['cover','contain'] as const);if(fit)out.imageFit=fit;
+ const pos=oneOf('imagePosition',['top','center','bottom'] as const);if(pos)out.imagePosition=pos;
+ const br=num('imageBrightness',n=>n>=0.5&&n<=1.5);if(br!==undefined)out.imageBrightness=Math.round(br*100)/100;
+ return out;
+}
 export function validateDraft(value: unknown): Draft {
   const v = value as Partial<Draft>;
   const str = (x: unknown, max: number, label: string) => { if (typeof x !== 'string' || x.length > max) throw new Error(`${label} 형식을 확인해 주세요.`); return x; };
@@ -52,6 +69,7 @@ export function validateDraft(value: unknown): Draft {
     if (s.image) { if (typeof s.image !== 'string' || s.image.length > 400000 || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s.image)) throw new Error('사진 크기 또는 형식을 확인해 주세요.'); slide.image = s.image; }
     if(s.seconds!==undefined){if(!Number.isInteger(s.seconds)||s.seconds<1||s.seconds>10)throw new Error('장면 길이는 1~10초입니다.');slide.seconds=s.seconds;}
     if(s.subtitle!==undefined)slide.subtitle=str(s.subtitle,200,'장면 자막');
+    if(s.style!==undefined)slide.style=validateStyle(s.style);
     return slide;
   });
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
