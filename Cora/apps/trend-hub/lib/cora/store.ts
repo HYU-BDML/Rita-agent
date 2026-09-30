@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { PublicationQueue } from './publishing/queue';
 import { JobScheduler } from './scheduler';
+import { TeamStore } from './team';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -13,6 +14,7 @@ export class CoraStore {
   private db: DatabaseSync;
   readonly publicationQueue: PublicationQueue;
   readonly scheduler: JobScheduler;
+  readonly team: TeamStore;
   constructor(file: string) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.db = new DatabaseSync(file);
@@ -27,6 +29,7 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
     this.publicationQueue = new PublicationQueue(this.db);
     this.scheduler = new JobScheduler(this.db);
+    this.team = new TeamStore(this.db);
   }
   signup(email: string, password: string) {
     const salt = randomBytes(16).toString('hex'); const hash = scryptSync(password, salt, 64).toString('hex');
@@ -53,6 +56,31 @@ export class CoraStore {
   get(userId: string, id: string): Project | null {
     const r = this.db.prepare('SELECT * FROM projects WHERE id=? AND user_id=?').get(id, userId) as ProjectRow | undefined;
     return r ? { ...JSON.parse(String(r.body)), id: String(r.id), version: Number(r.version), createdAt: String(r.created), updatedAt: String(r.updated) } : null;
+  }
+  /** Owner of a project, or null. Used to resolve team editor access without widening get()/save(). */
+  private projectOwner(id: string) { return (this.db.prepare('SELECT user_id FROM projects WHERE id=?').get(id) as { user_id: string } | undefined)?.user_id ?? null; }
+  /** Own project, or a teammate's project this user may edit (active editor, brand allowed). */
+  getAccessible(userId: string, id: string): (Project & { access: 'owner' | 'editor'; ownerEmail?: string }) | null {
+    const own = this.get(userId, id); if (own) return { ...own, access: 'owner' };
+    const owner = this.projectOwner(id); if (!owner) return null;
+    const p = this.get(owner, id); if (!p || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(owner) as { email: string }).email;
+    return { ...p, access: 'editor', ownerEmail: email };
+  }
+  /** Saves as the owner when the caller is an allowed editor. An editor cannot move work into a brand outside their grant. */
+  saveAccessible(userId: string, body: Draft, id: string, version: number): Project | null {
+    if (this.get(userId, id)) return this.save(userId, body, id, version);
+    const owner = this.projectOwner(id); if (!owner) return null;
+    const p = this.get(owner, id); if (!p || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    if (!this.team.canEdit(userId, owner, body.brief.brand)) throw new Error('권한이 없는 브랜드로 옮길 수 없습니다.');
+    return this.save(owner, body, id, version);
+  }
+  /** Projects in workspaces where this user is an active editor, filtered by granted brands. */
+  sharedProjects(userId: string) {
+    return this.team.editorGrants(userId).flatMap(g => {
+      const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(g.ownerId) as { email: string }).email;
+      return this.list(g.ownerId).filter(p => g.brands.length === 0 || g.brands.includes(p.brand)).map(p => ({ ...p, ownerEmail: email }));
+    });
   }
   save(userId: string, body: Draft, id?: string, version?: number): Project | null {
     const time = new Date().toISOString(); let encoded = JSON.stringify(body);
