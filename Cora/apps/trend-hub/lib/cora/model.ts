@@ -15,7 +15,7 @@ export interface Layer { id:string; type:LayerType; x:number; y:number; w:number
   text?:string; fontSize?:number; color?:string; weight?:400|500|600|700|800; align?:'left'|'center'|'right';
   src?:string; fill?:string; radius?:number }
 export const MAX_LAYERS=12;
-export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; style?:SlideStyle; layers?:Layer[] }
+export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; keyword?:string; style?:SlideStyle; layers?:Layer[] }
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
@@ -112,6 +112,7 @@ export function validateDraft(value: unknown): Draft {
     if (s.image) { if (typeof s.image !== 'string' || s.image.length > 400000 || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s.image)) throw new Error('사진 크기 또는 형식을 확인해 주세요.'); slide.image = s.image; }
     if(s.seconds!==undefined){if(!Number.isInteger(s.seconds)||s.seconds<1||s.seconds>10)throw new Error('장면 길이는 1~10초입니다.');slide.seconds=s.seconds;}
     if(s.subtitle!==undefined)slide.subtitle=str(s.subtitle,200,'장면 자막');
+    if(s.keyword!==undefined&&s.keyword!==''){const k=str(s.keyword,30,'강조 단어').trim();if(k&&!(slide.subtitle??'').includes(k))throw new Error('영상 강조 단어는 그 장면 자막에 들어 있어야 합니다.');if(k)slide.keyword=k;}
     if(s.style!==undefined)slide.style=validateStyle(s.style);
     if(s.layers!==undefined)slide.layers=validateLayers(s.layers);
     return slide;
