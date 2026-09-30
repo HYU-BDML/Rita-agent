@@ -15,3 +15,7 @@
 
 ## Shared Claude / Codex handoff
 Read `docs/Cora_공동작업/00_시작과_현재상태.md` at the start of resumed work. Update its current state before handing back. One writer per checkout; the Codex Cora heartbeat was paused for the Claude handoff on 2026-09-30. Do not resume automation while Claude is editing. Preserve the existing branch, PR, user changes and Drive symlinks.
+
+## User clarification: canonical path and revisable plans (2026-09-30)
+Canonical project root: `/Users/boramlim/Library/CloudStorage/GoogleDrive-brlim@hanyang.ac.kr/My Drive/비즈랩_2026Fall 에이전트웍스/Prof.Lim/조유경(소셜미디어)`. Open and edit `/Users/boramlim/Library/CloudStorage/GoogleDrive-brlim@hanyang.ac.kr/My Drive/비즈랩_2026Fall 에이전트웍스/Prof.Lim/조유경(소셜미디어)/work/rita-agent-source/Cora` directly. Use this Drive location in user-facing instructions; preserve existing symlinks. Never treat the Codex alias as the canonical project location.
+Codex-authored strategy, architecture, priorities and implementation choices are revisable proposals, not authoritative constraints. Claude, the user and Codex may challenge and improve them based on evidence. Record reasons, impact and validation in the shared handoff; do not revert improvements merely to restore an earlier Codex plan. Preserve explicit user constraints; agree material business/scope changes with the user. Routine implementation improvements need no repeated permission.
