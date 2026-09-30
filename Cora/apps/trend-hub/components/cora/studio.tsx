@@ -12,6 +12,7 @@ import { LibraryDesk } from './library';
 import { IdeasBoard } from './ideas-board';
 import { BillingDesk } from './billing';
 import { SettingsDesk } from './settings';
+import { AccountPanel } from './account';
 import { ImportDesk, LinkPageEditor, ApiKeysPanel } from './inputs';
 import { Workbench } from './workbench';
 
@@ -93,7 +94,7 @@ export function Studio(){
     {view==='assets'&&<LibraryDesk onApply={draft?templateId=>void run(async()=>{const r=await fetch('/api/cora/library',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'apply-template',templateId,draft})});const v=await r.json();if(!r.ok)throw new Error(v.error);setDraft(v.draft);setView('edit');}):undefined}/>}
     {view==='ideas'&&<IdeasBoard/>}
     {view==='billing'&&<BillingDesk/>}
-    {view==='settings'&&<SettingsDesk/>}
+    {view==='settings'&&<><SettingsDesk/><AccountPanel/></>}
     {view==='import'&&<ImportDesk onDraft={d=>{try{const next=validateDraft(d);setProject(null);setDraft(next);setBrief(next.brief);setSaved('');setSelected(0);setView('edit');setNotice('가져온 자료로 카드 초안을 만들었습니다. 저장해야 보관함에 남습니다.');}catch(e){setError(e instanceof Error?e.message:'가져온 초안 형식을 확인해 주세요.');}}}/>}
     {view==='publicpage'&&<><LinkPageEditor/><ApiKeysPanel/></>}
     {view==='library'&&<><div className={styles.libraryHeading}><div className={styles.pageHeading}><span className={styles.eyebrow}>YOUR CONTENT LIBRARY</span><h1>쌓이는 브랜드의 이야기.</h1><p>저장한 작업을 다시 열고, 다음 콘텐츠로 이어가세요.</p></div><button className={styles.primary} disabled={busy} onClick={newWork}>＋ 새 콘텐츠</button></div><section className={styles.panel}><label>브랜드 필터<select aria-label="브랜드 필터" value={brandFilter} onChange={e=>setBrandFilter(e.target.value)}><option value="">전체 브랜드</option>{Array.from(new Set(projects.map(p=>p.brand))).map(b=><option key={b} value={b}>{b}</option>)}</select></label><label>상태 필터<select aria-label="상태 필터" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="">모든 상태</option>{Object.entries(statusLabel).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><label>JSON 백업 불러오기<input aria-label="JSON 백업 불러오기" type="file" accept=".json,application/json" disabled={busy} onChange={e=>{void restore(e.target.files?.[0]);e.target.value='';}}/></label><p className={styles.hint}>이전에 내려받은 project.json을 새 작업으로 엽니다. 기존 작업을 덮어쓰지 않습니다.</p></section>{projects.length===0?<div className={styles.empty}><span>▤</span><h2>첫 번째 이야기를 기다리고 있어요.</h2><p>콘텐츠를 만들고 저장하면 이곳에 모입니다.</p><button className={styles.primary} onClick={()=>setView(draft?'edit':'brief')}>제작실로 가기 →</button></div>:<div className={styles.projectList}>{projects.filter(p=>(!brandFilter||p.brand===brandFilter)&&(!statusFilter||(p.workStatus??'draft')===statusFilter)).map(p=><button disabled={busy} key={p.id} className={styles.projectRow} onClick={()=>void open(p.id)}><span className={styles.fileIcon}>▤</span><span><b>{p.title}</b><small>{p.brand} · {statusLabel[p.workStatus??'draft']} · {p.count}장 · {new Date(p.updatedAt).toLocaleString('ko-KR')}</small></span><span className={styles.draftBadge}>저장본 v{p.version}</span><Arrow/></button>)}</div>}</>}
