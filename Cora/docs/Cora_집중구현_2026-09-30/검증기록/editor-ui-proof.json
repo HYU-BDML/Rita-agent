@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Text and shape layers added from the mounted panel appear in the card preview with text escaped",
+    "Layers are saved on the server as version 2",
+    "Restoring version 1 from the mounted history panel removes the layers in the open draft without saving",
+    "Version history lists v1 and v2; the Figma SVG export downloads a ZIP containing frames.svg"
+  ],
+  "errors": [],
+  "passed": true
+}

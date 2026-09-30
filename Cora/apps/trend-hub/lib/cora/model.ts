@@ -5,7 +5,17 @@ export interface Idea { id: string; title: string; description: string; structur
 /** Per-card text and photo settings. Every field is optional so older saved projects stay valid. */
 export interface SlideStyle { align?:'left'|'center'|'right'; emphasis?:string; letterSpacing?:number; lineHeight?:number; imageFit?:'cover'|'contain'; imagePosition?:'top'|'center'|'bottom'; imageBrightness?:number }
 export const LINE_HEIGHTS=[1.3,1.45,1.55,1.75,2] as const;
-export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; style?:SlideStyle }
+/**
+ * Free-form elements drawn on top of a card (coordinates in the 1080px-wide canvas, top-left origin).
+ * Static cards support text, image, logo and shape layers. Video elements are NOT layers: they belong to
+ * the video batch (per-scene motion/clip settings) and are intentionally not part of this type.
+ */
+export type LayerType='text'|'image'|'logo'|'shape';
+export interface Layer { id:string; type:LayerType; x:number; y:number; w:number; h:number; z:number; rotation?:number; opacity?:number; locked?:boolean; hidden?:boolean;
+  text?:string; fontSize?:number; color?:string; weight?:400|500|600|700|800; align?:'left'|'center'|'right';
+  src?:string; fill?:string; radius?:number }
+export const MAX_LAYERS=12;
+export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; style?:SlideStyle; layers?:Layer[] }
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
@@ -53,6 +63,39 @@ export function validateStyle(value:unknown):SlideStyle{
  const br=num('imageBrightness',n=>n>=0.5&&n<=1.5);if(br!==undefined)out.imageBrightness=Math.round(br*100)/100;
  return out;
 }
+const LAYER_ERR='요소 설정을 확인해 주세요.';
+const IMAGE_SRC=/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+/** Strict layer validation. Unknown types are refused; unknown keys are dropped so only known fields are stored. */
+export function validateLayers(value:unknown):Layer[]{
+ if(!Array.isArray(value)||value.length>MAX_LAYERS)throw new Error(`요소는 ${MAX_LAYERS}개 이하여야 합니다.`);
+ const ids=new Set<string>();
+ return value.map(raw=>{
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error(LAYER_ERR);
+  const v=raw as Record<string,unknown>;
+  if(typeof v.type!=='string'||!['text','image','logo','shape'].includes(v.type))throw new Error('지원하지 않는 요소 종류입니다.');
+  if(typeof v.id!=='string'||!v.id||v.id.length>80||ids.has(v.id))throw new Error('요소 번호가 비었거나 중복되었습니다.');ids.add(v.id);
+  const num=(k:string,lo:number,hi:number,int=false)=>{const n=v[k];if(typeof n!=='number'||!Number.isFinite(n)||n<lo||n>hi||(int&&!Number.isInteger(n)))throw new Error(LAYER_ERR);return n;};
+  const opt=(k:string,lo:number,hi:number,int=false)=>v[k]===undefined?undefined:num(k,lo,hi,int);
+  const hex=(k:string)=>{const c=v[k];if(typeof c!=='string'||!/^#[\da-f]{6}$/i.test(c))throw new Error(LAYER_ERR);return c;};
+  const flag=(k:string)=>{if(v[k]===undefined)return undefined;if(typeof v[k]!=='boolean')throw new Error(LAYER_ERR);return v[k] as boolean;};
+  const type=v.type as LayerType;
+  const l:Layer={id:v.id,type,x:num('x',-1080,3240),y:num('y',-1920,3840),w:num('w',1,4320),h:num('h',1,4320),z:num('z',0,999,true)};
+  const rot=opt('rotation',-360,360);if(rot!==undefined)l.rotation=rot;
+  const op=opt('opacity',0,1);if(op!==undefined)l.opacity=op;
+  const lk=flag('locked');if(lk!==undefined)l.locked=lk;const hd=flag('hidden');if(hd!==undefined)l.hidden=hd;
+  if(type==='text'){
+   if(typeof v.text!=='string'||v.text.length>300)throw new Error('요소 문구는 300자 이내입니다.');l.text=v.text;
+   l.fontSize=num('fontSize',8,400);l.color=hex('color');
+   if(![400,500,600,700,800].includes(v.weight as number))throw new Error(LAYER_ERR);l.weight=v.weight as Layer['weight'];
+   if(!['left','center','right'].includes(v.align as string))throw new Error(LAYER_ERR);l.align=v.align as Layer['align'];
+  }else if(type==='shape'){
+   l.fill=hex('fill');l.radius=num('radius',0,2000);
+  }else{
+   if(typeof v.src!=='string'||v.src.length>400000||!IMAGE_SRC.test(v.src))throw new Error('사진 크기 또는 형식을 확인해 주세요.');l.src=v.src;
+  }
+  return l;
+ });
+}
 export function validateDraft(value: unknown): Draft {
   const v = value as Partial<Draft>;
   const str = (x: unknown, max: number, label: string) => { if (typeof x !== 'string' || x.length > max) throw new Error(`${label} 형식을 확인해 주세요.`); return x; };
@@ -70,6 +113,7 @@ export function validateDraft(value: unknown): Draft {
     if(s.seconds!==undefined){if(!Number.isInteger(s.seconds)||s.seconds<1||s.seconds>10)throw new Error('장면 길이는 1~10초입니다.');slide.seconds=s.seconds;}
     if(s.subtitle!==undefined)slide.subtitle=str(s.subtitle,200,'장면 자막');
     if(s.style!==undefined)slide.style=validateStyle(s.style);
+    if(s.layers!==undefined)slide.layers=validateLayers(s.layers);
     return slide;
   });
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
