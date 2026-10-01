@@ -27,3 +27,36 @@ button.버금 { background: transparent; color: var(--파랑); border: 1px solid
   .판 { grid-template-columns: 1fr; }
   .보기틀 { height: 560px; }
 }
+
+.갈래 { display: flex; gap: 6px; margin: 10px 0 4px; }
+.갈래 button { margin-top: 0; background: transparent; color: var(--파랑); border: 1px solid var(--파랑); }
+.갈래 button.고름 { background: var(--파랑); color: #fff; }
+textarea { width: 100%; font: inherit; font-size: 15px; padding: 10px; border-radius: 8px; border: 1px solid var(--선); margin-top: 8px; background: Canvas; color: CanvasText; resize: vertical; }
+.대화 { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; display: grid; gap: 6px; max-height: 340px; overflow-y: auto; }
+.대화 li { padding: 8px 10px; border-radius: 10px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.대화 li.나 { background: rgba(59, 108, 246, .14); justify-self: end; }
+.대화 li.그쪽 { background: rgba(127, 127, 127, .12); justify-self: start; }
+.주문서 { border: 1px solid var(--선); border-radius: 10px; padding: 10px; margin-top: 12px; }
+.주문서 h3 { font-size: 15px; margin: 0 0 6px; }
+.주문서 table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.주문서 th { text-align: left; color: var(--흐림); font-weight: 500; padding: 4px 8px 4px 0; white-space: nowrap; vertical-align: top; }
+.주문서 td { padding: 4px 0; overflow-wrap: anywhere; }
+.띠 { background: rgba(199, 122, 0, .14); color: var(--경고); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+.단계표 { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.단계표 li { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--선); color: var(--흐림); }
+.단계표 li.지남 { color: CanvasText; }
+.단계표 li.지금 { background: var(--파랑); border-color: var(--파랑); color: #fff; }
+.칸들 { list-style: none; padding: 0; font-size: 14px; line-height: 1.9; }
+.소식 { border: 1px solid var(--선); border-radius: 12px; padding: 12px; margin: 12px 0; }
+.소식 h3 { font-size: 16px; margin: 0 0 8px; }
+.소식그림 { display: block; width: 100%; max-height: 520px; object-fit: contain; background: #111; border-radius: 8px; }
+.소식 blockquote { margin: 8px 0; padding: 6px 10px; border-left: 3px solid var(--선); color: var(--흐림); font-size: 13px; white-space: pre-wrap; }
+.딱지 { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(199, 122, 0, .14); color: var(--경고); margin-right: 6px; }
+.판단줄 { font-size: 13px; line-height: 1.7; padding-left: 20px; }
+.갈래 { flex-wrap: wrap; }
+.갈래 button { width: auto; flex: 1 1 auto; }  /* 칩처럼 한 줄에 여럿 — 저장된 분야가 늘어도 세로로 길어지지 않게(UX 점검) */
+.갈래 button.저장 { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.저장칸 table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+.저장칸 th { text-align: left; color: var(--흐림); font-weight: 500; padding: 4px 8px 4px 0; white-space: nowrap; vertical-align: top; }
+.저장칸 td { padding: 4px 0; overflow-wrap: anywhere; }
+.저장하기 { border-top: 1px solid var(--선); margin-top: 14px; padding-top: 10px; }
