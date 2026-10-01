@@ -1,0 +1,29 @@
+:root { color-scheme: light dark; --선: #c9c9d1; --흐림: #888; --파랑: #3b6cf6; --경고: #c77a00; --빨강: #d33; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: Canvas; color: CanvasText; }
+.판 { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+.왼쪽, .오른쪽 { border: 1px solid var(--선); border-radius: 12px; padding: 16px; min-width: 0; }
+h1 { font-size: 20px; margin: 0 0 6px; }
+h2 { font-size: 15px; margin: 20px 0 8px; }
+.설명, .흐림 { color: var(--흐림); font-size: 13px; }
+.이름표 { display: block; font-size: 13px; margin-top: 12px; }
+select, button { width: 100%; font-size: 15px; padding: 10px; border-radius: 8px; border: 1px solid var(--선); margin-top: 8px; background: Canvas; color: CanvasText; }
+button { background: var(--파랑); color: #fff; border: 0; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.알림 { color: var(--빨강); font-size: 13px; }
+.목록 { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.목록 li { padding: 8px 6px; border-radius: 6px; cursor: pointer; overflow-wrap: anywhere; }
+.목록 li:hover, .목록 li.고름 { background: rgba(59, 108, 246, .14); }
+.막대 { height: 8px; background: rgba(127, 127, 127, .2); border-radius: 4px; overflow: hidden; margin: 10px 0; }
+.막대 > div { height: 100%; background: var(--파랑); transition: width .4s; }
+.단계들 { list-style: none; padding: 0; font-size: 14px; line-height: 1.9; }
+.보기틀 { width: 100%; height: 760px; border: 0; border-radius: 8px; background: #111; }
+.줄단추 { display: flex; gap: 8px; }
+.줄단추 button { width: auto; flex: 1; }
+button.버금 { background: transparent; color: var(--파랑); border: 1px solid var(--파랑); }
+.빠진것 { font-size: 13px; color: var(--경고); margin: 6px 0; }
+.자세히 { font-size: 13px; margin-top: 12px; }
+@media (max-width: 760px) {
+  .판 { grid-template-columns: 1fr; }
+  .보기틀 { height: 560px; }
+}

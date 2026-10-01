@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주간 AI 소식 카드뉴스</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="판">
+  <section class="왼쪽">
+    <h1>주간 AI 소식 카드뉴스</h1>
+    <p class="설명">주차를 고르고 «만들기» 를 누르면 그 주 AI 소식을 카드뉴스로 만들어 드려요. 10~15분쯤 걸려요.</p>
+    <label class="이름표" for="주차">주차</label>
+    <select id="주차"><option>불러오는 중…</option></select>
+    <button id="만들기" type="button">만들기</button>
+    <p id="알림" class="알림" hidden></p>
+    <h2>지난 결과</h2>
+    <ul id="목록" class="목록"><li class="흐림">불러오는 중…</li></ul>
+  </section>
+  <section class="오른쪽" id="오른쪽">
+    <p class="흐림">왼쪽에서 주차를 골라 만들거나, 지난 결과를 눌러 보세요.</p>
+  </section>
+</main>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
