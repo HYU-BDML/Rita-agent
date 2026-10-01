@@ -1,0 +1,11 @@
+{
+  // 주간 AI 소식 카드뉴스 화면. 정적 화면(public/) + /api/* 는 지휘 서버로 넘긴다.
+  //   npx wrangler deploy --config weekly/web/wrangler.jsonc
+  // API_BASE 는 지휘 서버 앞문 주소 — Task 14 에서 weekly/deploy.py 가 찍은 값을 적는다.
+  // 로컬 확인은: npx wrangler dev --config weekly/web/wrangler.jsonc --var API_BASE:http://127.0.0.1:47301
+  "name": "weekly-ai",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-18",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "vars": { "API_BASE": "<지휘 서버 주소>" }
+}
