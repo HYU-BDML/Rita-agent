@@ -8,6 +8,12 @@ const DAY=86400000;
 try{
  await p.goto(base+'/studio');await p.getByLabel('이메일',{exact:true}).fill(`loop-${Date.now()}@example.test`);await p.getByLabel('비밀번호',{exact:true}).fill('Cora-loop-test-123');await p.getByRole('button',{name:'Cora 시작하기'}).click();await p.getByRole('button',{name:/예시로 먼저/}).waitFor();
  await p.getByRole('button',{name:/콘텐츠 순환/}).click();await p.getByRole('heading',{name:/사람이 고르고/}).waitFor();
+ await p.getByText('Instagram 시험 계정 연결 안내',{exact:true}).click();
+ await p.getByRole('button',{name:'연결 준비 상태 점검',exact:true}).click();
+ await p.getByLabel('Instagram 연결 준비 점검 결과').waitFor();
+ assert.match(await p.getByLabel('Instagram 연결 준비 점검 결과').innerText(),/설정 존재와 주소 형식만 점검/);
+ const anonymous=await browser.newContext();assert.equal((await anonymous.request.get(base+'/api/cora/connect/instagram?setup=1')).status(),401);await anonymous.close();
+ result.checks.push('Instagram 준비 안내·서버 설정 점검 화면과 비로그인 점검 차단');
  await p.getByLabel('순환 브랜드').fill('모퉁이 책방');await p.getByLabel('순환 대상').fill('퇴근 후 조용한 시간을 찾는 직장인');await p.getByLabel('순환 목표').fill('책 모임 참여 안내');
  await p.getByLabel('순환 자료').fill('모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.');
  // ① rules, then one real AI call

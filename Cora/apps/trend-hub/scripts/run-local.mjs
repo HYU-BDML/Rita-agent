@@ -23,4 +23,4 @@ const home=process.env.HOME||'';const secrets={...(await readEnv(path.join(home,
 console.log(`외부 연결 설정 ${Object.keys(secrets).length}개를 읽었습니다(값은 표시하지 않음).`);
 const port=process.env.CORA_PORT||'3210';
 console.log(`\nCora: http://127.0.0.1:${port}/studio\n이 컴퓨터에서만 열리는 개발용 작업실입니다.\n`);
-await run(process.execPath,['node_modules/next/dist/bin/next','dev','--hostname','127.0.0.1','--port',port],{...secrets,...process.env,CORA_DATA_DIR:process.env.CORA_DATA_DIR||path.join(source,'data','cora'),CORA_ORIGIN:`http://127.0.0.1:${port}`});
+await run(process.execPath,['node_modules/next/dist/bin/next','dev','--hostname','127.0.0.1','--port',port],{...secrets,...process.env,CORA_DATA_DIR:process.env.CORA_DATA_DIR||path.join(source,'data','cora'),CORA_ORIGIN:process.env.CORA_ORIGIN||secrets.CORA_ORIGIN||`http://127.0.0.1:${port}`});
