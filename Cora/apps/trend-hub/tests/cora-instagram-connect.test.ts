@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CoraStore } from '../lib/cora/store';
-import { InstagramConnections, seal, unseal, IG_SCOPES } from '../lib/cora/instagram-connect';
+import { InstagramConnections, seal, unseal, IG_SCOPES, IG_READ_SCOPES } from '../lib/cora/instagram-connect';
 import { loopDailyTick, loopOf } from '../lib/cora/loop-service';
 import { integrationStatus } from '../lib/cora/integrations';
 
@@ -31,7 +31,7 @@ test('Instagram connect: consent URL uses the Instagram App ID, scopes and a sin
   const url = new URL(ig.start(u));
   assert.equal(url.origin + url.pathname, 'https://www.instagram.com/oauth/authorize');
   assert.equal(url.searchParams.get('client_id'), '990001'); assert.equal(url.searchParams.get('response_type'), 'code');
-  assert.equal(url.searchParams.get('scope'), IG_SCOPES.join(',')); assert.equal(url.searchParams.get('redirect_uri'), ENV.CORA_IG_REDIRECT_URI);
+  assert.equal(url.searchParams.get('scope'), IG_READ_SCOPES.join(',')); assert.equal(url.searchParams.get('redirect_uri'), ENV.CORA_IG_REDIRECT_URI);
   const state = url.searchParams.get('state')!;
   const other = s.signup('ig-other@example.test', 'password123').id;
   await assert.rejects(ig.finish(other, 'code-1#_', state), /다른 계정/); // Another user must not consume the owner's state.
@@ -39,11 +39,24 @@ test('Instagram connect: consent URL uses the Instagram App ID, scopes and a sin
   const st2 = state;
   const status = await ig.finish(u, 'code-1#_', st2);
   assert.equal(status.connected, true); assert.equal(status.username, 'corner_books'); assert.equal(status.igUserId, '17841400000000001');
+  assert.equal(status.accounts[0].access, 'read'); assert.deepEqual(status.accounts[0].scopes, IG_READ_SCOPES);
   const form = calls[0].init!.body as URLSearchParams; assert.equal(form.get('code'), 'code-1', '#_ is stripped'); assert.equal(form.get('client_id'), '990001'); assert.equal(form.get('grant_type'), 'authorization_code');
   await assert.rejects(ig.finish(u, 'code-1', st2), /만료/, 'state cannot be reused');
   assert.equal(await ig.token(u), 'long-1');
   assert.ok(!JSON.stringify(ig.status(u)).includes('long-1'), 'status never contains the token');
   const sealed = seal('secret-token', 'k'); assert.ok(!sealed.includes('secret-token')); assert.equal(unseal(sealed, 'k'), 'secret-token'); assert.throws(() => unseal(sealed, 'wrong'));
+});
+
+test('Instagram connect: publishing scope requires an explicit manage connection; reconnect records changed access', async () => {
+  const { u, ig } = setup();
+  const read = new URL(ig.start(u));
+  assert.equal(read.searchParams.get('scope'), IG_READ_SCOPES.join(','));
+  await ig.finish(u, 'read-code', read.searchParams.get('state'));
+  assert.equal(ig.accounts(u)[0].access, 'read');
+  const manage = new URL(ig.start(u, 'manage'));
+  assert.equal(manage.searchParams.get('scope'), IG_SCOPES.join(','));
+  await ig.finish(u, 'manage-code', manage.searchParams.get('state'));
+  assert.equal(ig.accounts(u)[0].access, 'manage');
 });
 
 test('Instagram connect: missing settings are reported by name; tokens refresh when close to expiry; disconnect removes them', async () => {
@@ -110,6 +123,20 @@ test('legacy Instagram connections survive upgrade without resurrection after di
   assert.equal(reopened.accounts(user).length, 1);
   assert.equal(reopened.accounts(user)[0].username, 'corner_books');
   assert.equal(db.prepare("SELECT 1 FROM sqlite_master WHERE name='ig_connections'").get(), undefined);
+});
+
+test('existing Instagram account rows migrate without assuming publishing permission', () => {
+  const s = new CoraStore(':memory:');
+  const user = s.signup('old-scopes@example.test', 'password123').id;
+  const db = s.module('old-instagram', db => db);
+  db.exec(`CREATE TABLE ig_oauth_states(state TEXT PRIMARY KEY,user_id TEXT NOT NULL,created INTEGER NOT NULL);
+    CREATE TABLE ig_accounts(user_id TEXT NOT NULL,ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL,PRIMARY KEY(user_id,ig_user_id));`);
+  const now = Date.UTC(2026, 9, 4);
+  db.prepare('INSERT INTO ig_accounts VALUES (?,?,?,?,?,?,?)').run(user, '111', 'old', seal('old-token', ENV.CORA_SECRET_KEY), now + 60 * DAY, now, now);
+  const ig = new InstagramConnections(db, ENV, fakeInstagram([]), () => now);
+  assert.equal(ig.accounts(user)[0].access, 'unknown');
+  assert.deepEqual(ig.accounts(user)[0].scopes, []);
+  assert.equal(ig.start(user).includes('instagram_business_content_publish'), false);
 });
 
 

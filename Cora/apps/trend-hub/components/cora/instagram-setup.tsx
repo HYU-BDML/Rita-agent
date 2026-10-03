@@ -12,8 +12,8 @@ export function InstagramSetupGuide() {
   return <details><summary>Instagram 시험 계정 연결 안내</summary>
     <p>비밀번호나 2단계 인증번호를 Cora 또는 AI 채팅에 보내지 않습니다. Instagram 공식 화면에서 직접 로그인하고 연결을 승인합니다.</p>
     <ol>
-      <li>시험용 Instagram 계정을 준비하고 크리에이터 또는 비즈니스 계정으로 설정합니다. 준비 상태를 공유할 때는 @사용자명과 계정 유형만 알려주세요.</li>
-      <li>Cora 운영자가 Meta 개발자 앱의 Instagram 로그인 설정과 시험 사용자 권한을 준비합니다. 앱 시크릿은 서버의 비밀 설정에 저장합니다.</li>
+      <li>연결할 Instagram 프로페셔널 계정의 Meta 테스터 초대가 승인됐는지 확인합니다. 첫 실제 게시에는 별도의 시험 전용 계정을 사용합니다.</li>
+      <li>Cora 운영자가 HTTPS 복귀 주소와 Instagram 앱 시크릿을 서버의 비밀 설정에 저장합니다. 계정 암호는 저장하지 않습니다.</li>
       <li>설정된 HTTPS 주소에서 Cora에 로그인한 뒤 Instagram 계정 연결을 누릅니다. Instagram에서 권한을 승인하고 돌아오면 연결된 계정을 확인합니다.</li>
       <li>계정 연결과 실제 게시를 구분합니다. 현재 게시 준비함은 모의 실행이며 실제 게시 큐 연결은 개발 중입니다. 첫 실제 시험 게시 전에 계정과 게시물을 확인합니다.</li>
     </ol>
