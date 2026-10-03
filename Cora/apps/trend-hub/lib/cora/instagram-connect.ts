@@ -35,7 +35,7 @@ export function unseal(sealed: string, secret: string) {
 export class InstagramConnections {
   constructor(private db: DatabaseSync, private env: Env = process.env, private transport: typeof fetch = fetch, private now: () => number = () => Date.now()) {
     db.exec(`CREATE TABLE IF NOT EXISTS ig_oauth_states(state TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),created INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS ig_connections(user_id TEXT PRIMARY KEY REFERENCES users(id),ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL);`);
+      CREATE TABLE IF NOT EXISTS ig_accounts(user_id TEXT NOT NULL REFERENCES users(id),ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL,PRIMARY KEY(user_id,ig_user_id));`);
   }
   private cfg() { const c = igConfig(this.env); if (!c.configured) throw Object.assign(new Error(`Instagram 연결 설정이 없습니다: ${c.missing.join(', ')}`), { status: 503 }); return c; }
   /** Authorization URL with a single-use state bound to this user. */
@@ -73,27 +73,34 @@ export class InstagramConnections {
     const me = await this.json(`https://graph.instagram.com/${IG_API_VERSION}/me?fields=user_id,username`, { headers: { Authorization: `Bearer ${token}` } });
     const igId = String(me.user_id ?? me.id ?? ''); if (!/^[0-9]{1,40}$/.test(igId)) throw Object.assign(new Error('Instagram 계정 ID를 확인하지 못했습니다.'), { status: 502 });
     const t = this.now();
-    this.db.prepare('INSERT INTO ig_connections VALUES (?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET ig_user_id=excluded.ig_user_id,username=excluded.username,token=excluded.token,expires_at=excluded.expires_at,connected=excluded.connected,refreshed=excluded.refreshed')
+    this.db.prepare('INSERT INTO ig_accounts VALUES (?,?,?,?,?,?,?) ON CONFLICT(user_id,ig_user_id) DO UPDATE SET username=excluded.username,token=excluded.token,expires_at=excluded.expires_at,connected=excluded.connected,refreshed=excluded.refreshed')
       .run(user, igId, String(me.username ?? '').slice(0, 100), seal(token, c.key), t + expiresIn * 1000, t, t);
     return this.status(user);
   }
-  status(user: string) {
-    const c = igConfig(this.env); const r = this.db.prepare('SELECT ig_user_id,username,expires_at,connected FROM ig_connections WHERE user_id=?').get(user) as { ig_user_id: string; username: string; expires_at: number; connected: number } | undefined;
-    return { configured: c.configured, missing: c.missing, connected: !!r && r.expires_at > this.now(), username: r?.username ?? null, igUserId: r?.ig_user_id ?? null, expiresAt: r ? new Date(r.expires_at).toISOString() : null, connectedAt: r ? new Date(r.connected).toISOString() : null };
+  /** Every connected Instagram account of this Cora user (one user may run several accounts or brands). Never includes tokens. */
+  accounts(user: string) {
+    return (this.db.prepare('SELECT ig_user_id,username,expires_at,connected FROM ig_accounts WHERE user_id=? ORDER BY connected').all(user) as { ig_user_id: string; username: string; expires_at: number; connected: number }[])
+      .map(r => ({ igUserId: r.ig_user_id, username: r.username, expiresAt: new Date(r.expires_at).toISOString(), connectedAt: new Date(r.connected).toISOString(), active: r.expires_at > this.now() }));
   }
-  /** Decrypted token for server-side calls; refreshes when fewer than 7 days remain and the token is at least 24h old. */
-  async token(user: string) {
-    const c = this.cfg(); const r = this.db.prepare('SELECT token,expires_at,refreshed FROM ig_connections WHERE user_id=?').get(user) as { token: string; expires_at: number; refreshed: number } | undefined;
+  status(user: string) {
+    const c = igConfig(this.env); const accounts = this.accounts(user); const first = accounts.find(a => a.active) ?? accounts[0];
+    return { configured: c.configured, missing: c.missing, connected: accounts.some(a => a.active), accounts, username: first?.username ?? null, igUserId: first?.igUserId ?? null, expiresAt: first?.expiresAt ?? null, connectedAt: first?.connectedAt ?? null };
+  }
+  /** Decrypted token for server-side calls (a given account, or the first one); refreshes when fewer than 7 days remain and the token is at least 24h old. */
+  async token(user: string, igUserId?: string) {
+    const c = this.cfg();
+    const r = (igUserId ? this.db.prepare('SELECT ig_user_id,token,expires_at,refreshed FROM ig_accounts WHERE user_id=? AND ig_user_id=?').get(user, igUserId) : this.db.prepare('SELECT ig_user_id,token,expires_at,refreshed FROM ig_accounts WHERE user_id=? AND expires_at>? ORDER BY connected').get(user, this.now())) as { ig_user_id: string; token: string; expires_at: number; refreshed: number } | undefined;
     if (!r) return null; const t = this.now(); if (r.expires_at <= t) return null;
     let token = unseal(r.token, c.key);
     if (r.expires_at - t < 7 * DAY && t - r.refreshed >= DAY) {
       const u = new URL('https://graph.instagram.com/refresh_access_token'); u.searchParams.set('grant_type', 'ig_refresh_token'); u.searchParams.set('access_token', token);
-      try { const b = await this.json(u.href); if (typeof b.access_token === 'string') { token = b.access_token; const exp = t + (Number(b.expires_in) > 0 ? Number(b.expires_in) : 60 * 86400) * 1000; this.db.prepare('UPDATE ig_connections SET token=?,expires_at=?,refreshed=? WHERE user_id=?').run(seal(token, c.key), exp, t, user); } }
+      try { const b = await this.json(u.href); if (typeof b.access_token === 'string') { token = b.access_token; const exp = t + (Number(b.expires_in) > 0 ? Number(b.expires_in) : 60 * 86400) * 1000; this.db.prepare('UPDATE ig_accounts SET token=?,expires_at=?,refreshed=? WHERE user_id=? AND ig_user_id=?').run(seal(token, c.key), exp, t, user, r.ig_user_id); } }
       catch { /* keep the current token until it expires; the status screen shows the expiry */ }
     }
     return token;
   }
-  disconnect(user: string) { return this.db.prepare('DELETE FROM ig_connections WHERE user_id=?').run(user).changes > 0; }
+  /** Removes one account, or every account of this user when no id is given. */
+  disconnect(user: string, igUserId?: string) { return (igUserId ? this.db.prepare('DELETE FROM ig_accounts WHERE user_id=? AND ig_user_id=?').run(user, igUserId) : this.db.prepare('DELETE FROM ig_accounts WHERE user_id=?').run(user)).changes > 0; }
   /** Users with a stored connection, for the daily collection. */
-  connectedUsers() { return (this.db.prepare('SELECT user_id FROM ig_connections WHERE expires_at>?').all(this.now()) as { user_id: string }[]).map(r => r.user_id); }
+  connectedUsers() { return (this.db.prepare('SELECT DISTINCT user_id FROM ig_accounts WHERE expires_at>?').all(this.now()) as { user_id: string }[]).map(r => r.user_id); }
 }

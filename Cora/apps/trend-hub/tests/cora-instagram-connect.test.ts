@@ -70,3 +70,23 @@ test('Loop daily tick: once per Korean day after the set hour, collects Instagra
   assert.deepEqual(await loopDailyTick(s, clock.t + 3600000, { ig, transport: fakeInstagram(calls), hour: 9 }), [], 'second run the same day does nothing');
   assert.ok(integrationStatus(ENV).find(i => i.id === 'instagram-login')!.configured);
 });
+
+test('Instagram connect: one Cora user can connect several accounts; daily collection uses the token of the account each post was published from', async () => {
+  const names = ['corner_books', 'corner_cafe']; let me = 0; const usedTokens: string[] = [];
+  const t = (async (url: string, init?: RequestInit) => { const u = new URL(url); const ok = (b: unknown) => new Response(JSON.stringify(b), { status: 200 });
+    if (u.host === 'api.instagram.com') return ok({ access_token: `short-${me}` });
+    if (u.pathname === '/access_token') return ok({ access_token: `long-${names[me]}`, expires_in: 5184000 });
+    if (u.pathname.endsWith('/me')) { const n = names[me]; me++; return ok({ user_id: n === 'corner_books' ? '111' : '222', username: n }); }
+    if (u.pathname.endsWith('/insights')) { usedTokens.push(String((init?.headers as Record<string, string>).Authorization)); return ok({ data: [{ name: 'reach', values: [{ value: 10 }] }] }); }
+    return new Response('{}', { status: 404 }); }) as unknown as typeof fetch;
+  const { s, u, ig, clock } = setup(ENV, t);
+  for (let i = 0; i < 2; i++) await ig.finish(u, 'c', new URL(ig.start(u)).searchParams.get('state'));
+  assert.deepEqual(ig.accounts(u).map(a => a.username), ['corner_books', 'corner_cafe']); assert.equal(ig.status(u).connected, true);
+  const loop = loopOf(s);
+  for (const [label, media] of [['@corner_cafe', '9001'], ['@Corner_Books', '9002'], ['@someone_else', '9003']]) loop.registerPost(u, { title: label, platform: 'instagram', accountLabel: label, postedAt: new Date(clock.t - 2 * DAY).toISOString(), mediaId: media }, clock.t);
+  const { tokenForPost } = await import('../lib/cora/loop-service');
+  const r = await loop.collectInstagram(u, tokenForPost(ig, u), t, clock.t);
+  assert.equal(r.filter(x => x.ok).length, 2); assert.match(r.find(x => !x.ok)!.detail, /someone_else/);
+  assert.deepEqual(usedTokens.sort(), ['Bearer long-corner_books', 'Bearer long-corner_cafe']);
+  assert.equal(ig.disconnect(u, '222'), true); assert.deepEqual(ig.accounts(u).map(a => a.username), ['corner_books']);
+});

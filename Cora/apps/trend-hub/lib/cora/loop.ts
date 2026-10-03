@@ -246,10 +246,11 @@ export class ContentLoop {
     return rows.map(r => ({ postId: r.post_id, day: r.day, ageDays: r.age_days, source: r.source as Snapshot['source'], recordedAt: r.recorded, ...Object.fromEntries(METRIC_KEYS.map(k => [k, r[k]])) as Record<MetricKey, number | null> }));
   }
   /** Daily Instagram collection for posts that carry a media id and are at most `maxAgeDays` old. Each failure is reported, none stops the rest. */
-  async collectInstagram(user: string, token: string, transport: typeof fetch = fetch, now = Date.now(), maxAgeDays = 30) {
+  /** `token` is one token, or a lookup that returns the token of the account a post was published from (null when no connected account matches). */
+  async collectInstagram(user: string, token: string | ((post: Post) => Promise<string | null>), transport: typeof fetch = fetch, now = Date.now(), maxAgeDays = 30) {
     const out: { postId: string; ok: boolean; detail: string }[] = [];
     for (const p of this.posts(user).filter(p => p.platform === 'instagram' && p.mediaId && now - Date.parse(p.postedAt) <= maxAgeDays * DAY)) {
-      try { const v = await fetchInstagramInsights(token, p.mediaId, transport); this.recordMetrics(user, p.id, { ...v, day: dayOf(now) }, 'instagram', now); out.push({ postId: p.id, ok: true, detail: '기록함' }); }
+      try { const t = typeof token === 'string' ? token : await token(p); if (!t) throw new Error(`연결된 Instagram 계정 가운데 ${p.accountLabel}이(가) 없습니다.`); const v = await fetchInstagramInsights(t, p.mediaId, transport); this.recordMetrics(user, p.id, { ...v, day: dayOf(now) }, 'instagram', now); out.push({ postId: p.id, ok: true, detail: '기록함' }); }
       catch (e) { out.push({ postId: p.id, ok: false, detail: e instanceof Error ? e.message : '실패' }); }
     }
     return out;

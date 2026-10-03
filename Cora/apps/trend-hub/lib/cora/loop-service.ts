@@ -10,6 +10,14 @@ export type LoopGenerate = (userId: string, prompt: string) => Promise<{ text: s
 export const LOOP_DAILY_AI_LIMIT = 10;
 export const loopOf = (s: CoraStore) => s.module('content-loop', db => new ContentLoop(db));
 export const igOf = (s: CoraStore) => s.module('instagram-connect', db => new InstagramConnections(db));
+const handle = (v: string) => v.trim().replace(/^@/, '').toLowerCase();
+/** Token lookup by the post's account label (@username); with exactly one connected account, that account is used. */
+export function tokenForPost(ig: InstagramConnections, user: string) {
+  return async (post: { accountLabel: string }) => {
+    const list = ig.accounts(user).filter(a => a.active); const match = list.find(a => handle(a.username) === handle(post.accountLabel)) ?? (list.length === 1 ? list[0] : undefined);
+    return match ? ig.token(user, match.igUserId) : null;
+  };
+}
 const KST = 9 * 3600000;
 /**
  * Once per Korean calendar day per user (from CORA_LOOP_DAILY_HOUR, default 9 KST): collect Instagram insights for
@@ -22,7 +30,7 @@ export async function loopDailyTick(s: CoraStore, now = Date.now(), deps: { ig?:
   for (const userId of loop.usersWithPosts()) {
     if (!loop.claimDaily(userId, day)) continue;
     let collected = 0;
-    try { const token = ig.status(userId).configured ? await ig.token(userId) : null; if (token) collected = (await loop.collectInstagram(userId, token, deps.transport ?? fetch, now)).filter(r => r.ok).length; } catch { /* collection failure is visible as a missing-record action in the review */ }
+    try { if (ig.status(userId).configured && ig.status(userId).connected) collected = (await loop.collectInstagram(userId, tokenForPost(ig, userId), deps.transport ?? fetch, now)).filter(r => r.ok).length; } catch { /* collection failure is visible as a missing-record action in the review */ }
     const review = loop.review(userId, now); const proposed = review.actions.filter(a => a.status === 'proposed').length;
     if (proposed) notifyUser(userId, 'loop_review', { title: `오늘 점검: 다음 할 일 ${proposed}개`, body: collected ? `Instagram 성과 ${collected}건을 가져왔습니다.` : '오늘 성과를 기록한 뒤 할 일을 확인하세요.', link: '/studio' }, s);
     out.push({ userId, collected, proposed });
@@ -76,9 +84,8 @@ export async function loopAction(s: CoraStore, user: string, b: Record<string, u
       case 'review': return { review: loop.review(user) };
       case 'decide': return { action: loop.decideAction(user, String(b.actionId ?? ''), b.status, b.note) };
       case 'collect': {
-        const ig = igOf(s); const token = ig.status(user).configured ? await ig.token(user) : null;
-        if (!token) throw new OpsError('Instagram 계정을 먼저 연결해 주세요.', 409);
-        const results = await loop.collectInstagram(user, token);
+        const ig = igOf(s); if (!ig.status(user).configured || !ig.status(user).connected) throw new OpsError('Instagram 계정을 먼저 연결해 주세요.', 409);
+        const results = await loop.collectInstagram(user, tokenForPost(ig, user));
         return { results, saved: results.filter(r => r.ok).length };
       }
       default: throw new OpsError('지원하지 않는 요청입니다.');
