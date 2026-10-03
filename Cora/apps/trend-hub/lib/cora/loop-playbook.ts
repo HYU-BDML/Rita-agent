@@ -7,7 +7,7 @@ import { KNOWHOW } from './loop-knowhow';
  * contested; 'Cora 기준' = Cora's own operating rule (data hygiene, comparison method), not a platform claim.
  * Rules with `check` produce proposed actions from data; rules without `check` are guidance only.
  */
-export type Source = { url: string; publisher: string; type: 'official' | 'research' | 'practitioner' | 'cora'; popularity: string; accessed: string };
+export type Source = { url: string; publisher: string; type: 'official' | 'press' | 'research' | 'practitioner' | 'cora'; popularity: string; accessed: string };
 export type PlaybookRule = { id: string; stage: 1 | 2 | 3 | 4 | 5; platform: string; title: string; rule: string; basis: string; sources: Source[]; stability: '안정' | '미확인' | 'Cora 기준'; check?: (ctx: ReviewContext) => ProposedAction[] };
 
 const CORA: Source = { url: '', publisher: 'Cora 운영 기준', type: 'cora', popularity: '내부 기준', accessed: '2026-10-03' };
@@ -29,7 +29,7 @@ export const CORE_RULES: PlaybookRule[] = [
     title: '기준선보다 높은 게시물은 한 요소만 바꿔 다시 시험',
     rule: '저장률이나 공유율이 같은 계정의 같은 경과일 중앙값보다 1.2배 이상 높은 게시물이 있으면, 다음 후보 중 하나는 그 게시물의 시작 방식을 유지하고 나머지 한 요소만 바꾼다.',
     basis: '한 번 높게 나온 결과는 우연일 수 있으므로, 같은 시작 방식을 한 번 더 써서 다시 높게 나오는지 확인한다. 여러 요소를 동시에 바꾸면 어느 요소 때문인지 알 수 없다.',
-    check: ctx => ctx.rows.filter(r => r.compare && r.post.hook && (r.compare.saveRate.status === 'above' || r.compare.shareRate.status === 'above')).slice(0, 3).map(r => {
+    check: ctx => ctx.rows.filter(r => r.compare && r.post.hook && !(r.latest?.source === 'instagram' && r.latest.ageDays < 2) && (r.compare.saveRate.status === 'above' || r.compare.shareRate.status === 'above')).slice(0, 3).map(r => {
       const c = r.compare!; const hook = r.post.hook as Hook;
       return { kind: 'repeat', preferHook: hook, text: `“${r.post.title}”의 시작 방식(${HOOK_LABEL[hook]})을 다음 후보 하나에 다시 쓰고, 주제나 형식 중 한 가지만 바꾼다.`, evidence: `게시 ${c.ageDays}일째 저장률 ${pct(c.saveRate.mine)}(중앙값 ${pct(c.saveRate.median)}, ${times(c.saveRate.ratio)}, 비교 ${c.saveRate.n}개), 공유율 ${pct(c.shareRate.mine)}(중앙값 ${pct(c.shareRate.median)}, ${times(c.shareRate.ratio)}, 비교 ${c.shareRate.n}개)` };
     }),

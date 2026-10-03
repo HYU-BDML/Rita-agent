@@ -102,3 +102,19 @@ test('Loop ④: Instagram insights adapter maps metric names, keeps missing metr
   await assert.rejects(fetchInstagramInsights('t', 'abc', ok), /게시물 ID/);
   assert.equal(Object.keys(HOOKS).length, 5);
 });
+
+test('Loop know-how: 44 sourced rules, official-only stability, Instagram 48h delay holds back judgement, reel cadence check', async () => {
+  const { PLAYBOOK } = await import('../lib/cora/loop-playbook');
+  const know = PLAYBOOK.filter(r => /^R\d\d$/.test(r.id)); assert.equal(know.length, 44);
+  for (const r of know) { assert.ok(r.sources.length > 0 && r.sources.every(x => /^https:\/\//.test(x.url)), r.id); if (r.stability === '안정') assert.ok(r.sources.some(x => x.type === 'official') || new Set(r.sources.map(x => new URL(x.url).hostname)).size >= 3, r.id); }
+  assert.ok(know.filter(r => r.sources.some(x => /socialmediatoday|tubefilter|routenote/.test(x.url))).every(r => r.sources.filter(x => /socialmediatoday|tubefilter|routenote/.test(x.url)).every(x => x.type !== 'official')), 'press reports are not labelled official');
+  const { s, u } = fresh(); const loop = loopOf(s); const now = Date.UTC(2026, 9, 3, 12); // fixed clock: post 0 is exactly day 1
+  const ids: string[] = [];
+  for (let i = 0; i < 5; i++) { const p = loop.registerPost(u, { title: `릴스 ${i}`, platform: 'instagram', accountLabel: '@a', postedAt: new Date(now - (i === 0 ? 1 : i + 2) * DAY - 3600000).toISOString(), hook: 'story', format: 'reel', mediaId: String(1000 + i) }, now); ids.push(p.id); }
+  // Post 0 is one day old and its numbers came from Instagram: it must not be judged yet even though its save rate is high.
+  loop.recordMetrics(u, ids[0], { reach: 100, saves: 50 }, 'instagram', now);
+  for (let i = 1; i < 5; i++) loop.recordMetrics(u, ids[i], { day: new Date(now - (i + 1) * DAY).toISOString().slice(0, 10), reach: 100, saves: 5 }, 'manual', now);
+  const r = loop.review(u, now);
+  assert.ok(r.actions.some(a => a.ruleId === 'R27')); assert.ok(!r.actions.some(a => a.ruleId === 'C5-repeat-above'), '48h rule holds back the repeat proposal');
+  const cad = r.actions.find(a => a.ruleId === 'R18')!; assert.equal(cad.preferFormat, 'reel'); assert.match(cad.evidence, /릴스 기록 5개/);
+});

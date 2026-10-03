@@ -17,6 +17,7 @@ const METRIC_LABEL:Record<string,string>={reach:'도달',views:'조회',likes:'�
 const pct=(v:number|null)=>v===null?'–':`${(v*100).toFixed(2)}%`;
 const STATUS:Record<string,string>={above:'기준보다 높음',below:'기준보다 낮음',similar:'기준과 비슷함',insufficient:'비교 부족'};
 const today=()=>new Date().toISOString().slice(0,10);
+const SOURCE_TYPE:Record<string,string>={official:'플랫폼 공식',press:'보도',research:'대규모 조사',practitioner:'실무자',cora:'Cora 기준'};
 
 /** Cora's core loop on one screen: candidates → human choice → post record → daily metrics → review and next action. */
 export function ContentLoopStudio({brief:initial,onOpen}:{brief?:Brief;onOpen?:(id:string)=>void}){
@@ -115,7 +116,7 @@ export function ContentLoopStudio({brief:initial,onOpen}:{brief?:Brief;onOpen?:(
   </div>
 
   <details className={s.row}><summary>순환 규칙과 근거 {st.playbook.length}개</summary>
-   {[1,2,3,4,5].map(n=>{const rules=st.playbook.filter(r=>r.stage===n);return rules.length?<div key={n}><h3>{STAGES[n]}</h3>{rules.map(r=><div key={r.id}><b>{r.title}</b> <span className={s.muted}>{r.stability}{r.automatic?' · 점검 때 자동 적용':' · 확인 목록'}</span><p>{r.rule}</p><p className={s.muted}>{r.basis} {r.sources.filter(x=>x.url).map(x=><a key={x.url} href={x.url} target="_blank" rel="noreferrer">{x.publisher}</a>)}</p></div>)}</div>:null;})}
+   {[1,2,3,4,5].map(n=>{const rules=st.playbook.filter(r=>r.stage===n);return rules.length?<div key={n}><h3>{STAGES[n]}</h3>{rules.map(r=><div key={r.id}><b>{r.title}</b> <span className={s.muted}>{r.stability}{r.automatic?' · 점검 때 자동 적용':' · 확인 목록'}</span><p>{r.rule}</p><p className={s.muted}>{r.basis} {r.sources.filter(x=>x.url).map(x=><span key={x.url}> · <a href={x.url} target="_blank" rel="noreferrer">{x.publisher}</a> ({SOURCE_TYPE[x.type]??x.type})</span>)}</p></div>)}</div>:null;})}
   </details>
  </section>;
 }
