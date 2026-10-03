@@ -4,7 +4,7 @@
 
 - Meta 개발자 앱 `Cora`와 Instagram 사용 사례가 생성되어 있다.
 - `instagram_business_content_publish`, `instagram_business_manage_insights`, `instagram_business_manage_comments` 권한을 추가했다. 새로고침 뒤 세 항목 모두 Meta 화면에서 **테스트 준비 완료**로 확인했다. `instagram_business_basic`과 `instagram_business_manage_messages`도 같은 상태다. 추가 직후 Meta가 일반 오류 팝업을 띄웠지만 저장은 반영되었으므로 재추가할 필요가 없다.
-- Instagram 전문가 계정 `@bdm.lab`을 Instagram 테스터로 초대했다. Meta 역할 화면의 상태는 **대기 중(User is pending)**이다. 계정 소유자가 [Instagram 앱·웹사이트 관리](https://www.instagram.com/accounts/manage_access/)에서 초대를 수락해야 한다.
+- Instagram 전문가 계정 `@bdm.lab`이 PC Instagram의 **테스터 초대**에서 `Cora-IG`를 2026-10-04 수락했다. Meta 앱 역할 화면에서도 `@bdm.lab` 행의 **대기 중 표시가 사라진 것**을 확인했다. 테스터 역할 승인은 완료됐지만 OAuth 연결·토큰 발급과는 별개다. 모바일 앱에는 테스터 초대 탭이 표시되지 않아 PC 웹에서 수락했다.
 - `@bdm.lab`은 실제 운영 계정이다. 최초 공개 게시 시험은 별도 시험 전용 계정에서, 플랫폼별 첫 게시에 대한 사용자 확인을 받은 뒤 실행한다.
 - **테스트 준비 완료는 OAuth 연결·토큰 발급·고급 접근 승인·실제 API 성공을 뜻하지 않는다.** HTTPS 복귀 주소 등록, 서버 비밀 설정, 계정 연결 및 읽기 전용 수집은 아직 미검증이다. 실제 게시도 실행하지 않았다.
 
@@ -12,7 +12,7 @@
 
 1. 최초 공개 게시에 쓸 별도 시험 전용 계정의 @사용자명(아직 없으면 “새로 만들 예정”). 읽기 전용 연결을 위한 운영 계정은 `@bdm.lab`으로 확인됐다.
 2. 개인 / 크리에이터 / 비즈니스 중 계정 유형. Instagram 로그인 API 연동에는 크리에이터 또는 비즈니스 계정이 필요하다.
-3. `@bdm.lab` 계정에서 위 Instagram 테스터 초대를 수락했는지 여부.
+3. `@bdm.lab` 테스터 초대는 완료. 다음 사용자 작업은 Instagram 공식 OAuth 승인 화면이 준비되면 계정 소유자가 직접 로그인·권한을 확인하는 것이다.
 
 비밀번호·2단계 인증번호·복구코드를 AI 채팅에 전달하지 않는다. 연결 시 Instagram 공식 화면에서 직접 로그인하고 승인한다. @사용자명만으로 API 연결되는 것은 아니다.
 
