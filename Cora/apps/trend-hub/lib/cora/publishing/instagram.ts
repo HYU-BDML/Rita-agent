@@ -17,12 +17,24 @@ import type { PublishObservation } from './blotato';
  */
 export const IG_API_VERSION = process.env.CORA_IG_API_VERSION || 'v25.0';
 const ID = /^[0-9]{1,40}$/;
-export type InstagramInput = { igUserId: string; caption: string; imageUrls: string[] };
+/** Images: 1 = single photo, 2~10 = carousel. A videoUrl (and no images) makes a Reel (media_type=REELS, checked 2026-10-03). */
+export type InstagramInput = { igUserId: string; caption: string; imageUrls: string[]; videoUrl?: string };
+function publicHttps(value: string, label: string) {
+  let u: URL; try { u = new URL(value); } catch { throw new Error(`${label} 주소 형식 오류`); }
+  if (u.protocol !== 'https:' || u.username || u.password || u.port || u.hostname === 'localhost' || u.hostname.endsWith('.local') || /^\d+\.\d+\.\d+\.\d+$/.test(u.hostname) || u.hostname.includes(':')) throw new Error(`공개 HTTPS ${label} 주소가 필요합니다.`);
+  return u;
+}
 
 export function validateInstagramInput(input: InstagramInput) {
   if (!ID.test(input.igUserId)) throw new Error('Instagram 계정 ID를 확인해 주세요.');
   if (typeof input.caption !== 'string' || input.caption.length > 2200) throw new Error('Instagram 캡션은 2,200자 이내입니다.');
   if ((input.caption.match(/#/g) || []).length > 30) throw new Error('Instagram 해시태그는 30개 이내입니다.');
+  if (input.videoUrl !== undefined) {
+    if (Array.isArray(input.imageUrls) && input.imageUrls.length) throw new Error('릴스는 영상 하나만 올립니다. 이미지와 함께 보낼 수 없습니다.');
+    const u = publicHttps(input.videoUrl, '영상');
+    if (!/\.(mp4|mov)$/i.test(u.pathname)) throw new Error('릴스 영상은 MP4 또는 MOV 파일 주소여야 합니다.');
+    return input;
+  }
   if (!Array.isArray(input.imageUrls) || !input.imageUrls.length || input.imageUrls.length > 10) throw new Error('이미지 1~10개가 필요합니다.');
   for (const value of input.imageUrls) {
     let u: URL; try { u = new URL(value); } catch { throw new Error('이미지 주소 형식 오류'); }
@@ -56,7 +68,8 @@ export class InstagramAdapter {
     const v = validateInstagramInput(input);
     try {
       let id: string;
-      if (v.imageUrls.length === 1) id = await this.container(v.igUserId, { image_url: v.imageUrls[0], caption: v.caption });
+      if (v.videoUrl) id = await this.container(v.igUserId, { media_type: 'REELS', video_url: v.videoUrl, caption: v.caption });
+      else if (v.imageUrls.length === 1) id = await this.container(v.igUserId, { image_url: v.imageUrls[0], caption: v.caption });
       else {
         const children: string[] = [];
         for (const u of v.imageUrls) children.push(await this.container(v.igUserId, { image_url: u, is_carousel_item: 'true' }));
