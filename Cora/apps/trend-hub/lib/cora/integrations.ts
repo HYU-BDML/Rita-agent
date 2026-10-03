@@ -7,6 +7,7 @@
 export type Integration = { id: string; label: string; env: string[]; via?: 'llmgw'; features: string[]; note: string };
 export const INTEGRATIONS: Integration[] = [
   { id: 'meta', label: 'Meta 개발자 앱(Instagram·Threads)', env: ['CORA_META_APP_ID', 'CORA_META_APP_SECRET', 'CORA_META_REDIRECT_URI'], features: ['F093', 'F072', 'F075', 'F076', 'F077', 'F080', 'F081', 'F082', 'F083', 'F084', 'F079', 'F085', 'F086', 'F087', 'F088', 'F089'], note: 'Instagram 로그인으로 계정 연결, 게시·댓글·DM·인사이트, Threads' },
+  { id: 'instagram-login', label: 'Instagram 계정 연결(Instagram 로그인)', env: ['CORA_IG_APP_ID', 'CORA_IG_APP_SECRET', 'CORA_IG_REDIRECT_URI', 'CORA_SECRET_KEY'], features: ['F093', 'F085', 'F087', 'F088'], note: 'Meta 앱의 Instagram 앱 ID·시크릿(Meta 앱 ID와 다름), 콜백 주소 /api/cora/connect/instagram/callback, 토큰 암호화 키' },
   { id: 'media', label: '공개 이미지·영상 저장소(Cloudflare R2 등 S3 호환)', env: ['CORA_S3_ENDPOINT', 'CORA_S3_BUCKET', 'CORA_S3_ACCESS_KEY', 'CORA_S3_SECRET_KEY', 'CORA_S3_PUBLIC_BASE'], features: ['F093', 'F072', 'F073', 'F074'], note: 'SNS가 내려받을 공개 HTTPS 주소' },
   { id: 'tiktok', label: 'TikTok for Developers 앱', env: ['CORA_TIKTOK_CLIENT_KEY', 'CORA_TIKTOK_CLIENT_SECRET'], features: ['F073'], note: '심사 전 앱은 비공개 게시만 가능' },
   { id: 'google', label: 'Google Cloud OAuth 클라이언트', env: ['CORA_GOOGLE_CLIENT_ID', 'CORA_GOOGLE_CLIENT_SECRET'], features: ['F074', 'F098'], note: 'YouTube 업로드와 Google 로그인' },

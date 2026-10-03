@@ -12,7 +12,7 @@ export type IdeaStatus = (typeof IDEA_STATUSES)[number];
 /** Allowed moves. 제작 완료 is final; 보류 can be reopened. */
 export const IDEA_TRANSITIONS: Record<IdeaStatus, IdeaStatus[]> = { '새 아이디어': ['검토 중', '보류'], '검토 중': ['제작 예정', '보류'], '제작 예정': ['제작 완료', '검토 중', '보류'], '제작 완료': [], '보류': ['새 아이디어', '검토 중'] };
 export const isIdeaStatus = (v: unknown): v is IdeaStatus => (IDEA_STATUSES as readonly string[]).includes(v as string);
-export const NOTIFY_KINDS = ['review_requested', 'review_decided', 'publish_result', 'schedule_failed', 'team_invite', 'credit_low'] as const;
+export const NOTIFY_KINDS = ['review_requested', 'review_decided', 'publish_result', 'schedule_failed', 'team_invite', 'credit_low', 'loop_review'] as const;
 export type NotifyKind = (typeof NOTIFY_KINDS)[number];
 export const isNotifyKind = (v: unknown): v is NotifyKind => (NOTIFY_KINDS as readonly string[]).includes(v as string);
 export type HistoryEntry = { from: IdeaStatus; to: IdeaStatus; by: string; at: string };

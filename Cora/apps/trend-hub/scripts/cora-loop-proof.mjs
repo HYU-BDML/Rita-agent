@@ -11,11 +11,12 @@ try{
  await p.getByLabel('순환 브랜드').fill('모퉁이 책방');await p.getByLabel('순환 대상').fill('퇴근 후 조용한 시간을 찾는 직장인');await p.getByLabel('순환 목표').fill('책 모임 참여 안내');
  await p.getByLabel('순환 자료').fill('모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.');
  // ① rules, then one real AI call
+ await p.getByLabel('Instagram 연결 상태').filter({hasText:/연결 준비 전|연결되지 않았습니다|연결됨/}).waitFor();result.checks.push('③ Instagram 연결 상태 표시: '+(await p.getByLabel('Instagram 연결 상태').innerText()).slice(0,40));
  await p.getByLabel('순환 후보 수').fill('3');await p.getByRole('button',{name:'규칙으로 후보 만들기(AI 없음)'}).click();await p.getByRole('status').filter({hasText:'규칙으로 후보 3개'}).waitFor();
  assert.equal(await p.getByRole('article').count(),3);result.checks.push('① 규칙으로 서로 다른 시작 방식의 후보 3개 생성(AI 없음)');
- await p.getByRole('button',{name:'AI로 후보 만들기'}).click();result.aiCalls++;await p.getByRole('status').filter({hasText:/AI가 후보 \d개/}).waitFor({timeout:200000});
+ if(process.env.CORA_PROOF_SKIP_AI!=='1'){await p.getByRole('button',{name:'AI로 후보 만들기'}).click();result.aiCalls++;await p.getByRole('status').filter({hasText:/AI가 후보 \d개/}).waitFor({timeout:200000});
  const aiState=await(await ctx.request.get(base+'/api/cora/loop')).json();assert.equal(aiState.current.mode,'ai');const hooks=aiState.candidates.map(c=>c.hook);assert.equal(new Set(hooks).size,hooks.length,'distinct hooks');assert.ok(aiState.candidates.length>=2);result.aiCandidates=aiState.candidates.map(c=>({hook:c.hook,first:c.draft.slides[0].headline}));
- result.checks.push(`① 실제 AI 1회 호출로 후보 ${aiState.candidates.length}개 생성, 시작 방식이 모두 다름(${hooks.join(', ')})`);
+ result.checks.push(`① 실제 AI 1회 호출로 후보 ${aiState.candidates.length}개 생성, 시작 방식이 모두 다름(${hooks.join(', ')})`);}
  // ② human choice with a reason; rejection with a reason
  await p.getByRole('button',{name:'후보 1로 결정'}).click();await p.getByRole('alert').filter({hasText:'고른 이유'}).waitFor();
  await p.getByLabel('후보 1 고른 이유 첫 문장이 강함').check();await p.getByRole('button',{name:'후보 1로 결정'}).click();await p.getByRole('status').filter({hasText:'후보를 골랐습니다'}).waitFor();

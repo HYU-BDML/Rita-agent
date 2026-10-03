@@ -40,6 +40,7 @@ function Arrow(){return <span aria-hidden="true">↗</span>}
 export function Studio(){
  const [user,setUser]=useState<Account|null>(null),[loaded,setLoaded]=useState(false),[mode,setMode]=useState<'signup'|'login'>('signup');
  const [view,setView]=useState<View>('brief'),[brief,setBrief]=useState<Brief>({...blankBrief}),[draft,setDraft]=useState<Draft|null>(null),[project,setProject]=useState<(Project&{access?:'owner'|'editor';ownerEmail?:string})|null>(null); const sharedFrom=project?.access==='editor'?(project.ownerEmail||'다른 소유자'):''; const [videoOptions,setVideoOptions]=useState<VideoOptionsValue>(defaultVideoOptions);
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get('view')==='loop')setView('loop');},[]);
  const [selected,setSelected]=useState(0),[projects,setProjects]=useState<Summary[]>([]),[saved,setSaved]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [brands,setBrands]=useState<BrandProfile[]>([]),[brandNotes,setBrandNotes]=useState(''),[brandFilter,setBrandFilter]=useState(''),[statusFilter,setStatusFilter]=useState('');
  const [reviewEmail,setReviewEmail]=useState('');

@@ -57,7 +57,7 @@ test('Blog filter: limit clamps to 50 and cursor pages are stable under inserts,
 });
 
 test('Notify: respects prefs (in-app default on, email default off), unread ordering, mark read, isolation',async()=>{const{s,a,b,w}=setup();try{
- assert.deepEqual(w.prefs(a.id).map(p=>[p.kind,p.inapp,p.email]),[['review_requested',true,false],['review_decided',true,false],['publish_result',true,false],['schedule_failed',true,false],['team_invite',true,false],['credit_low',true,false]]);
+ assert.deepEqual(w.prefs(a.id).map(p=>[p.kind,p.inapp,p.email]),[['review_requested',true,false],['review_decided',true,false],['publish_result',true,false],['schedule_failed',true,false],['team_invite',true,false],['credit_low',true,false],['loop_review',true,false]]);
  assert.deepEqual(await w.notify(a.id,'review_requested',{title:'검토 요청',link:'/studio'}),{inapp:true,email:'skipped'});
  w.setPref(a.id,'publish_result',{inapp:false});assert.deepEqual(await w.notify(a.id,'publish_result',{title:'게시 완료'}),{inapp:false,email:'skipped'});
  await w.notify(a.id,'credit_low',{title:'크레딧 부족',link:'https://evil.example/x'});

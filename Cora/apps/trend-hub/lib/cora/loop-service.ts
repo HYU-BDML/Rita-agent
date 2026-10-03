@@ -3,10 +3,32 @@ import { ContentLoop, ruleCandidates, candidatePrompt, parseCandidates, FORMATS,
 import { playbookFor } from './loop-playbook';
 import { validateDraft, type Brief } from './model';
 import { OpsError, asOpsError } from './ops/errors';
+import { InstagramConnections } from './instagram-connect';
+import { notifyUser } from './notifier';
 
 export type LoopGenerate = (userId: string, prompt: string) => Promise<{ text: string; provider: string; model: string; cost: null }>;
 export const LOOP_DAILY_AI_LIMIT = 10;
 export const loopOf = (s: CoraStore) => s.module('content-loop', db => new ContentLoop(db));
+export const igOf = (s: CoraStore) => s.module('instagram-connect', db => new InstagramConnections(db));
+const KST = 9 * 3600000;
+/**
+ * Once per Korean calendar day per user (from CORA_LOOP_DAILY_HOUR, default 9 KST): collect Instagram insights for
+ * connected users, run the review, and notify when there are proposed next actions. Called from the scheduler loop.
+ */
+export async function loopDailyTick(s: CoraStore, now = Date.now(), deps: { ig?: InstagramConnections; transport?: typeof fetch; hour?: number } = {}) {
+  const hour = deps.hour ?? (Number(process.env.CORA_LOOP_DAILY_HOUR) || 9); const local = new Date(now + KST);
+  if (local.getUTCHours() < hour) return [];
+  const day = local.toISOString().slice(0, 10); const loop = loopOf(s); const ig = deps.ig ?? igOf(s); const out: { userId: string; collected: number; proposed: number }[] = [];
+  for (const userId of loop.usersWithPosts()) {
+    if (!loop.claimDaily(userId, day)) continue;
+    let collected = 0;
+    try { const token = ig.status(userId).configured ? await ig.token(userId) : null; if (token) collected = (await loop.collectInstagram(userId, token, deps.transport ?? fetch, now)).filter(r => r.ok).length; } catch { /* collection failure is visible as a missing-record action in the review */ }
+    const review = loop.review(userId, now); const proposed = review.actions.filter(a => a.status === 'proposed').length;
+    if (proposed) notifyUser(userId, 'loop_review', { title: `오늘 점검: 다음 할 일 ${proposed}개`, body: collected ? `Instagram 성과 ${collected}건을 가져왔습니다.` : '오늘 성과를 기록한 뒤 할 일을 확인하세요.', link: '/studio' }, s);
+    out.push({ userId, collected, proposed });
+  }
+  return out;
+}
 
 function briefOf(value: unknown): Brief {
   // Reuses the draft validator so the loop accepts exactly the briefs the editor accepts.
@@ -18,7 +40,7 @@ export function loopState(s: CoraStore, user: string, batchId?: string | null) {
   const current = batchId ? loop.batch(user, batchId) : batches[0] ?? null;
   return {
     batches, current, candidates: current ? loop.candidates(user, current.id) : [],
-    posts: loop.posts(user), snapshots: loop.snapshots(user), actions: loop.actions(user),
+    posts: loop.posts(user), snapshots: loop.snapshots(user), actions: loop.actions(user), instagram: igOf(s).status(user),
     playbook: playbookFor(), options: { hooks: HOOKS, formats: FORMATS, pickTags: PICK_TAGS, rejectTags: REJECT_TAGS, metrics: METRIC_KEYS },
   };
 }
@@ -53,6 +75,12 @@ export async function loopAction(s: CoraStore, user: string, b: Record<string, u
       case 'import': return loop.importMetricsCSV(user, String(b.csv ?? ''));
       case 'review': return { review: loop.review(user) };
       case 'decide': return { action: loop.decideAction(user, String(b.actionId ?? ''), b.status, b.note) };
+      case 'collect': {
+        const ig = igOf(s); const token = ig.status(user).configured ? await ig.token(user) : null;
+        if (!token) throw new OpsError('Instagram 계정을 먼저 연결해 주세요.', 409);
+        const results = await loop.collectInstagram(user, token);
+        return { results, saved: results.filter(r => r.ok).length };
+      }
       default: throw new OpsError('지원하지 않는 요청입니다.');
     }
   } catch (e) { throw asOpsError(e); }

@@ -146,6 +146,7 @@ export class ContentLoop {
       CREATE TABLE IF NOT EXISTS loop_candidates(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),batch_id TEXT NOT NULL REFERENCES loop_batches(id) ON DELETE CASCADE,idx INTEGER NOT NULL,hook TEXT NOT NULL,format TEXT NOT NULL,angle TEXT NOT NULL,draft TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'proposed',reason_tags TEXT NOT NULL DEFAULT '[]',note TEXT NOT NULL DEFAULT '',decided TEXT,project_id TEXT);
       CREATE TABLE IF NOT EXISTS loop_posts(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),candidate_id TEXT REFERENCES loop_candidates(id) ON DELETE SET NULL,project_id TEXT,title TEXT NOT NULL,platform TEXT NOT NULL,account_label TEXT NOT NULL,posted_at TEXT NOT NULL,url TEXT NOT NULL DEFAULT '',media_id TEXT NOT NULL DEFAULT '',hook TEXT,format TEXT,created TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS loop_metrics(post_id TEXT NOT NULL REFERENCES loop_posts(id) ON DELETE CASCADE,day TEXT NOT NULL,age_days INTEGER NOT NULL,reach INTEGER,views INTEGER,likes INTEGER,comments INTEGER,saves INTEGER,shares INTEGER,follows INTEGER,source TEXT NOT NULL,recorded TEXT NOT NULL,PRIMARY KEY(post_id,day));
+      CREATE TABLE IF NOT EXISTS loop_daily(user_id TEXT NOT NULL REFERENCES users(id),day TEXT NOT NULL,PRIMARY KEY(user_id,day));
       CREATE TABLE IF NOT EXISTS loop_actions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),review_day TEXT NOT NULL,rule_id TEXT NOT NULL,stage INTEGER NOT NULL,kind TEXT NOT NULL,text TEXT NOT NULL,evidence TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'proposed',note TEXT NOT NULL DEFAULT '',decided TEXT,prefer_hook TEXT,avoid_hook TEXT,prefer_format TEXT,UNIQUE(user_id,review_day,rule_id,text));
     `);
   }
@@ -253,6 +254,11 @@ export class ContentLoop {
     }
     return out;
   }
+
+  /** Users who have at least one post record (daily review candidates). */
+  usersWithPosts() { return (this.db.prepare('SELECT DISTINCT user_id FROM loop_posts').all() as { user_id: string }[]).map(r => r.user_id); }
+  /** True exactly once per user per day key, even with two workers. */
+  claimDaily(user: string, day: string) { return this.db.prepare('INSERT OR IGNORE INTO loop_daily VALUES (?,?)').run(user, day).changes > 0; }
 
   /* ⑤ daily review */
   review(user: string, now = Date.now()) {

@@ -35,7 +35,7 @@ JYK_TAVILY_API_KEY=tvly-xxxxxxxx
 
 | 순서 | 서비스 | 쓰는 기능 | 무료 조건 | 기록할 줄 이름(JYK 예시) |
 |---|---|---|---|---|
-| 1 | Meta 개발자 앱 | Instagram 게시·릴스·댓글·DM·인사이트, Threads | 사용료 없음. 다른 사람 계정 연결은 Meta 앱 심사 필요 | JYK_META_APP_ID, JYK_META_APP_SECRET |
+| 1 | Meta 개발자 앱 | Instagram 게시·릴스·댓글·DM·인사이트, Threads | 사용료 없음. 다른 사람 계정 연결은 Meta 앱 심사 필요 | JYK_META_APP_ID, JYK_META_APP_SECRET, JYK_IG_APP_ID, JYK_IG_APP_SECRET |
 | 2 | Google Cloud OAuth | YouTube 업로드, Google 로그인 | 사용료 없음. 검수 전 업로드는 비공개 | JYK_GOOGLE_CLIENT_ID, JYK_GOOGLE_CLIENT_SECRET |
 | 3 | YouTube Data API 키 | YouTube 영상 정보 가져오기 | 하루 10,000단위(영상 정보 1건 1단위) | JYK_YOUTUBE_API_KEY |
 | 4 | TikTok for Developers | TikTok 게시 | 사용료 없음. 심사 전 비공개 게시만 가능 | JYK_TIKTOK_CLIENT_KEY, JYK_TIKTOK_CLIENT_SECRET |
@@ -51,8 +51,9 @@ JYK_TAVILY_API_KEY=tvly-xxxxxxxx
 1. developers.facebook.com에 본인 Facebook 계정으로 로그인하고, 처음이면 개발자 계정 등록을 마친다.
 2. “내 앱” → “앱 만들기”에서 사용 사례 “Instagram API로 메시지 및 콘텐츠 관리”를 고르고, 앱 이름을 `이니셜-social-01`(예: JYK-social-01)로 적는다.
 3. 앱 대시보드의 “앱 설정” → “기본 설정”에서 앱 ID를 `이니셜_META_APP_ID`에, 앱 시크릿 코드(“보기” 클릭)를 `이니셜_META_APP_SECRET`에 적는다.
-4. “Instagram” → “API 설정” → “Instagram 로그인 설정”의 리디렉션 URI 칸에 교수님이 알려 준 주소를 등록한다.
-5. “앱 역할” → “역할”에서 시험 전용 Instagram 전문가 계정을 Instagram 테스터로 초대하고, 그 계정의 Instagram 앱 설정에서 초대를 수락한다.
+4. “Instagram” 제품의 Instagram 로그인 API 설정 화면에서 Instagram 앱 ID를 `이니셜_IG_APP_ID`에, Instagram 앱 시크릿을 `이니셜_IG_APP_SECRET`에 적는다. 이 두 값은 3번의 Meta 앱 ID·시크릿과 다른 값이며, Instagram 계정 연결에는 이 두 값이 쓰인다(화면 메뉴 이름은 발급할 때 확인 필요).
+5. 같은 화면의 비즈니스 로그인 설정에서 리디렉션 URI 칸에 교수님이 알려 준 주소를 등록한다. Cora의 연결 주소는 `https://(Cora 주소)/api/cora/connect/instagram/callback` 형식이다.
+6. “앱 역할” → “역할”에서 시험 전용 Instagram 전문가 계정을 Instagram 테스터로 초대하고, 그 계정의 Instagram 앱 설정에서 초대를 수락한다.
 
 테스터로 등록한 계정은 심사 없이 게시·댓글·인사이트를 시험할 수 있다. 다른 사람의 계정을 연결하려면 Meta 앱 심사(권한별 사용 목적 설명과 화면 녹화)를 받아야 한다.
 

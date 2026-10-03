@@ -19,7 +19,7 @@ try{const n=Date.now();await signup(A,`ws-a-${n}@example.test`);await signup(B,`
  assert.equal((await post(B,'/api/cora/ideas',{action:'set-status',id,status:'보류'})).status(),404);assert.equal((await(await get(B,'/api/cora/ideas')).json()).ideas.length,0);result.checks.push('다른 계정은 내 아이디어를 보지도 바꾸지도 못함');
  const list=await(await get(A,'/api/cora/content-list?status=수정됨&from=2000-01-01')).json();assert.equal(list.total,1);assert.equal(list.items[0].title,'글 둘');
  assert.equal((await get(A,'/api/cora/content-list?from=2026-02-30')).status(),400);assert.equal((await(await get(B,'/api/cora/content-list')).json()).total,0);result.checks.push('블로그 진행 상태·기간 필터, 잘못된 날짜 400, 계정 분리');
- const s0=await(await get(A,'/api/cora/settings')).json();assert.equal(s0.language,'ko');assert.equal(s0.prefs.length,6);
+ const s0=await(await get(A,'/api/cora/settings')).json();assert.equal(s0.language,'ko');assert.equal(s0.prefs.length,7);assert.ok(s0.prefs.some(p=>p.kind==='loop_review'));
  assert.equal((await post(A,'/api/cora/settings',{action:'set-language',language:'en'})).status(),200);assert.equal((await post(A,'/api/cora/settings',{action:'set-language',language:'fr'})).status(),400);
  assert.equal((await(await get(A,'/api/cora/settings')).json()).language,'en');assert.equal((await(await get(B,'/api/cora/settings')).json()).language,'ko');result.checks.push('언어 설정은 계정별로 저장, 미지원 언어 400');
  const p=await(await post(A,'/api/cora/settings',{action:'set-pref',kind:'credit_low',inapp:false,email:true})).json();assert.deepEqual(p.prefs.find(x=>x.kind==='credit_low'),{kind:'credit_low',inapp:false,email:true});
