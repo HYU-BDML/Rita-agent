@@ -50,10 +50,10 @@
     "source": "Mirr",
     "source_url": "https://www.mirra.my/en/social-accounts/new",
     "reuse": "현재 SQLite/auth 확장, 멤버/역할 분리",
-    "status": "부분 구현",
+    "status": "부분 검증",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 연결할 플랫폼 선택→해당 서비스 승인 경로로 이동하는 UI.",
     "external_condition": "실제 연결은 미실행. 비활성 원인이 요금제·지역·일시 중단 중 무엇인지는 미확인.",
-    "evidence": "15_Instagram_공식API_연결.md; Instagram 공식 API(Instagram Login) 게시 어댑터와 계약 시험 6개. 계정 연결(OAuth) 화면·토큰 저장·공개 이미지 보관 장소·실제 계정 시험은 미완."
+    "evidence": "22_Instagram_업그레이드와_회귀검수.md; Instagram OAuth·암호화 토큰·다중 계정과 구버전 DB 이전 구현/계약 시험. 실제 계정 인증은 대기."
   },
   {
     "id": "F094",
@@ -949,7 +949,7 @@
     "status": "부분 검증",
     "acceptance": "화면에서 입력→실행→실제 결과 확인→저장/재접속 후 유지. 원본 범위: 계정과 기간을 선택해 성과를 보고 비교·차트·내보내기를 설정.",
     "external_condition": "SNS 미연결로 값이 있는 차트와 파일 형식 미검증.",
-    "evidence": "수동 CSV 분석 화면과 저장. Instagram 공식 지표 동기화 없음."
+    "evidence": "22_Instagram_업그레이드와_회귀검수.md; 콘텐츠 순환의 수동 성과 입력·동일 경과일 비교·다음 후보 반영을 브라우저에서 검증. Instagram 공식 수집 연결 코드는 있으나 실계정 호출 미검증."
   },
   {
     "id": "F086",

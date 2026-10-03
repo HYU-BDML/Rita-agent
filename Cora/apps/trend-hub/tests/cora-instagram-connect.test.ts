@@ -34,8 +34,9 @@ test('Instagram connect: consent URL uses the Instagram App ID, scopes and a sin
   assert.equal(url.searchParams.get('scope'), IG_SCOPES.join(',')); assert.equal(url.searchParams.get('redirect_uri'), ENV.CORA_IG_REDIRECT_URI);
   const state = url.searchParams.get('state')!;
   const other = s.signup('ig-other@example.test', 'password123').id;
-  await assert.rejects(ig.finish(other, 'code-1#_', state), /다른 계정/); // state is bound to the user and is consumed even on mismatch
-  const st2 = new URL(ig.start(u)).searchParams.get('state')!;
+  await assert.rejects(ig.finish(other, 'code-1#_', state), /다른 계정/); // Another user must not consume the owner's state.
+  assert.equal(calls.length, 0);
+  const st2 = state;
   const status = await ig.finish(u, 'code-1#_', st2);
   assert.equal(status.connected, true); assert.equal(status.username, 'corner_books'); assert.equal(status.igUserId, '17841400000000001');
   const form = calls[0].init!.body as URLSearchParams; assert.equal(form.get('code'), 'code-1', '#_ is stripped'); assert.equal(form.get('client_id'), '990001'); assert.equal(form.get('grant_type'), 'authorization_code');
@@ -89,4 +90,50 @@ test('Instagram connect: one Cora user can connect several accounts; daily colle
   assert.equal(r.filter(x => x.ok).length, 2); assert.match(r.find(x => !x.ok)!.detail, /someone_else/);
   assert.deepEqual(usedTokens.sort(), ['Bearer long-corner_books', 'Bearer long-corner_cafe']);
   assert.equal(ig.disconnect(u, '222'), true); assert.deepEqual(ig.accounts(u).map(a => a.username), ['corner_books']);
+});
+
+
+test('legacy Instagram connections survive upgrade without resurrection after disconnect', async () => {
+  const s = new CoraStore(':memory:');
+  const user = s.signup('legacy@example.test', 'password123').id;
+  const now = Date.UTC(2026, 9, 3), encrypted = seal('legacy-token', ENV.CORA_SECRET_KEY);
+  const db = s.module('legacy-fixture', db => db);
+  db.exec(`CREATE TABLE ig_connections(user_id TEXT PRIMARY KEY REFERENCES users(id),ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL)`);
+  db.prepare('INSERT INTO ig_connections VALUES (?,?,?,?,?,?,?)').run(user, '111', 'legacy', encrypted, now + 60 * DAY, now, now);
+  const ig = new InstagramConnections(db, ENV, fakeInstagram([]), () => now);
+  assert.equal(await ig.token(user, '111'), 'legacy-token');
+  assert.equal((db.prepare('SELECT token FROM ig_accounts').get() as { token: string }).token, encrypted);
+  await ig.finish(user, 'code', new URL(ig.start(user)).searchParams.get('state'));
+  assert.equal(ig.accounts(user).length, 2);
+  assert.equal(ig.disconnect(user, '111'), true);
+  const reopened = new InstagramConnections(db, ENV, fakeInstagram([]), () => now);
+  assert.equal(reopened.accounts(user).length, 1);
+  assert.equal(reopened.accounts(user)[0].username, 'corner_books');
+  assert.equal(db.prepare("SELECT 1 FROM sqlite_master WHERE name='ig_connections'").get(), undefined);
+});
+
+
+test('OAuth transport failures never expose token exchange URLs or secrets', async () => {
+  let calls = 0;
+  const transport = (async (url: string) => {
+    if (++calls === 1) return new Response(JSON.stringify({ access_token: 'sensitive-short-token' }));
+    throw new Error(`Request failed: ${url}`);
+  }) as typeof fetch;
+  const { u, ig } = setup(ENV, transport);
+  await assert.rejects(ig.finish(u, 'code', new URL(ig.start(u)).searchParams.get('state')), error => {
+    assert.equal((error as { status: number }).status, 502);
+    assert.ok(!String(error).includes('sensitive-short-token'));
+    assert.ok(!String(error).includes(ENV.CORA_IG_APP_SECRET));
+    return true;
+  });
+});
+
+test('expired OAuth state is consumed without contacting Instagram', async () => {
+  const calls: Call[] = []; const { ig, u, clock } = setup(ENV, fakeInstagram(calls));
+  const state = new URL(ig.start(u)).searchParams.get('state');
+  clock.t += 11 * 60000;
+  await assert.rejects(ig.finish(u, 'code', state), /만료/);
+  clock.t -= 11 * 60000;
+  await assert.rejects(ig.finish(u, 'code', state), /만료/);
+  assert.equal(calls.length, 0);
 });

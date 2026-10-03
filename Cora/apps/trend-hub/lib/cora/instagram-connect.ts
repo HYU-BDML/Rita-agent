@@ -36,6 +36,17 @@ export class InstagramConnections {
   constructor(private db: DatabaseSync, private env: Env = process.env, private transport: typeof fetch = fetch, private now: () => number = () => Date.now()) {
     db.exec(`CREATE TABLE IF NOT EXISTS ig_oauth_states(state TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),created INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS ig_accounts(user_id TEXT NOT NULL REFERENCES users(id),ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL,PRIMARY KEY(user_id,ig_user_id));`);
+    // Move legacy encrypted rows once. Retiring the source prevents a disconnected
+    // account from reappearing on the next application restart.
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='ig_connections'").get()) {
+        db.exec(`INSERT OR IGNORE INTO ig_accounts(user_id,ig_user_id,username,token,expires_at,connected,refreshed)
+          SELECT user_id,ig_user_id,username,token,expires_at,connected,refreshed FROM ig_connections;
+          DROP TABLE ig_connections;`);
+      }
+      db.exec('COMMIT');
+    } catch (error) { db.exec('ROLLBACK'); throw error; }
   }
   private cfg() { const c = igConfig(this.env); if (!c.configured) throw Object.assign(new Error(`Instagram 연결 설정이 없습니다: ${c.missing.join(', ')}`), { status: 503 }); return c; }
   /** Authorization URL with a single-use state bound to this user. */
@@ -48,7 +59,9 @@ export class InstagramConnections {
     return u.href;
   }
   private async json(url: string, init: RequestInit = {}) {
-    const r = await this.transport(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(20000) });
+    let r: Response;
+    try { r = await this.transport(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(20000) }); }
+    catch { throw Object.assign(new Error('Instagram 연결 요청에 실패했습니다. 잠시 후 다시 연결해 주세요.'), { status: 502 }); }
     let body: Record<string, unknown> | null = null; try { body = await r.json() as Record<string, unknown>; } catch { /* non-JSON */ }
     if (!r.ok || !body) throw Object.assign(new Error(`Instagram 응답 오류(HTTP ${r.status})`), { status: 502 });
     return body;
@@ -57,8 +70,7 @@ export class InstagramConnections {
   async finish(user: string, code: unknown, state: unknown) {
     const c = this.cfg();
     if (typeof state !== 'string' || !state) throw new Error('연결 요청 확인값이 없습니다. 다시 연결해 주세요.');
-    const row = this.db.prepare('SELECT user_id,created FROM ig_oauth_states WHERE state=?').get(state) as { user_id: string; created: number } | undefined;
-    this.db.prepare('DELETE FROM ig_oauth_states WHERE state=?').run(state);
+    const row = this.db.prepare('DELETE FROM ig_oauth_states WHERE state=? AND user_id=? RETURNING user_id,created').get(state, user) as { user_id: string; created: number } | undefined;
     if (!row || row.user_id !== user || this.now() - row.created > STATE_TTL) throw new Error('연결 요청이 만료됐거나 다른 계정의 요청입니다. 다시 연결해 주세요.');
     if (typeof code !== 'string' || !code.trim()) throw new Error('Instagram이 승인 코드를 보내지 않았습니다. 권한을 허용했는지 확인해 주세요.');
     const clean = code.replace(/#_$/, '').trim();
