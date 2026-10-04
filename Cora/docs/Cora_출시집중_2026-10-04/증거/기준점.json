@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-04",
+  "timezone": "Asia/Seoul",
+  "source_commit": "472c6e687d7b75a97cfde67f8f9068e4526cddc5",
+  "source_modified_before_planning": false,
+  "existing_ledger_rows": 119,
+  "existing_ledger_sha256": "6dc812e7a72d0200bdb940df87e148ccf2812996b8d48bf141e965c7d76b5273",
+  "baseline_test": {
+    "command": "npm test",
+    "isolated_runtime": "/tmp/cora-launch-audit/Cora/apps/trend-hub",
+    "total": 497,
+    "passed": 496,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "tests/recipe.test.ts: source observation DB absent",
+    "initial_harness_failure": "App-only copy omitted ../../integrations/rita/contract.schema.json. Corrected fixture directory structure; rerun passed."
+  },
+  "audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 1,
+    "high": 1,
+    "critical": 0,
+    "total": 2
+  },
+  "ledger_integrity": "passed; 109 Mirr +10 additional; no name/evidence mismatch",
+  "executed_now": {
+    "new_ui": false,
+    "feature_gating": false,
+    "migration": false,
+    "live_ai_calls": 0,
+    "live_sns_calls": 0,
+    "deployment": false,
+    "claude_independent_review": false
+  },
+  "evidence_files": [
+    "기존회귀_2026-10-04.log",
+    "dependency-audit.json"
+  ]
+}

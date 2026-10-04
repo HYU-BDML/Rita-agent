@@ -1,0 +1,10 @@
+﻿ID,심각도,증거수준,문제,파일_Cora기준,관찰근거,영향,연결작업,해결후필수검수,발견커밋,상태,수정커밋,독립검수자,독립검수증거
+D01,P2,확인된 UX 구조,제작 시작점이 여러 메뉴로 분산,apps/trend-hub/components/cora/studio.tsx,View17종과 독립 광고/순환/운영 nav 확인,신규 고객이 기능 조립을 해야 함,L02,4개 업무 흐름의 브라우저/사람 검수,472c6e6,미해결,,,
+D02,P1 검토대상,구조 위험·유출 재현 아님,브랜드 이름이 권한 조건에 사용됨,apps/trend-hub/lib/cora/team.ts; store.ts,canEdit의 brands.includes(brand) 확인,이름 변경/중복/이전의 권한 일관성 검증 필요,L05 L06 L07,동명고객/이름변경/권한회수·이전 반례 검수,472c6e6,미해결,,,
+D03,P2,확인된 기능 제한,검토자는 먼저 Cora에 가입해야 함,apps/trend-hub/lib/cora/store.ts,requestReview가 기존 users의 email 조회,외부 고객 승인 진입 장벽,L16,검토 링크의 신원·만료·철회·모바일 검수,472c6e6,미해결,,,
+D04,P1 출시차단,확인된 미연결,공식 게시 어댑터와 게시 큐 실실행 미연결,apps/trend-hub/lib/cora/publishing/queue.ts; app/api/cora/publications/route.ts,mode simulation과 livePublishing:false,자동게시 제품으로 출시 불가,L31 L33 L34,모의장애+전용시험계정 실제 게시 증거,472c6e6,미해결,,,
+D05,P1 출시차단,확인된 설정 불일치,옛 Trend 시연용 배포 설정,apps/trend-hub/render.yaml; package.json,Node22.11.0과 engines>=22.13.0 불일치; Cora 영구저장 설정 없음,현 파일 그대로 Cora 운영에 부적합,L27 L28,새 staging 기동/재배포 보존/복원,472c6e6,미해결,,,
+D06,P1 검토대상,현재 audit 경고·도달가능성 미확인,next moderate·postcss high,증거/dependency-audit.json,npm audit --omit=dev: high1 moderate1,실제 배포 노출에 따라 수정·완화 필요,L38,정확한 advisory·도달경로·수정버전·회귀·독립검수,472c6e6,미해결,,,
+D07,P1 출시차단,확인된 계측 제한,생성 비용 null·프로세스별 동시제한,apps/trend-hub/lib/cora/gateway.ts; scripts/cora-llm.py,cost:null·active Set,고객별 원가·분산동시 지출 상한 보장 미검증,L23,한도예약 경합·비용실측/추정 표시,472c6e6,미해결,,,
+D08,P1 검토대상,현재 구현 확인,로그인 제한이 프로세스 메모리,apps/trend-hub/lib/cora/http.ts,Map 기반 allowAuth,재시작·여러프로세스·proxy 신뢰 검수 필요,L21,공유 rate-limit·세션/CSRF 회귀,472c6e6,미해결,,,
+D09,P2,확인된 제품 한계,광고 계정 정보 중복 입력·시각분석 없음,apps/trend-hub/lib/cora/ad-creative.ts; components/cora/ad-creative.tsx,manual captions/profile와 visual review,브랜드 기억 통합·실제 품질검수 필요,L09 L13 L14,계정별규칙 재사용·참고피드 비교·사람평가,472c6e6,미해결,,,
