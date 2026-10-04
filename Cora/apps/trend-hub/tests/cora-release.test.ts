@@ -30,6 +30,7 @@ test('release rejects archived POST actions before effects, including unknown ac
  }
  for(const kind of ['blog','script','calendar','automation',null])assert.ok(releaseDenial('/api/cora/workbench','POST',{action:'save',kind},'focused'));
  assert.equal(releaseDenial('/api/cora/workbench','POST',{action:'save',kind:'material'},'focused'),null);
+ assert.equal(releaseDenial('/api/cora/workbench','POST',{action:'copy-personal'},'focused'),null);
  for(const action of ['compose','republish','enqueue','anything'])assert.ok(releaseDenial('/api/cora/publications','POST',{action},'focused'));
  assert.equal(releaseDenial('/api/cora/publications','POST',{action:'prepare'},'focused'),null);
  assert.ok(needsReleaseBody('/api/cora/workbench','POST','focused'));assert.equal(needsReleaseBody('/api/cora/workbench','POST','labs'),false);

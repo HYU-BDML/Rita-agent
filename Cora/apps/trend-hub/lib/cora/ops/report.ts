@@ -21,16 +21,17 @@ export function aggregateBlocks(a:Agg):Block[]{
 export const LIMITS=['이 자료는 사용자가 직접 올린 CSV이며 공식 Instagram 동기화 결과가 아닙니다.','비율과 기간 차이는 관찰한 숫자를 그대로 나눈 것이고, 검정(p값)이나 인과효과를 뜻하지 않습니다.',`표본이 ${SMALL_SAMPLE}개 미만이면 중앙값이 게시물 한두 개에 좌우됩니다.`,'빈칸은 결측으로 세어 제외했고 0으로 바꾸지 않았습니다.','같은 계정·형식·기간·광고 여부인지 확인한 뒤 해석하세요.'];
 export const INSIGHT_DISCLAIMER='AI 해석, 인과 아님: 아래 답변은 집계표만 근거로 한 AI의 해석이며 원인을 입증하지 않습니다.';
 
-export function reportBlocks(s:CoraStore,userId:string,analysisId:string,periods?:{a?:unknown;b?:unknown}){
- const item=s.item(userId,analysisId);if(!item||item.kind!=='analysis')throw new OpsError('진단 자료를 찾을 수 없습니다.',404);
+export function reportBlocks(s:CoraStore,userId:string,analysisId:string,periods?:{a?:unknown;b?:unknown},clientId?:string|null){
+ const item=clientId===undefined?s.item(userId,analysisId):s.scopedItem(userId,analysisId,clientId);if(!item||item.kind!=='analysis')throw new OpsError('진단 자료를 찾을 수 없습니다.',404);
  const rows=rowsOf(item.data),agg=aggregateSummary(item.data,periods),norm=normalizedMetrics(rows);
- const insights=s.items(userId).filter(i=>i.kind==='material'&&i.data.format==='insight'&&i.data.analysisId===analysisId).slice(0,5);
+ const insights=(clientId===undefined?s.items(userId):s.scopedItems(userId,clientId)).filter(i=>i.kind==='material'&&i.data.format==='insight'&&i.data.analysisId===analysisId).slice(0,5);
  const blocks:Block[]=[{p:`기준 자료: ${String(item.data.summary??'')}`},{p:`분석 저장 시각: ${item.createdAt}`},...aggregateBlocks(agg)];
  blocks.push({h:'게시물별 노출 대비 비율'},{table:{head:['날짜','제목','도달','좋아요율','저장률','공유율','댓글률'],rows:norm.perPost.slice(0,50).map(p=>[p.date,p.title,String(p.reach),pct(p.likeRate),pct(p.saveRate),pct(p.shareRate),pct(p.commentRate)])}});
  if(norm.perPost.length>50)blocks.push({p:`게시물이 ${norm.perPost.length}개라 위 표에는 처음 50개만 실었습니다.`});
  if(insights.length){blocks.push({h:'저장된 AI 해석'},{p:INSIGHT_DISCLAIMER});for(const i of insights)blocks.push({p:`질문: ${String(i.data.question??'')}`},{quote:String(i.data.text??'')});}
  blocks.push({h:'한계'},{ul:[...LIMITS,...(Array.isArray(item.data.warnings)?(item.data.warnings as unknown[]).map(String).slice(0,30):[])]});
- return{title:'계정 분석 리포트',blocks,analysisId,createdAt:item.createdAt};
+ if(clientId)blocks.unshift({p:`고객사 ID: ${clientId}`});
+ return{title:clientId?`${s.clients.get(userId,clientId)?.name??'고객사'} · 계정 분석 리포트`:'계정 분석 리포트',blocks,analysisId,createdAt:item.createdAt};
 }
 const mdCell=(t:string)=>mdText(t).replace(/\|/g,'\\|');
 const mdText=(t:string)=>String(t).replace(/\r?\n/g,' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/([\\`*_[\]])/g,'\\$1');

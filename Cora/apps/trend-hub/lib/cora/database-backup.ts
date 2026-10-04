@@ -5,6 +5,8 @@ import path from 'node:path';
 import {CoraStore} from './store';
 import {InstagramConnections} from './instagram-connect';
 import {ClientAccounts} from './client-accounts';
+import {LibraryStore} from './library';
+import {AdCreativeStore} from './ad-creative';
 import {DraftRecovery} from './recovery';
 
 // Runtime readOnly option is supported by the declared Node minimum; pinned Node typings predate it.
@@ -49,7 +51,7 @@ export function backupDatabase(source:string,target:string){
 export function migrateDatabase(file:string){
  const s=new CoraStore(file);try{
   const ig=s.module('instagram',db=>new InstagramConnections(db,{},async()=>{throw new Error('Network forbidden during migration.');}));
-  s.module('client-accounts',db=>new ClientAccounts(db,s,ig));s.module('recovery',db=>new DraftRecovery(db));
+  s.module('client-accounts',db=>new ClientAccounts(db,s,ig));s.module('recovery',db=>new DraftRecovery(db));s.module('library',db=>new LibraryStore(db));s.module('ad-creative',db=>new AdCreativeStore(db));
  }finally{s.close();}
 }
 function preserved(source:string,target:string){

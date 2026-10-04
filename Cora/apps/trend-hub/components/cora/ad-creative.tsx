@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import type { AccessibleClient } from '@/lib/cora/clients';
 import type { Draft } from '@/lib/cora/model';
 import type { AdAccount, AdBrief, AdResult } from '@/lib/cora/ad-creative';
 import s from './workbench.module.css';
@@ -10,20 +11,22 @@ const briefBlank:AdBrief={product:'',facts:'',audience:'',goal:'awareness',cta:'
 const lines=(value:string)=>value.split('\n').map(x=>x.trim()).filter(Boolean);
 const samples=(value:string)=>value.split(/\n\s*---\s*\n/g).map(x=>x.trim()).filter(Boolean);
 const formOf=(a:AdAccount):AccountForm=>({...a,pillars:a.pillars.join('\n'),avoid:a.avoid.join('\n'),captions:a.captions.join('\n---\n')});
-async function call(input?:Record<string,unknown>){const r=await fetch('/api/cora/ad-creative',{method:input?'POST':'GET',headers:input?{'Content-Type':'application/json'}:undefined,body:input?JSON.stringify(input):undefined});const v=await r.json();if(!r.ok)throw new Error(v.error||'광고 제작 요청 실패');return v;}
+async function request(input?:Record<string,unknown>,clientId=''){const r=await fetch('/api/cora/ad-creative?'+new URLSearchParams({clientId}),{method:input?'POST':'GET',headers:input?{'Content-Type':'application/json'}:undefined,body:input?JSON.stringify({...input,clientId}):undefined});const v=await r.json();if(!r.ok)throw new Error(v.error||'광고 제작 요청 실패');return v;}
 
 /** Manual account evidence first; approved Instagram read access can supply real samples later. */
-export function AdCreativeDesk({onDraft}:{onDraft:(draft:Draft)=>void}) {
-  const [account,setAccount]=useState<AccountForm>(blank),[brief,setBrief]=useState<AdBrief>(briefBlank),[profiles,setProfiles]=useState<AdAccount[]>([]),[results,setResults]=useState<AdResult[]>([]),[selected,setSelected]=useState<AdResult|null>(null);
+export function AdCreativeDesk({onDraft,clientId='',client}:{clientId?:string;client?:AccessibleClient;onDraft:(draft:Draft)=>void}) {
+  const call=(input?:Record<string,unknown>)=>request(input,clientId);
+  const [personalProfiles,setPersonalProfiles]=useState<AdAccount[]>([]);const [account,setAccount]=useState<AccountForm>(client?{...blank,brand:client.name,voice:client.voice,visualRules:client.visualRules,pillars:client.pillars,avoid:client.avoid,accent:client.accent}:blank),[brief,setBrief]=useState<AdBrief>({...briefBlank,audience:client?.audience??''}),[profiles,setProfiles]=useState<AdAccount[]>([]),[results,setResults]=useState<AdResult[]>([]),[selected,setSelected]=useState<AdResult|null>(null);
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
-  useEffect(()=>{void call().then(v=>{setProfiles(v.profiles);setResults(v.results);}).catch(e=>setError(e.message));},[]);
+  useEffect(()=>{let active=true;void call().then(v=>{if(active){setProfiles(v.profiles);setPersonalProfiles(v.personalProfiles||[]);setResults(v.results);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[clientId]);
   const data=()=>({handle:account.handle,brand:account.brand,pillars:lines(account.pillars),voice:account.voice,visualRules:account.visualRules,avoid:lines(account.avoid),captions:samples(account.captions),accent:account.accent});
   async function run(f:()=>Promise<void>){if(busy)return;setBusy(true);setError('');setNotice('');try{await f();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   const update=(key:keyof AccountForm,value:string)=>setAccount(a=>({...a,[key]:value}));
   const updateBrief=(key:keyof AdBrief,value:string)=>setBrief(b=>({...b,[key]:value}));
-  return <div className={s.root}><h1>계정에 어울리는 광고 만들기</h1><p>평소 게시물의 주제·말투·시각 규칙을 먼저 기록하고, 광고 목적과 확인된 상품 사실을 넣어 광고안 3개를 만듭니다. 계정 적합성 점검은 편집 판단을 돕는 규칙 검사이며 성과 예측이 아닙니다.</p>
+  return <div className={s.root}><h1>계정에 어울리는 광고 만들기</h1><p>{clientId?`고객사: ${client?.name??clientId} · 광고안과 결과도 이 고객사에 저장됩니다.`:'고객사 미지정 개인 작업입니다. 고객사 광고는 먼저 고객사를 선택하세요.'}</p><p>평소 게시물의 주제·말투·시각 규칙을 먼저 기록하고, 광고 목적과 확인된 상품 사실을 넣어 광고안 3개를 만듭니다. 계정 적합성 점검은 편집 판단을 돕는 규칙 검사이며 성과 예측이 아닙니다.</p>
     {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
     <section className={s.panel}><h2>1. 광고가 올라갈 계정의 평소 모습</h2><p>현재는 계정 운영자가 제공한 예시로만 분석합니다. Instagram에 로그인해 게시물을 가져온 것으로 표시하지 않습니다.</p>
+      {personalProfiles.length>0&&<label>개인 계정 스타일에서 가져오기<select aria-label="개인 광고 계정 스타일 가져오기" defaultValue="" onChange={e=>{const p=personalProfiles.find(x=>x.handle===e.target.value);if(p){setAccount(formOf(p));setNotice('개인 스타일을 입력란에 가져왔습니다. 고객사와 실제 계정을 확인한 뒤 저장하세요.');}}}><option value="">선택 후 검토·저장</option>{personalProfiles.map(p=><option key={p.handle} value={p.handle}>@{p.handle} · {p.brand}</option>)}</select></label>}
       {profiles.length>0&&<label>저장한 계정<select aria-label="저장한 광고 계정" defaultValue="" onChange={e=>{const p=profiles.find(x=>x.handle===e.target.value);if(p)setAccount(formOf(p));}}><option value="">새 계정 입력</option>{profiles.map(p=><option key={p.handle} value={p.handle}>@{p.handle} · {p.brand}</option>)}</select></label>}
       <label>Instagram 사용자명<input aria-label="광고 계정 사용자명" maxLength={31} value={account.handle} onChange={e=>update('handle',e.target.value)} placeholder="예: bdm.lab"/></label>
       <label>브랜드 이름<input aria-label="광고 브랜드" maxLength={80} value={account.brand} onChange={e=>update('brand',e.target.value)}/></label>

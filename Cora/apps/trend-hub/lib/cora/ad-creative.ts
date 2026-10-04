@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import { randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { validateDraft, type Draft } from './model';
@@ -10,7 +11,7 @@ export type AdAccount = {
 export type AdBrief = { product: string; facts: string; audience: string; goal: 'awareness'|'traffic'|'leads'|'sales'; cta: string; disclosure: string; landingUrl: string };
 export type AdConcept = { name: string; hook: string; caption: string; slides: { headline: string; body: string }[] };
 export type FitCheck = { id: string; status: 'pass'|'review'|'block'; detail: string };
-export type AdResult = { id: string; account: AdAccount; brief: AdBrief; concepts: { concept: AdConcept; checks: FitCheck[]; draft: Draft }[]; createdAt: string };
+export type AdResult = { clientId?:string; id: string; account: AdAccount; brief: AdBrief; concepts: { concept: AdConcept; checks: FitCheck[]; draft: Draft }[]; createdAt: string };
 type Generate = (prompt: string) => Promise<string>;
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const field = (v: unknown, name: string, max: number, required = true) => {
@@ -85,16 +86,32 @@ export function adConceptToDraft(a: AdAccount, b: AdBrief, c: AdConcept, checks:
     reviewNotes:`광고 시안. 계정 @${a.handle}의 사용자가 입력한 캡션 ${a.captions.length}개를 참고함. 자동 점검은 성과 예측이 아닙니다. ${checks.filter(x=>x.status!=='pass').map(x=>x.detail).join(' ')}`.slice(0,3000) });
 }
 export class AdCreativeStore {
-  constructor(private db: DatabaseSync) { db.exec(`CREATE TABLE IF NOT EXISTS ad_account_profiles(user_id TEXT NOT NULL REFERENCES users(id),handle TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(user_id,handle));
-    CREATE TABLE IF NOT EXISTS ad_creatives(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),handle TEXT NOT NULL,body TEXT NOT NULL,created TEXT NOT NULL);`); }
-  profiles(user: string) { return (this.db.prepare('SELECT body FROM ad_account_profiles WHERE user_id=? ORDER BY handle').all(user) as {body:string}[]).map(r=>JSON.parse(r.body) as AdAccount); }
-  saveProfile(user: string, input: unknown) { const p=validateAdAccount(input);this.db.prepare('INSERT INTO ad_account_profiles VALUES (?,?,?) ON CONFLICT(user_id,handle) DO UPDATE SET body=excluded.body').run(user,p.handle,JSON.stringify(p));return p; }
-  results(user: string) { return (this.db.prepare('SELECT body FROM ad_creatives WHERE user_id=? ORDER BY created DESC LIMIT 20').all(user) as {body:string}[]).map(r=>JSON.parse(r.body) as AdResult); }
-  async generate(user: string, accountIn: unknown, briefIn: unknown, generate: Generate): Promise<AdResult> {
+  constructor(private db: DatabaseSync, readonly clientId:string|null=null, init=true) {
+    if(!init)return;
+    schemaStep(db,'ads-client-v1',()=>{
+      db.exec(`CREATE TABLE IF NOT EXISTS ad_account_profiles(user_id TEXT NOT NULL REFERENCES users(id),handle TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(user_id,handle));
+      CREATE TABLE IF NOT EXISTS ad_client_profiles(user_id TEXT NOT NULL REFERENCES users(id),client_id TEXT NOT NULL REFERENCES clients(id),handle TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(user_id,client_id,handle));
+      CREATE TABLE IF NOT EXISTS ad_creatives(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),handle TEXT NOT NULL,body TEXT NOT NULL,created TEXT NOT NULL);`);
+      if(!(db.prepare('PRAGMA table_info(ad_creatives)').all() as {name:string}[]).some(c=>c.name==='client_id'))db.exec('ALTER TABLE ad_creatives ADD COLUMN client_id TEXT REFERENCES clients(id)');
+      db.exec('CREATE INDEX IF NOT EXISTS ad_creatives_client ON ad_creatives(user_id,client_id,created)');
+    });
+  }
+  forClient(clientId:string|null){return new AdCreativeStore(this.db,clientId,false);}
+  profiles(user:string){
+    const rows=this.clientId?this.db.prepare('SELECT body FROM ad_client_profiles WHERE user_id=? AND client_id=? ORDER BY handle').all(user,this.clientId):this.db.prepare('SELECT body FROM ad_account_profiles WHERE user_id=? ORDER BY handle').all(user);
+    return (rows as {body:string}[]).map(r=>JSON.parse(r.body) as AdAccount);
+  }
+  saveProfile(user:string,input:unknown){const p=validateAdAccount(input);
+    if(this.clientId)this.db.prepare('INSERT INTO ad_client_profiles VALUES (?,?,?,?) ON CONFLICT(user_id,client_id,handle) DO UPDATE SET body=excluded.body').run(user,this.clientId,p.handle,JSON.stringify(p));
+    else this.db.prepare('INSERT INTO ad_account_profiles VALUES (?,?,?) ON CONFLICT(user_id,handle) DO UPDATE SET body=excluded.body').run(user,p.handle,JSON.stringify(p));
+    return p;
+  }
+  results(user:string){return (this.db.prepare('SELECT body FROM ad_creatives WHERE user_id=? AND client_id IS ? ORDER BY created DESC LIMIT 20').all(user,this.clientId) as {body:string}[]).map(r=>JSON.parse(r.body) as AdResult);}
+  /** Authorization must precede generation and be rechecked atomically by commit after await. */
+  async generate(user:string,accountIn:unknown,briefIn:unknown,generate:Generate,commit:(write:()=>AdResult)=>AdResult=write=>write()):Promise<AdResult>{
     const account=validateAdAccount(accountIn),brief=validateAdBrief(briefIn);
     const concepts=parseConcepts(await generate(adPrompt(account,brief)));
-    const result:AdResult={id:randomUUID(),account,brief,concepts:concepts.map(concept=>{const checks=checkAdFit(account,brief,concept);return{concept,checks,draft:adConceptToDraft(account,brief,concept,checks)};}),createdAt:new Date().toISOString()};
-    this.db.prepare('INSERT INTO ad_creatives VALUES (?,?,?,?,?)').run(result.id,user,account.handle,JSON.stringify(result),result.createdAt);
-    return result;
+    const result:AdResult={...(this.clientId?{clientId:this.clientId}:{}),id:randomUUID(),account,brief,concepts:concepts.map(concept=>{const checks=checkAdFit(account,brief,concept);return{concept,checks,draft:{...adConceptToDraft(account,brief,concept,checks),...(this.clientId?{clientId:this.clientId}:{})}};}),createdAt:new Date().toISOString()};
+    return commit(()=>{this.db.prepare('INSERT INTO ad_creatives(id,user_id,handle,body,created,client_id) VALUES (?,?,?,?,?,?)').run(result.id,user,account.handle,JSON.stringify(result),result.createdAt,this.clientId);return result;});
   }
 }

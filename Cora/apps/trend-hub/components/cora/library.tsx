@@ -5,19 +5,21 @@ type Tpl={id:string;name:string;source:'project'|'builtin';design:Design;styles:
 type Logo={id:string;name:string;brand:string;data:string;isDefault:boolean};
 type Cta={id:string;text:string;brand:string;uses:number};
 type Builtin={id:string;name:string;design:Design};
-type View={templates:Tpl[];logos:Logo[];ctas:Cta[];builtins:Builtin[]};
-type Proj={id:string;title:string;brand:string};
+type View={templates:Tpl[];logos:Logo[];ctas:Cta[];builtins:Builtin[];personal?:{templates:Tpl[];logos:Logo[];ctas:Cta[]}};
+type Proj={id:string;title:string;brand:string;clientId?:string};
 const tplLabel={editorial:'에디토리얼',minimal:'미니멀',bold:'볼드'};
-async function api(data?:Record<string,unknown>,query=''):Promise<View>{const r=await fetch('/api/cora/library'+query,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify(data):undefined});const v=await r.json();if(!r.ok)throw new Error(v.error);return v;}
+async function request(data?:Record<string,unknown>,query=''):Promise<View>{const r=await fetch('/api/cora/library'+query,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify(data):undefined});const v=await r.json();if(!r.ok)throw new Error(v.error);return v;}
 /** Asset library: personal card templates (favorite, copy built-ins, edit), brand logos (max 5), reusable CTA phrases. */
-export function LibraryDesk({onApply}:{onApply?:(templateId:string)=>void}){
+export function LibraryDesk({onApply,clientId=''}:{clientId?:string;onApply?:(templateId:string)=>void}){
+ const api=(data?:Record<string,unknown>)=>request(data?{...data,clientId}:undefined,'?'+new URLSearchParams({clientId}));
  const[data,setData]=useState<View|null>(null),[projects,setProjects]=useState<Proj[]>([]),[projectId,setProjectId]=useState(''),[name,setName]=useState(''),[editing,setEditing]=useState<{id:string;version:number;name:string;design:Design}|null>(null),[logoName,setLogoName]=useState(''),[logoBrand,setLogoBrand]=useState(''),[logoData,setLogoData]=useState(''),[cta,setCta]=useState(''),[ctaBrand,setCtaBrand]=useState(''),[filter,setFilter]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const refresh=useCallback(async()=>setData(await api()),[]);
- useEffect(()=>{void refresh().catch(e=>setError(e.message));void fetch('/api/cora/projects').then(r=>r.json()).then(v=>{const list=(v.projects||[]) as Proj[];setProjects(list);if(list[0])setProjectId(list[0].id);}).catch(()=>{});},[refresh]);
+ const refresh=useCallback(async()=>setData(await api()),[clientId]);
+ useEffect(()=>{void refresh().catch(e=>setError(e.message));void fetch('/api/cora/projects').then(r=>r.json()).then(v=>{const list=(v.projects||[]) as Proj[];const scoped=list.filter(p=>(p.clientId??'')===clientId);setProjects(scoped);if(scoped[0])setProjectId(scoped[0].id);}).catch(()=>{});},[refresh,clientId]);
  async function run(f:()=>Promise<View|void>,msg:string){if(busy)return;setBusy(true);setError('');setNotice('');try{const v=await f();if(v)setData(v);setNotice(msg);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  function pick(file?:File){setLogoData('');if(!file)return;if(!/^image\/(png|jpeg|webp)$/.test(file.type)||file.size>300000){setError('로고는 300KB 이하의 PNG, JPEG, WebP 이미지여야 합니다.');return;}const r=new FileReader();r.onload=()=>setLogoData(String(r.result));r.readAsDataURL(file);}
  const shown=data?.ctas.filter(c=>!filter||c.brand===filter)||[],brands=[...new Set((data?.ctas||[]).map(c=>c.brand).filter(Boolean))];
- return <div className={s.root}><h1>자산 라이브러리</h1><p className={s.warning}>템플릿, 로고, CTA 문구는 내 계정에만 저장되며 다른 계정에서는 보이지 않습니다.</p>{error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
+ return <div className={s.root}><h1>자산 라이브러리</h1><p className={s.warning}>{clientId?'선택한 고객사의 템플릿·로고·CTA입니다. 소유자와 현재 편집 권한이 있는 팀원만 사용합니다.':'고객사 미지정 기존 개인 자료입니다. 고객사 자료는 고객사를 선택한 뒤 저장하세요.'}</p>{error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
+  {clientId&&data?.personal&&<details className={s.panel}><summary>기존 개인 자산을 이 고객사에 복사</summary><p>선택한 자료만 고객사 편집자에게 공유됩니다. 원본은 개인 보관함에 남습니다.</p>{(['templates','logos','ctas'] as const).flatMap(kind=>data.personal![kind].map(item=><article className={s.row} key={item.id}><span>{'name' in item?item.name:item.text}</span><button disabled={busy} onClick={()=>void run(()=>api({action:'copy-personal',kind:kind==='templates'?'template':kind==='logos'?'logo':'cta',id:item.id,...('version' in item?{version:item.version}:{})}),'선택한 자료를 고객사에 복사했습니다. 원본은 그대로 남습니다.')}>이 고객사에 복사</button></article>))}</details>}
   <div className={s.grid}><section className={s.panel}><h2>템플릿</h2><p>저장한 작업의 디자인과 카드별 문자·사진 설정을 템플릿으로 보관합니다. 기본 디자인 3종은 내 템플릿으로 복사한 뒤 고칠 수 있습니다.</p>
    <label>템플릿으로 저장할 작업<select aria-label="템플릿으로 저장할 작업" value={projectId} onChange={e=>setProjectId(e.target.value)}>{projects.map(p=><option key={p.id} value={p.id}>{p.brand} · {p.title}</option>)}</select></label>
    <label>템플릿 이름<input aria-label="템플릿 이름" maxLength={60} value={name} onChange={e=>setName(e.target.value)}/></label>

@@ -11,7 +11,7 @@ const methods: Record<string, string[]> = {
  'client-accounts':['GET','POST'], 'connect/instagram':['GET','POST'], 'connect/instagram/callback':['GET'],
 };
 const actions: Record<string, string[]> = {
- recovery:['put','clear'], workbench:['discover','fetch','save','analyze','experiment'],
+ recovery:['put','clear'], workbench:['discover','fetch','save','analyze','experiment','copy-personal'],
  'client-accounts':['bind','unbind'], publications:['prepare','cancel'], 'connect/instagram':['disconnect'],
 };
 /** null = permitted by scope only. Route authentication/ownership/CSRF checks still apply. */

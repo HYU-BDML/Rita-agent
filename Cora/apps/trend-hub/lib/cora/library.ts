@@ -1,11 +1,13 @@
+import {schemaStep} from './schema';
 import type { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { defaultDesign, validateStyle } from './model';
 import type { Design, Draft, SlideStyle } from './model';
 
 /**
- * Reusable asset library, all rows owned by one user id: card templates (design + per-card styles),
- * brand logos (max 5), and call-to-action phrases. Other users' rows are never visible or writable.
+ * Assets remain in the client owner's workspace. Each instance queries exactly one client ID
+ * (null = legacy personal assets). Routes must resolve current actor grants via withClientAccess.
+ * Counts/defaults/duplicate detection are scoped too; never infer a client from a brand name.
  */
 export const MAX_TEMPLATES = 50, MAX_LOGOS = 5, MAX_CTAS = 200, MAX_LOGO_CHARS = 400000, MAX_CTA_CHARS = 200;
 export interface Template { id: string; name: string; source: 'project' | 'builtin'; design: Design; styles: SlideStyle[]; slideCount: number; headline: string; body: string; favorite: boolean; version: number; created: string; updated: string }
@@ -48,21 +50,37 @@ export function applyTemplate(draft: Draft, t: Pick<Template, 'design' | 'styles
 }
 
 export class LibraryStore {
-  constructor(private db: DatabaseSync) {
-    db.exec(`
+  constructor(private db: DatabaseSync, readonly clientId:string|null=null, init=true) {
+    if(!init)return;
+    schemaStep(db,'library-client-v1',()=>{db.exec(`
     CREATE TABLE IF NOT EXISTS library_templates(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,source TEXT NOT NULL,design TEXT NOT NULL,styles TEXT NOT NULL,slide_count INTEGER NOT NULL,headline TEXT NOT NULL DEFAULT '',body TEXT NOT NULL DEFAULT '',favorite INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created TEXT NOT NULL,updated TEXT NOT NULL);
     CREATE INDEX IF NOT EXISTS library_templates_user ON library_templates(user_id,favorite,updated);
     CREATE TABLE IF NOT EXISTS library_logos(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,brand TEXT NOT NULL DEFAULT '',data TEXT NOT NULL,is_default INTEGER NOT NULL DEFAULT 0,created TEXT NOT NULL);
     CREATE INDEX IF NOT EXISTS library_logos_user ON library_logos(user_id,brand);
     CREATE TABLE IF NOT EXISTS library_ctas(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),text TEXT NOT NULL,brand TEXT NOT NULL DEFAULT '',uses INTEGER NOT NULL DEFAULT 0,created TEXT NOT NULL,last_used TEXT);
     CREATE INDEX IF NOT EXISTS library_ctas_user ON library_ctas(user_id,brand);`);
+    for(const table of ['library_templates','library_logos','library_ctas']){
+      if(!(db.prepare(`PRAGMA table_info(${table})`).all() as {name:string}[]).some(c=>c.name==='client_id'))db.exec(`ALTER TABLE ${table} ADD COLUMN client_id TEXT REFERENCES clients(id)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS ${table}_client ON ${table}(user_id,client_id)`);
+    }
+    });
   }
-  private tx<T>(f: () => T): T { this.db.exec('BEGIN IMMEDIATE'); try { const r = f(); this.db.exec('COMMIT'); return r; } catch (e) { this.db.exec('ROLLBACK'); throw e; } }
+  private tx<T>(f: () => T): T { const sp='library_'+randomUUID().replaceAll('-',''); this.db.exec(`SAVEPOINT ${sp}`); try { const r=f(); this.db.exec(`RELEASE ${sp}`); return r; } catch(e){this.db.exec(`ROLLBACK TO ${sp}; RELEASE ${sp}`);throw e;} }
+  forClient(clientId:string|null){return new LibraryStore(this.db,clientId,false);}
+  /** Owner selects one personal asset explicitly; preserve original and copy into the chosen client. */
+  copyPersonal(userId:string,kind:unknown,id:string,version?:unknown){
+    if(!this.clientId)throw new Error('고객사를 먼저 선택해 주세요.');
+    const personal=this.forClient(null);
+    if(kind==='template'){const t=personal.template(userId,id);if(!t)throw new Error('NOT_FOUND');if(t.version!==Number(version))throw new Error('CONFLICT');return this.insert(userId,t,t.source);}
+    if(kind==='logo'){const l=personal.logos(userId).find(x=>x.id===id);if(!l)throw new Error('NOT_FOUND');return this.addLogo(userId,l.name,l.data,l.brand);}
+    if(kind==='cta'){const c=personal.ctas(userId).find(x=>x.id===id);if(!c)throw new Error('NOT_FOUND');return this.addCta(userId,c.text,c.brand);}
+    throw new Error('복사할 자산 종류를 확인해 주세요.');
+  }
   private mapT(r: TRow): Template { return { id: r.id, name: r.name, source: r.source, design: JSON.parse(r.design), styles: JSON.parse(r.styles), slideCount: r.slide_count, headline: r.headline, body: r.body, favorite: !!r.favorite, version: r.version, created: r.created, updated: r.updated }; }
 
   // ---- templates (F022, F027)
-  templates(userId: string): Template[] { return (this.db.prepare('SELECT * FROM library_templates WHERE user_id=? ORDER BY favorite DESC,updated DESC').all(userId) as TRow[]).map(r => this.mapT(r)); }
-  template(userId: string, id: string): Template | null { const r = this.db.prepare('SELECT * FROM library_templates WHERE id=? AND user_id=?').get(id, userId) as TRow | undefined; return r ? this.mapT(r) : null; }
+  templates(userId: string): Template[] { return (this.db.prepare('SELECT * FROM library_templates WHERE user_id=? AND client_id IS ? ORDER BY favorite DESC,updated DESC').all(userId,this.clientId) as TRow[]).map(r => this.mapT(r)); }
+  template(userId: string, id: string): Template | null { const r = this.db.prepare('SELECT * FROM library_templates WHERE id=? AND user_id=? AND client_id IS ?').get(id, userId,this.clientId) as TRow | undefined; return r ? this.mapT(r) : null; }
   /** Snapshot a project (or any draft) into a personal template. */
   saveFromDraft(userId: string, draft: Draft, name: string, opts: { headline?: unknown; body?: unknown } = {}): Template {
     return this.insert(userId, { name, design: draft.design ?? defaultDesign, styles: draft.slides.map(s => s.style ?? {}), slideCount: draft.slides.length, headline: opts.headline ?? '', body: opts.body ?? '' }, 'project');
@@ -77,9 +95,9 @@ export class LibraryStore {
     const headline = text(v.headline ?? '', 80, '제목 자리표시'), body = text(v.body ?? '', 500, '본문 자리표시');
     const count = Number(v.slideCount ?? styles.length); if (!Number.isInteger(count) || count < 1 || count > 12) bad('카드 수는 1~12장입니다.');
     return this.tx(() => {
-      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_templates WHERE user_id=?').get(userId) as { n: number }).n) >= MAX_TEMPLATES) bad(`템플릿은 ${MAX_TEMPLATES}개까지 보관할 수 있습니다.`);
+      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_templates WHERE user_id=? AND client_id IS ?').get(userId,this.clientId) as { n: number }).n) >= MAX_TEMPLATES) bad(`템플릿은 ${MAX_TEMPLATES}개까지 보관할 수 있습니다.`);
       const id = randomUUID(), now = new Date().toISOString();
-      this.db.prepare('INSERT INTO library_templates(id,user_id,name,source,design,styles,slide_count,headline,body,favorite,version,created,updated) VALUES(?,?,?,?,?,?,?,?,?,0,1,?,?)').run(id, userId, name, source, JSON.stringify(design), JSON.stringify(styles), count, headline, body, now, now);
+      this.db.prepare('INSERT INTO library_templates(id,user_id,name,source,design,styles,slide_count,headline,body,favorite,version,created,updated,client_id) VALUES(?,?,?,?,?,?,?,?,?,0,1,?,?,?)').run(id, userId, name, source, JSON.stringify(design), JSON.stringify(styles), count, headline, body, now, now,this.clientId);
       return this.template(userId, id)!;
     });
   }
@@ -91,42 +109,42 @@ export class LibraryStore {
       const design = patch.design === undefined ? cur.design : validateDesign(patch.design), styles = patch.styles === undefined ? cur.styles : validateStyles(patch.styles);
       const headline = patch.headline === undefined ? cur.headline : text(patch.headline, 80, '제목 자리표시'), body = patch.body === undefined ? cur.body : text(patch.body, 500, '본문 자리표시');
       const count = patch.slideCount === undefined ? cur.slideCount : Number(patch.slideCount); if (!Number.isInteger(count) || count < 1 || count > 12) bad('카드 수는 1~12장입니다.');
-      this.db.prepare('UPDATE library_templates SET name=?,design=?,styles=?,slide_count=?,headline=?,body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(name, JSON.stringify(design), JSON.stringify(styles), count, headline, body, new Date().toISOString(), id, userId);
+      this.db.prepare('UPDATE library_templates SET name=?,design=?,styles=?,slide_count=?,headline=?,body=?,version=version+1,updated=? WHERE id=? AND user_id=? AND client_id IS ?').run(name, JSON.stringify(design), JSON.stringify(styles), count, headline, body, new Date().toISOString(), id, userId,this.clientId);
       return this.template(userId, id)!;
     });
   }
   setFavorite(userId: string, id: string, favorite: boolean): Template {
-    if (this.db.prepare('UPDATE library_templates SET favorite=? WHERE id=? AND user_id=?').run(favorite ? 1 : 0, id, userId).changes === 0) throw new Error('NOT_FOUND');
+    if (this.db.prepare('UPDATE library_templates SET favorite=?,version=version+1,updated=? WHERE id=? AND user_id=? AND client_id IS ?').run(favorite ? 1 : 0,new Date().toISOString(), id, userId,this.clientId).changes === 0) throw new Error('NOT_FOUND');
     return this.template(userId, id)!;
   }
-  deleteTemplate(userId: string, id: string): boolean { return this.db.prepare('DELETE FROM library_templates WHERE id=? AND user_id=?').run(id, userId).changes > 0; }
+  deleteTemplate(userId: string, id: string): boolean { return this.db.prepare('DELETE FROM library_templates WHERE id=? AND user_id=? AND client_id IS ?').run(id,userId,this.clientId).changes > 0; }
 
   // ---- logos (F095)
-  logos(userId: string): Logo[] { return (this.db.prepare('SELECT * FROM library_logos WHERE user_id=? ORDER BY created,rowid').all(userId) as LRow[]).map(r => ({ id: r.id, name: r.name, brand: r.brand, data: r.data, isDefault: !!r.is_default, created: r.created })); }
+  logos(userId: string): Logo[] { return (this.db.prepare('SELECT * FROM library_logos WHERE user_id=? AND client_id IS ? ORDER BY created,rowid').all(userId,this.clientId) as LRow[]).map(r => ({ id: r.id, name: r.name, brand: r.brand, data: r.data, isDefault: !!r.is_default, created: r.created })); }
   addLogo(userId: string, name: unknown, data: unknown, brand: unknown = ''): Logo {
     const n = text(name, 60, '로고 이름', true), b = text(brand ?? '', 80, '브랜드 이름');
     if (!validLogo(data)) bad('로고는 400KB 이하의 PNG, JPEG, WebP 이미지여야 합니다.');
     return this.tx(() => {
-      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_logos WHERE user_id=?').get(userId) as { n: number }).n) >= MAX_LOGOS) bad(`로고는 ${MAX_LOGOS}개까지 보관할 수 있습니다. 하나를 삭제한 뒤 추가해 주세요.`);
-      const id = randomUUID(), first = !this.db.prepare('SELECT 1 FROM library_logos WHERE user_id=? AND brand=?').get(userId, b);
-      this.db.prepare('INSERT INTO library_logos(id,user_id,name,brand,data,is_default,created) VALUES(?,?,?,?,?,?,?)').run(id, userId, n, b, data as string, first ? 1 : 0, new Date().toISOString());
+      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_logos WHERE user_id=? AND client_id IS ?').get(userId,this.clientId) as { n: number }).n) >= MAX_LOGOS) bad(`로고는 ${MAX_LOGOS}개까지 보관할 수 있습니다. 하나를 삭제한 뒤 추가해 주세요.`);
+      const id = randomUUID(), first = !this.db.prepare('SELECT 1 FROM library_logos WHERE user_id=? AND client_id IS ? AND brand=?').get(userId,this.clientId, b);
+      this.db.prepare('INSERT INTO library_logos(id,user_id,name,brand,data,is_default,created,client_id) VALUES(?,?,?,?,?,?,?,?)').run(id, userId, n, b, data as string, first ? 1 : 0, new Date().toISOString(),this.clientId);
       return this.logos(userId).find(l => l.id === id)!;
     });
   }
   /** Deleting a brand's default promotes the oldest remaining logo of that brand. */
   deleteLogo(userId: string, id: string): boolean {
     return this.tx(() => {
-      const r = this.db.prepare('SELECT brand,is_default FROM library_logos WHERE id=? AND user_id=?').get(id, userId) as { brand: string; is_default: number } | undefined; if (!r) return false;
-      this.db.prepare('DELETE FROM library_logos WHERE id=? AND user_id=?').run(id, userId);
-      if (r.is_default) this.db.prepare('UPDATE library_logos SET is_default=1 WHERE id=(SELECT id FROM library_logos WHERE user_id=? AND brand=? ORDER BY created,rowid LIMIT 1)').run(userId, r.brand);
+      const r = this.db.prepare('SELECT brand,is_default FROM library_logos WHERE id=? AND user_id=? AND client_id IS ?').get(id, userId,this.clientId) as { brand: string; is_default: number } | undefined; if (!r) return false;
+      this.db.prepare('DELETE FROM library_logos WHERE id=? AND user_id=? AND client_id IS ?').run(id,userId,this.clientId);
+      if (r.is_default) this.db.prepare('UPDATE library_logos SET is_default=1 WHERE id=(SELECT id FROM library_logos WHERE user_id=? AND client_id IS ? AND brand=? ORDER BY created,rowid LIMIT 1)').run(userId,this.clientId,r.brand);
       return true;
     });
   }
   setDefaultLogo(userId: string, id: string): Logo[] {
     this.tx(() => {
-      const r = this.db.prepare('SELECT brand FROM library_logos WHERE id=? AND user_id=?').get(id, userId) as { brand: string } | undefined; if (!r) throw new Error('NOT_FOUND');
-      this.db.prepare('UPDATE library_logos SET is_default=0 WHERE user_id=? AND brand=?').run(userId, r.brand);
-      this.db.prepare('UPDATE library_logos SET is_default=1 WHERE id=? AND user_id=?').run(id, userId);
+      const r = this.db.prepare('SELECT brand FROM library_logos WHERE id=? AND user_id=? AND client_id IS ?').get(id, userId,this.clientId) as { brand: string } | undefined; if (!r) throw new Error('NOT_FOUND');
+      this.db.prepare('UPDATE library_logos SET is_default=0 WHERE user_id=? AND client_id IS ? AND brand=?').run(userId,this.clientId,r.brand);
+      this.db.prepare('UPDATE library_logos SET is_default=1 WHERE id=? AND user_id=? AND client_id IS ?').run(id,userId,this.clientId);
     });
     return this.logos(userId);
   }
@@ -134,21 +152,21 @@ export class LibraryStore {
 
   // ---- CTA phrases (F078)
   ctas(userId: string, brand?: string): Cta[] {
-    const rows = (brand === undefined ? this.db.prepare('SELECT * FROM library_ctas WHERE user_id=? ORDER BY uses DESC,created DESC').all(userId) : this.db.prepare('SELECT * FROM library_ctas WHERE user_id=? AND brand=? ORDER BY uses DESC,created DESC').all(userId, brand)) as CRow[];
+    const rows = (brand === undefined ? this.db.prepare('SELECT * FROM library_ctas WHERE user_id=? AND client_id IS ? ORDER BY uses DESC,created DESC').all(userId,this.clientId) : this.db.prepare('SELECT * FROM library_ctas WHERE user_id=? AND client_id IS ? AND brand=? ORDER BY uses DESC,created DESC').all(userId,this.clientId, brand)) as CRow[];
     return rows.map(r => ({ id: r.id, text: r.text, brand: r.brand, uses: r.uses, created: r.created, lastUsed: r.last_used }));
   }
   addCta(userId: string, phrase: unknown, brand: unknown = ''): Cta {
     const t = text(phrase, MAX_CTA_CHARS, 'CTA 문구', true), b = text(brand ?? '', 80, '브랜드 이름');
     return this.tx(() => {
-      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_ctas WHERE user_id=?').get(userId) as { n: number }).n) >= MAX_CTAS) bad(`CTA 문구는 ${MAX_CTAS}개까지 보관할 수 있습니다.`);
-      if (this.db.prepare('SELECT 1 FROM library_ctas WHERE user_id=? AND brand=? AND text=?').get(userId, b, t)) bad('같은 브랜드에 이미 저장한 문구입니다.');
-      const id = randomUUID(); this.db.prepare('INSERT INTO library_ctas(id,user_id,text,brand,uses,created) VALUES(?,?,?,?,0,?)').run(id, userId, t, b, new Date().toISOString());
+      if (Number((this.db.prepare('SELECT COUNT(*) n FROM library_ctas WHERE user_id=? AND client_id IS ?').get(userId,this.clientId) as { n: number }).n) >= MAX_CTAS) bad(`CTA 문구는 ${MAX_CTAS}개까지 보관할 수 있습니다.`);
+      if (this.db.prepare('SELECT 1 FROM library_ctas WHERE user_id=? AND client_id IS ? AND brand=? AND text=?').get(userId,this.clientId, b, t)) bad('같은 브랜드에 이미 저장한 문구입니다.');
+      const id = randomUUID(); this.db.prepare('INSERT INTO library_ctas(id,user_id,text,brand,uses,created,client_id) VALUES(?,?,?,?,0,?,?)').run(id, userId, t, b, new Date().toISOString(),this.clientId);
       return this.ctas(userId).find(c => c.id === id)!;
     });
   }
   useCta(userId: string, id: string): Cta {
-    if (this.db.prepare('UPDATE library_ctas SET uses=uses+1,last_used=? WHERE id=? AND user_id=?').run(new Date().toISOString(), id, userId).changes === 0) throw new Error('NOT_FOUND');
+    if (this.db.prepare('UPDATE library_ctas SET uses=uses+1,last_used=? WHERE id=? AND user_id=? AND client_id IS ?').run(new Date().toISOString(), id, userId,this.clientId).changes === 0) throw new Error('NOT_FOUND');
     return this.ctas(userId).find(c => c.id === id)!;
   }
-  deleteCta(userId: string, id: string): boolean { return this.db.prepare('DELETE FROM library_ctas WHERE id=? AND user_id=?').run(id, userId).changes > 0; }
+  deleteCta(userId: string, id: string): boolean { return this.db.prepare('DELETE FROM library_ctas WHERE id=? AND user_id=? AND client_id IS ?').run(id,userId,this.clientId).changes > 0; }
 }

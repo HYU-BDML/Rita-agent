@@ -36,6 +36,10 @@ export class CoraStore {
     this.scheduler = new JobScheduler(this.db);
     this.clients = new ClientStore(this.db);
     this.team = new TeamStore(this.db);
+    schemaStep(this.db,'work-items-client-v1',()=>{
+      if(!(this.db.prepare('PRAGMA table_info(work_items)').all() as {name:string}[]).some(c=>c.name==='client_id'))this.db.exec('ALTER TABLE work_items ADD COLUMN client_id TEXT REFERENCES clients(id)');
+      this.db.exec('CREATE INDEX IF NOT EXISTS work_items_client ON work_items(user_id,client_id)');
+    });
     }catch(e){this.db.close();throw e;}
   }
   signup(email: string, password: string) {
@@ -104,6 +108,30 @@ export class CoraStore {
     const email=(this.db.prepare('SELECT email FROM users WHERE id=?').get(owner) as {email:string}).email;
     return {...client,access:owner===userId?'owner':'editor',...(owner===userId?{}:{ownerEmail:email})};
   }
+  /** Synchronous only: resolve current grant while holding the same write lock as the mutation.
+   * Never hold this transaction across a network/LLM await. Missing scope means own legacy rows only. */
+  withClientAccess<T>(actorId:string,clientId:string|null,fn:(ownerId:string)=>T):T {
+    return this.atomic(()=>{
+      const c=clientId?this.accessibleClient(actorId,clientId):null;
+      if(clientId&&!c)throw new Error('NOT_FOUND');
+      const result=fn(c?this.clients.owner(c.id)!:actorId);
+      if(result&&typeof (result as {then?:unknown}).then==='function')throw new Error('ASYNC_TRANSACTION');
+      if(clientId&&!this.accessibleClient(actorId,clientId))throw new Error('NOT_FOUND');
+      return result;
+    });
+  }
+  scopedItems(ownerId:string,clientId:string|null){
+    return (this.db.prepare('SELECT id FROM work_items WHERE user_id=? AND client_id IS ? ORDER BY rowid DESC LIMIT 500').all(ownerId,clientId) as {id:string}[]).map(r=>({...this.item(ownerId,r.id)!,clientId}));
+  }
+  scopedItem(ownerId:string,id:string,clientId:string|null){
+    return this.db.prepare('SELECT 1 FROM work_items WHERE user_id=? AND id=? AND client_id IS ?').get(ownerId,id,clientId)?{...this.item(ownerId,id)!,clientId}:null;
+  }
+  addScopedItem(ownerId:string,clientId:string|null,kind:string,title:string,data:Record<string,unknown>){
+    if(clientId&&!this.clients.get(ownerId,clientId))throw new Error('NOT_FOUND');
+    const id=randomUUID(),createdAt=new Date().toISOString();
+    this.db.prepare('INSERT INTO work_items(id,user_id,kind,title,data,created,client_id) VALUES (?,?,?,?,?,?,?)').run(id,ownerId,kind,title,JSON.stringify(data),createdAt,clientId);
+    return {id,kind,title,data,createdAt,clientId};
+  }
   accessibleClients(userId:string):AccessibleClient[] {
     const own=this.clients.list(userId).map(c=>({...c,access:'owner' as const}));
     const shared=this.team.editorGrants(userId).flatMap(g=>g.scope==='clients'?g.clientIds.map(id=>this.accessibleClient(userId,id)).filter((c):c is AccessibleClient=>!!c):[]);
@@ -130,7 +158,7 @@ export class CoraStore {
     this.db.prepare('INSERT INTO revisions VALUES (?,?,?,?)').run(id,result.version,encoded,time);return result;
   }
   items(userId:string):{id:string;kind:string;title:string;data:Record<string,unknown>;createdAt:string}[]{return (this.db.prepare('SELECT * FROM work_items WHERE user_id=? ORDER BY rowid DESC LIMIT 500').all(userId) as {id:string;kind:string;title:string;data:string;created:string}[]).map(r=>({id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}));}
-  addItem(userId:string,kind:string,title:string,data:Record<string,unknown>){const id=randomUUID(),createdAt=new Date().toISOString();this.db.prepare('INSERT INTO work_items VALUES (?,?,?,?,?,?)').run(id,userId,kind,title,JSON.stringify(data),createdAt);return {id,kind,title,data,createdAt};}
+  addItem(userId:string,kind:string,title:string,data:Record<string,unknown>){const id=randomUUID(),createdAt=new Date().toISOString();this.db.prepare('INSERT INTO work_items(id,user_id,kind,title,data,created) VALUES (?,?,?,?,?,?)').run(id,userId,kind,title,JSON.stringify(data),createdAt);return {id,kind,title,data,createdAt};}
   updateItem(userId:string,id:string,data:Record<string,unknown>){this.db.prepare('UPDATE work_items SET data=? WHERE id=? AND user_id=?').run(JSON.stringify(data),id,userId);}
   item(userId:string,id:string){const r=this.db.prepare('SELECT * FROM work_items WHERE id=? AND user_id=?').get(id,userId) as {id:string;kind:string;title:string;data:string;created:string}|undefined;return r?{id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}:null;}
   editItemText(userId:string,id:string,expectedText:string,text:string){
