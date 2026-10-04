@@ -149,8 +149,8 @@
       "구현_제안담당": "Codex",
       "상태": "부분검증",
       "독립검토": "미실행 — 동일 커밋에서 Claude 또는 별도 Codex/Astra 반례 재현 필요",
-      "증거": "13_고객사자산_광고_성과_검증.md; 증거/구현4_고객사자산_광고_성과/",
-      "차단요인": "광고 고객사 ID 분리·기본 규칙 채우기 구현. 동일 profile version/근거/확인자/변경 이력·일반 제작 통합·입력 한도 일치가 남음",
+      "증거": "14_공통브랜드규칙_수정기억_검증.md; 증거/구현5_브랜드규칙_수정기억/",
+      "차단요인": "101449b: focused 일반/광고 공통 규칙·근거·버전·확인자·이력·긴 입력 계약 구현; labs 지식/스타일의 명시 이전·독립 검수·실제 AI 품질은 남음",
       "실제담당": "Codex",
       "완료일": ""
     },
@@ -982,11 +982,11 @@
       "실행": "규칙 변경 후 양쪽 제작",
       "기대결과": "같은 client profile version 사용; 근거·수정자 표시",
       "검증방식": "통합",
-      "상태": "부분통과",
-      "실행커밋": "229a87f",
-      "증거파일": "13_고객사자산_광고_성과_검증.md; 증거/구현4_고객사자산_광고_성과/",
-      "실제결과": "선택 clientId의 기본 규칙을 광고 폼에 채우고 프로필/result 저장영역 분리. 공통 profile version·근거·수정자·변경 이력 및 변경 후 양쪽 실제 생성 검수는 미실행",
-      "검수자": "Codex 로컬 합성 검수; 독립/운영 staging/실연결 미실행"
+      "상태": "로컬통과_독립검수대기",
+      "실행커밋": "101449b",
+      "증거파일": "14_공통브랜드규칙_수정기억_검증.md; 증거/구현5_브랜드규칙_수정기억/",
+      "실제결과": "같은 고객사 규칙 사본/버전·근거·확인자·최근5 수정메모를 일반/광고 fake 생성 함수에서 확인. 원문 초안→저장·광고안→편집·옛 버전/변경 경고·이력/권한·긴 규칙 API 검수. 실제 AI 품질/독립 검수 미실행",
+      "검수자": "Codex 합성 검수; 독립/실연결/실제 생성 품질 미실행"
     },
     {
       "ID": "T14",
@@ -3097,15 +3097,14 @@
   ],
   "latest": {
     "date": "2026-10-04",
-    "code_commit": "229a87fdcfc2da7afc8366391f994ac783b1d603",
+    "code_commit": "101449bdcbe17a69b6f0dca86a269492020e7cbd",
     "unit_tests": {
-      "total": 545,
-      "passed": 544,
+      "total": 554,
+      "passed": 553,
       "failed": 0,
       "skipped": 1
     },
-    "new_client_content_unit_tests": 13,
-    "browser_api_checks": 39,
+    "browser_api_checks": 49,
     "client_content_checks": 17,
     "recovery_regression_checks": 12,
     "focused_regression_checks": 10,
@@ -3123,9 +3122,11 @@
     "test_server": "stopped",
     "automation": "paused",
     "source_ledger_sha256": "6dc812e7a72d0200bdb940df87e148ccf2812996b8d48bf141e965c7d76b5273",
-    "title": "고객사별 자산·광고·성과 연결과 권한 회수",
-    "note": "선택 clientId 자산/계정 스타일/광고안/CSV/실험/리포트의 소유자 저장과 편집 권한을 연결했다. 기존 개인 자료는 자동 병합하지 않고 소유자가 개별 복사한다. 생성 중 권한 회수와 고객사 전환 뒤 늦은 실험 응답을 방어했다. 독립 검수·브랜드 규칙 버전/이력·주간 묶음·비용 동시성·실제 Meta/SNS·staging 및 media/암호화키 복원은 남는다.",
+    "title": "일반 콘텐츠·광고의 공통 브랜드 규칙과 수정 기억",
+    "note": "현재 고객사의 전체 공통 규칙·최근5 수정메모를 두 생성 경로에 전달하고 결과 사본/버전을 유지한다. 이력/근거/확인자·복원·변조 방어·긴 입력 계약을 검수했다. 실제 AI 품질·독립 검수·labs 명시 이전·주간 묶음·비용 동시성·Meta/SNS·staging/media/키 복원은 남는다.",
     "pull_request": "https://github.com/HYU-BDML/Rita-agent/pull/5",
-    "prior_pr_1": "merged; not reopened"
+    "prior_pr_1": "merged; not reopened",
+    "new_brand_rule_unit_tests": 9,
+    "brand_rule_checks": 10
   }
 }

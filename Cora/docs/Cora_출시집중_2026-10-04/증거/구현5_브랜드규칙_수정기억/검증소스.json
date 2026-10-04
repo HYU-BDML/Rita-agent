@@ -1,0 +1,25 @@
+{
+  "code_commit": "101449bdcbe17a69b6f0dca86a269492020e7cbd",
+  "sha256": {
+    "Cora/apps/trend-hub/app/api/cora/ad-creative/route.ts": "b3ab71599a0a284c53ed85d148cfc94c700774c761161e3a8cb114a18551b024",
+    "Cora/apps/trend-hub/app/api/cora/clients/route.ts": "3e52aef54466727ac7860b22be2e6e5aaa3084c3fbcaa34924cdd77d5c5074eb",
+    "Cora/apps/trend-hub/app/api/cora/generate/route.ts": "6392472a878c909207f6b15e1f2a96acefb31d1a7b83943948d231aae3a2758b",
+    "Cora/apps/trend-hub/app/api/cora/library/route.ts": "4a18f94233940db9f4e0d5c051bfa931229e4b5bc27410c92254d9994cedee72",
+    "Cora/apps/trend-hub/components/cora/ad-creative.tsx": "54fd2f67146fdcd5e775ca039743f937b6428a82c0b7d3f62597baa10f6db1a1",
+    "Cora/apps/trend-hub/components/cora/brand-reference.tsx": "166db8277277a2ba7eab3f61e8e48597a6f1b5a325e1454b9cfccd0b47c04a1a",
+    "Cora/apps/trend-hub/components/cora/clients.tsx": "f099aba5616977d7b637af608a161d39bae69cec660d35fbfac38331cdd63475",
+    "Cora/apps/trend-hub/components/cora/studio.tsx": "7bbefb2fb293d3c46afe6b830129fc7a2491db7538a4e894c9dfa48b667ca4ba",
+    "Cora/apps/trend-hub/lib/cora/ad-creative.ts": "fc67d0adfca2542c94d7961deeb4f383816ea71037bde82553e461c0ac3c8c97",
+    "Cora/apps/trend-hub/lib/cora/brand-rules.ts": "3afc163ae5bd1b08452ddb5184ce85bc7097acef0e5714b167d65af72360c18e",
+    "Cora/apps/trend-hub/lib/cora/clients.ts": "3ebe1f4ca92d85d0d9a7cbe737ccb0ff29ce14e39b0c6eaabb378b6447af0101",
+    "Cora/apps/trend-hub/lib/cora/content-generation.ts": "7b925023ecaf3745fdd0bf478faa804cbf55bad3eb07f5129b8084c5a00bd41e",
+    "Cora/apps/trend-hub/lib/cora/model.ts": "a7e30731ba40ac2f65825c7fe5ded7bdd0b8c147b2fede568cd727b91a018063",
+    "Cora/apps/trend-hub/lib/cora/store.ts": "69063f18c8fb6cfe3c47bc99eeee392197021766ddd2b75ac98f1efc2643810c",
+    "Cora/apps/trend-hub/scripts/cora-brand-rules-proof.mjs": "f0688fc2f835818a68cb06d08491aa5f6ade154ddd0d680ed27033781371e92e",
+    "Cora/apps/trend-hub/scripts/cora-client-content-proof.mjs": "1d7cdda397e652dad228bf577dce6fcc9b47f80ca8f61a0931a2a500400ebf27",
+    "Cora/apps/trend-hub/tests/cora-brand-rules.test.ts": "9996c632fd661a8cd9d2ff76706dea59c8022be77368ac526904813a0c8c65bb"
+  },
+  "generation_contract": "injected fake generators; real generation POST/gateway success not executed",
+  "actual_AI": 0,
+  "production_data_access": false
+}
