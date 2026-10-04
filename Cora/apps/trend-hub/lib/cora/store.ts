@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { PublicationQueue } from './publishing/queue';
 import { JobScheduler } from './scheduler';
 import { TeamStore } from './team';
+import { ClientStore } from './clients';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -15,6 +16,7 @@ export class CoraStore {
   readonly publicationQueue: PublicationQueue;
   readonly scheduler: JobScheduler;
   readonly team: TeamStore;
+  readonly clients: ClientStore;
   constructor(file: string) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.db = new DatabaseSync(file);
@@ -30,6 +32,7 @@ export class CoraStore {
     this.publicationQueue = new PublicationQueue(this.db);
     this.scheduler = new JobScheduler(this.db);
     this.team = new TeamStore(this.db);
+    this.clients = new ClientStore(this.db);
   }
   signup(email: string, password: string) {
     const salt = randomBytes(16).toString('hex'); const hash = scryptSync(password, salt, 64).toString('hex');
@@ -52,7 +55,7 @@ export class CoraStore {
   }
   user(token: string) { return this.db.prepare('SELECT u.id,u.email FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token=? AND s.expires>?').get(digest(token), Date.now()) as { id: string; email: string } | undefined; }
   logout(token: string) { this.db.prepare('DELETE FROM sessions WHERE token=?').run(digest(token)); }
-  list(userId: string) { return (this.db.prepare('SELECT id,version,created,updated,body FROM projects WHERE user_id=? ORDER BY updated DESC').all(userId) as ProjectRow[]).map(r => { const b = JSON.parse(String(r.body)) as Draft; return { id: String(r.id), version: Number(r.version), brand: b.brief.brand, title: b.idea, count: b.slides.length, workStatus: b.workStatus ?? 'draft', updatedAt: String(r.updated) }; }); }
+  list(userId: string) { return (this.db.prepare('SELECT id,version,created,updated,body FROM projects WHERE user_id=? ORDER BY updated DESC').all(userId) as ProjectRow[]).map(r => { const b = JSON.parse(String(r.body)) as Draft; return { id: String(r.id), version: Number(r.version), clientId:b.clientId, brand: b.brief.brand, title: b.idea, count: b.slides.length, workStatus: b.workStatus ?? 'draft', updatedAt: String(r.updated) }; }); }
   get(userId: string, id: string): Project | null {
     const r = this.db.prepare('SELECT * FROM projects WHERE id=? AND user_id=?').get(id, userId) as ProjectRow | undefined;
     return r ? { ...JSON.parse(String(r.body)), id: String(r.id), version: Number(r.version), createdAt: String(r.created), updatedAt: String(r.updated) } : null;
@@ -63,7 +66,7 @@ export class CoraStore {
   getAccessible(userId: string, id: string): (Project & { access: 'owner' | 'editor'; ownerEmail?: string }) | null {
     const own = this.get(userId, id); if (own) return { ...own, access: 'owner' };
     const owner = this.projectOwner(id); if (!owner) return null;
-    const p = this.get(owner, id); if (!p || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    const p = this.get(owner, id); if (!p || p.clientId || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
     const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(owner) as { email: string }).email;
     return { ...p, access: 'editor', ownerEmail: email };
   }
@@ -71,7 +74,8 @@ export class CoraStore {
   saveAccessible(userId: string, body: Draft, id: string, version: number): Project | null {
     if (this.get(userId, id)) return this.save(userId, body, id, version);
     const owner = this.projectOwner(id); if (!owner) return null;
-    const p = this.get(owner, id); if (!p || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    const p = this.get(owner, id); if (!p || p.clientId || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    if(body.clientId)throw new Error('고객사별 팀 권한 연결 전에는 소유자만 고객사를 지정할 수 있습니다.');
     if (!this.team.canEdit(userId, owner, body.brief.brand)) throw new Error('권한이 없는 브랜드로 옮길 수 없습니다.');
     return this.save(owner, body, id, version);
   }
@@ -79,18 +83,19 @@ export class CoraStore {
   sharedProjects(userId: string) {
     return this.team.editorGrants(userId).flatMap(g => {
       const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(g.ownerId) as { email: string }).email;
-      return this.list(g.ownerId).filter(p => g.brands.length === 0 || g.brands.includes(p.brand)).map(p => ({ ...p, ownerEmail: email }));
+      return this.list(g.ownerId).filter(p => !p.clientId && (g.brands.length === 0 || g.brands.includes(p.brand))).map(p => ({ ...p, ownerEmail: email }));
     });
   }
   save(userId: string, body: Draft, id?: string, version?: number): Project | null {
     const time = new Date().toISOString(); let encoded = JSON.stringify(body);
     this.db.exec('BEGIN IMMEDIATE');
     try {
+      if(body.clientId&&!this.clients.get(userId,body.clientId))throw new Error('고객사를 찾을 수 없습니다.');
       if (id) {
         const current = this.get(userId, id);
         if (!current) { this.db.exec('ROLLBACK'); return null; }
         if (current.version !== version) throw new Error('CONFLICT');
-        if(current.workStatus==='ready' && JSON.stringify([current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
+        if(current.workStatus==='ready' && JSON.stringify([current.clientId,current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.clientId,body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
         this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded, time, id, userId);
       } else {
         id = randomUUID(); this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id, userId, encoded, 1, time, time);

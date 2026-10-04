@@ -1,3 +1,4 @@
+import {productMode} from '@/lib/cora/release';
 import { NextRequest } from 'next/server';
 import { store } from '@/lib/cora/store';
 import { attributeSignup } from '@/lib/cora/platform/referral';
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof b.password !== 'string' || b.password.length < 10 || b.password.length > 128 || !['signup','login'].includes(b.mode)) return json({ error: '이메일과 10~128자 비밀번호를 입력해 주세요.' }, 400);
     const account = b.mode === 'signup' ? store().signup(email, b.password) : store().login(email, b.password);
     // A bad or missing referral code must never block signup.
-    if (b.mode === 'signup' && typeof b.ref === 'string' && b.ref) { try { attributeSignup(account.id, b.ref); } catch { /* ignore */ } }
+    if (productMode()==='labs' && b.mode === 'signup' && typeof b.ref === 'string' && b.ref) { try { attributeSignup(account.id, b.ref); } catch { /* ignore */ } }
     const token = store().createSession(account.id); const res = json({ user: account });
     res.cookies.set(COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: new URL(req.headers.get('origin') || req.url).protocol === 'https:', path: '/api/cora', maxAge: 7 * 86400 }); return res;
   } catch (e) { return json({ error: e instanceof Error ? e.message : '로그인할 수 없습니다.' }, 400); }

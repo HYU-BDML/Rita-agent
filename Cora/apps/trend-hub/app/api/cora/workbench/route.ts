@@ -1,13 +1,14 @@
+import {releaseDenial,productMode} from '@/lib/cora/release';
 import{experimentMaterial}from'@/lib/cora/experiment';
 import{rm}from'node:fs/promises';import{videoPath}from'@/lib/cora/video';
 import {NextRequest} from 'next/server';
 import {store} from '@/lib/cora/store';import{json,user,sameOrigin,body}from '@/lib/cora/http';
 import{generateText}from '@/lib/cora/gateway';import{RECIPE_FORMATS}from '@/lib/cora/scheduler-handlers';import{createOutline,approveOutline,reopenOutline,writeFromOutline}from '@/lib/cora/blog-outline';import{knowledgeContext}from '@/lib/cora/platform/knowledge';import{styleInstructions}from '@/lib/cora/platform/style';import{fetchAll,SOURCES}from '@/lib/collect/rss';import{fetchPublic}from '@/lib/cora/source';import{analyzeCSV}from '@/lib/cora/analytics';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=180;
-export function GET(req:NextRequest){const u=user(req);return u?json({items:store().items(u.id).filter(x=>x.kind!=='run'),capabilities:{llm:true,posting:false},llmStatus:'로컬 게이트웨이 설정 필요. 실행 결과로 연결을 확인합니다.'}):json({error:'로그인이 필요합니다.'},401);}
+export function GET(req:NextRequest){const u=user(req);return u?json({items:store().items(u.id).filter(x=>productMode()==='focused'?['material','analysis'].includes(x.kind):x.kind!=='run'),capabilities:{llm:true,posting:false},llmStatus:'로컬 게이트웨이 설정 필요. 실행 결과로 연결을 확인합니다.'}):json({error:'로그인이 필요합니다.'},401);}
 export async function POST(req:NextRequest){
  if(!sameOrigin(req))return json({error:'허용되지 않은 요청입니다.'},403);const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);
- try{const b=await body(req);const text=(x:unknown,max=20000)=>{if(typeof x!=='string'||x.length>max)throw new Error('입력 형식 또는 길이를 확인해 주세요.');return x;};
+ try{const b=await body(req);const denied=releaseDenial('/api/cora/workbench',req.method,b);if(denied)return json({error:denied},404);const text=(x:unknown,max=20000)=>{if(typeof x!=='string'||x.length>max)throw new Error('입력 형식 또는 길이를 확인해 주세요.');return x;};
   if(b.action==='edit-text'){try{return json({item:store().editItemText(u.id,text(b.id,80),text(b.expectedText,50000),text(b.text,50000))});}catch(e){const m=(e as Error).message;if(m==='NOT_FOUND')return json({error:'편집할 자산을 찾을 수 없습니다.'},404);if(m==='CONFLICT')return json({error:'다른 창에서 본문이 변경됐습니다. 현재 편집본을 파일로 내려받고 보관함에서 최신 자산을 다시 열어 주세요.'},409);throw e;}}
   if(b.action==='delete'){const id=text(b.id,80),item=store().item(u.id,id);if(!item)return json({error:'자료를 찾을 수 없습니다.'},404);if(item.kind==='video'){if(item.data.status==='rendering')return json({error:'렌더 종료 후 삭제해 주세요.'},409);await rm(videoPath(u.id,id),{recursive:true,force:true});}store().removeItem(u.id,id);return json({deleted:true});}
   if(b.action==='save'){if(!['blog','script','material','calendar','automation'].includes(b.kind)||!b.data||typeof b.data!=='object'||Array.isArray(b.data)||JSON.stringify(b.data).length>100000)throw new Error('저장 형식을 확인해 주세요.');if(b.kind==='calendar'&&(!Number.isFinite(Date.parse(b.data.scheduledAt))||b.data.status!=='planned'))throw new Error('유효한 일정과 planned 상태가 필요합니다.');return json({item:store().addItem(u.id,b.kind,text(b.title,200),b.data)},201);}

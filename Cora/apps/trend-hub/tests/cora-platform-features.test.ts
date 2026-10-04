@@ -175,7 +175,7 @@ test('MCP server: handshake, tools/list and tools/call against a fake Cora HTTP 
     res.statusCode = 404; res.end(JSON.stringify({ error: '작업을 찾을 수 없습니다.' })); });
   await new Promise<void>(r => srv.listen(0, '127.0.0.1', r)); const port = (srv.address() as { port: number }).port;
   const run = async (env: Record<string, string>, lines: object[]) => new Promise<{ out: Record<string, any>[]; err: string; code: number | null }>((resolve) => {
-    const child = spawn(process.execPath, [path.join(process.cwd(), 'scripts/cora-mcp.mjs')], { env: { PATH: process.env.PATH!, ...env } as unknown as NodeJS.ProcessEnv, stdio: ['pipe', 'pipe', 'pipe'] }); let o = '', e = '';
+    const child = spawn(process.execPath, [path.join(process.cwd(), 'scripts/cora-mcp.mjs')], { env: { PATH: process.env.PATH!, CORA_PRODUCT_MODE:'labs', ...env } as unknown as NodeJS.ProcessEnv, stdio: ['pipe', 'pipe', 'pipe'] }); let o = '', e = '';
     child.stdout.on('data', d => o += d); child.stderr.on('data', d => e += d); child.on('close', code => resolve({ out: o.split('\n').filter(Boolean).map(l => JSON.parse(l)), err: e, code }));
     for (const l of lines) child.stdin.write((typeof l === 'string' ? l : JSON.stringify(l)) + '\n'); child.stdin.end(); });
   try {

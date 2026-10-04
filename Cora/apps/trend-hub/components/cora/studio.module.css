@@ -13,3 +13,18 @@
 @media(prefers-reduced-motion:reduce){.app button,.authPage button{transition:none}}
 
 .app select{width:100%;padding:12px;border:1px solid #dce2d7;border-radius:9px;background:#fff;color:#25483d;font:inherit}.content>section.panel{margin:20px 0}.panel select{margin-top:8px}.panel>h3{margin-bottom:12px}
+
+/* Focused release keeps its primary actions readable and tappable on phones. */
+.focused .account{overflow-wrap:anywhere}
+@media(max-width:600px){
+ .focused .sidebar nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:6px}
+ .focused .sidebar nav button{min-height:44px;font-size:14px;padding:10px;white-space:normal}
+ .focused .account{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px}
+ .focused .account span{width:100%}
+ .focused .account button{min-height:44px;min-width:60px;font-size:12px}
+ .focused .actions button{font-size:13px!important;min-height:44px;white-space:normal;padding:10px}
+ .focused .textButton{font-size:13px!important;min-height:44px}
+ .focused .panel label,.focused .inspector label{font-size:14px}
+ .focused .panel select,.focused .panel textarea,.focused .inspector select,.focused .inspector textarea{font-size:14px;min-height:44px}
+ .focused .moveBar button{font-size:12px!important;min-height:44px;white-space:normal}
+}

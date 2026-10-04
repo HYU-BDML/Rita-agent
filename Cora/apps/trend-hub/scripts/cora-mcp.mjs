@@ -52,8 +52,9 @@ export async function handle(msg) {
     case 'server/discover':
       return ok(msg.id, { supportedVersions: [MODERN, LEGACY[0]], capabilities: { tools: { listChanged: false } }, _meta: { [META + 'serverInfo']: SERVER_INFO }, instructions: 'Read-only access to your Cora projects.' }, true);
     case 'ping': return ok(msg.id, {}, modern);
-    case 'tools/list': return ok(msg.id, { tools: TOOLS }, modern);
+    case 'tools/list': return ok(msg.id, { tools: process.env.CORA_PRODUCT_MODE==='labs'?TOOLS:[] }, modern);
     case 'tools/call': {
+      if(process.env.CORA_PRODUCT_MODE!=='labs')return err(msg.id,-32601,'MCP is preserved and disabled in the focused release.');
       const tool = TOOLS.find(t => t.name === p.name);
       if (!tool) return err(msg.id, -32602, `Unknown tool: ${String(p.name).slice(0, 80)}`);
       const args = p.arguments && typeof p.arguments === 'object' && !Array.isArray(p.arguments) ? p.arguments : {};

@@ -1,7 +1,15 @@
 import{NextRequest,NextResponse}from'next/server';
-import{user,sameOrigin}from'./lib/cora/http';
+import{body,user,sameOrigin}from'./lib/cora/http';
+import{needsReleaseBody,releaseDenial}from'./lib/cora/release';
 import{isCoraPublicPath,legacyAccess}from'./lib/cora/legacy-access';
-export function middleware(req:NextRequest){
+export async function middleware(req:NextRequest){
+ const path=req.nextUrl.pathname;
+ let scopeError=releaseDenial(path,req.method);
+ if(!scopeError&&needsReleaseBody(path,req.method)){
+  try{scopeError=releaseDenial(path,req.method,await body(req.clone()));}
+  catch{return NextResponse.json({error:'요청 형식 또는 크기를 확인해 주세요.'},{status:400});}
+ }
+ if(scopeError)return NextResponse.json({error:scopeError},{status:404,headers:{'Cache-Control':'private, no-store'}});
  if(isCoraPublicPath(req.nextUrl.pathname))return NextResponse.next();
  const operator=process.env.CORA_LEGACY_OPERATOR_ID;
  const denied=legacyAccess(operator,operator?user(req)?.id:undefined,req.method,sameOrigin(req));

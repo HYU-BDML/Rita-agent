@@ -1,3 +1,4 @@
+import {productMode,type ProductMode} from './release';
 import type { CoraStore } from './store';
 import type { Claim, Handler, JobKind } from './scheduler';
 import { localSimulation, type SimulationProvider } from './publishing/queue';
@@ -9,12 +10,13 @@ export const RECIPE_FORMATS={blog:'한국어 블로그 글을 Markdown으로 작
 export type Generate=(userId:string,prompt:string)=>Promise<{text:string;provider:string;model:string;cost:null}>;
 
 /** Builds the handler table. `generate` is injected so tests never reach the paid gateway. */
-export function schedulerHandlers(store:CoraStore,deps:{provider?:SimulationProvider;generate?:Generate;aiEnabled?:boolean;dailyLimit?:number}={}):Record<JobKind,Handler>{
+export function schedulerHandlers(store:CoraStore,deps:{mode?:ProductMode;provider?:SimulationProvider;generate?:Generate;aiEnabled?:boolean;dailyLimit?:number}={}):Record<JobKind,Handler>{
   const provider=deps.provider??localSimulation;
   const aiEnabled=deps.aiEnabled??process.env.CORA_SCHEDULER_AI==='1';
   const dailyLimit=deps.dailyLimit??10;
   return{
     async publication_tick(claim:Claim,now:number){
+      if((deps.mode??productMode())==='focused')return{outcome:'skipped',detail:'첫 출시에서는 보존한 모의 게시 스케줄러를 실행하지 않습니다.'};
       const q=store.publicationQueue;const before=q.get(claim.userId,claim.refId);
       if(!before)return{outcome:'completed',detail:'모의 게시 작업이 없어 예약을 종료합니다.'};
       if(TERMINAL.has(before.state)||(before.state==='unknown'&&!before.submission_id))return{outcome:'completed',detail:`이미 종료 상태(${before.state})입니다.`};
@@ -24,6 +26,7 @@ export function schedulerHandlers(store:CoraStore,deps:{provider?:SimulationProv
       return{outcome:'ok',detail:`모의 상태 ${after.state}`};
     },
     async recipe_run(claim:Claim){
+      if((deps.mode??productMode())==='focused')return{outcome:'skipped',detail:'첫 출시에서는 보존한 레시피를 실행하지 않습니다.'};
       const recipe=store.item(claim.userId,claim.refId);
       if(!recipe||recipe.kind!=='automation')return{outcome:'completed',detail:'레시피가 삭제되어 예약을 종료합니다.'};
       if(!claim.aiAllowed)return{outcome:'skipped',detail:'이 예약은 유료 AI 자동 호출을 허용하지 않았습니다. 수동 실행으로 진행하세요.'};
