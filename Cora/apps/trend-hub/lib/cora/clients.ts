@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import {randomUUID} from 'node:crypto';
 import type {DatabaseSync} from 'node:sqlite';
 export interface ClientInput {name:string;audience:string;goal:string;voice:string;visualRules:string;pillars:string;avoid:string;accent:string}
@@ -13,9 +14,11 @@ export function validateClient(value:unknown):ClientInput {
 /** Additive schema: never infer identity or merge legacy brands by name. */
 export class ClientStore {
  constructor(private db:DatabaseSync){
+    schemaStep(db,'clients-v1',()=>{
   db.exec(`CREATE TABLE IF NOT EXISTS client_workspaces(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE);
    CREATE TABLE IF NOT EXISTS clients(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,workspace_id TEXT NOT NULL REFERENCES client_workspaces(id) ON DELETE CASCADE,body TEXT NOT NULL,version INTEGER NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL);
    CREATE INDEX IF NOT EXISTS clients_owner ON clients(user_id);`);
+    });
  }
  workspace(userId:string){
   const old=this.db.prepare('SELECT id FROM client_workspaces WHERE owner_id=?').get(userId) as {id:string}|undefined;

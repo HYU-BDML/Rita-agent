@@ -2,7 +2,7 @@
 export type ProductMode = 'focused' | 'labs';
 export function productMode(value = process.env.CORA_PRODUCT_MODE): ProductMode { return value === 'labs' ? 'labs' : 'focused'; }
 const methods: Record<string, string[]> = {
- session:['GET','POST','DELETE'], projects:['GET','POST'], clients:['GET','POST'],
+ recovery:['GET','POST'], session:['GET','POST','DELETE'], projects:['GET','POST'], clients:['GET','POST'],
  brands:['GET','POST'], generate:['POST'], reviews:['GET','POST'], team:['GET','POST'],
  library:['GET','POST'], ideas:['GET','POST'], revisions:['GET','POST'],
  workbench:['GET','POST'], publications:['GET','POST'], settings:['GET','POST'],
@@ -11,7 +11,7 @@ const methods: Record<string, string[]> = {
  'client-accounts':['GET','POST'], 'connect/instagram':['GET','POST'], 'connect/instagram/callback':['GET'],
 };
 const actions: Record<string, string[]> = {
- workbench:['discover','fetch','save','analyze','experiment'],
+ recovery:['put','clear'], workbench:['discover','fetch','save','analyze','experiment'],
  'client-accounts':['bind','unbind'], publications:['prepare','cancel'], 'connect/instagram':['disconnect'],
 };
 /** null = permitted by scope only. Route authentication/ownership/CSRF checks still apply. */

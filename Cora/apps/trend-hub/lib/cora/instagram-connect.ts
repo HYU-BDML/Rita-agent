@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import type { DatabaseSync } from 'node:sqlite';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { IG_API_VERSION } from './publishing/instagram';
@@ -35,6 +36,7 @@ export function unseal(sealed: string, secret: string) {
 
 export class InstagramConnections {
   constructor(private db: DatabaseSync, private env: Env = process.env, private transport: typeof fetch = fetch, private now: () => number = () => Date.now()) {
+    schemaStep(db,'instagram-accounts-v2',()=>{
     db.exec(`CREATE TABLE IF NOT EXISTS ig_oauth_states(state TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),created INTEGER NOT NULL,scopes TEXT NOT NULL DEFAULT '');
       CREATE TABLE IF NOT EXISTS ig_accounts(user_id TEXT NOT NULL REFERENCES users(id),ig_user_id TEXT NOT NULL,username TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,connected INTEGER NOT NULL,refreshed INTEGER NOT NULL,scopes TEXT NOT NULL DEFAULT '',PRIMARY KEY(user_id,ig_user_id));`);
     // Older connections did not record their granted scopes. Keep them unknown rather than assuming publish access.
@@ -42,15 +44,15 @@ export class InstagramConnections {
     if (!(db.prepare('PRAGMA table_info(ig_accounts)').all() as { name: string }[]).some(c => c.name === 'scopes')) db.exec("ALTER TABLE ig_accounts ADD COLUMN scopes TEXT NOT NULL DEFAULT ''");
     // Move legacy encrypted rows once. Retiring the source prevents a disconnected
     // account from reappearing on the next application restart.
-    db.exec('BEGIN IMMEDIATE');
-    try {
+
       if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='ig_connections'").get()) {
+        const collision=db.prepare(`SELECT 1 FROM ig_connections old JOIN ig_accounts cur ON old.user_id=cur.user_id AND old.ig_user_id=cur.ig_user_id WHERE old.username IS NOT cur.username OR old.token IS NOT cur.token OR old.expires_at IS NOT cur.expires_at OR old.connected IS NOT cur.connected OR old.refreshed IS NOT cur.refreshed LIMIT 1`).get();
+        if(collision)throw new Error('Legacy Instagram rows conflict; preserve the source and reconcile explicitly.');
         db.exec(`INSERT OR IGNORE INTO ig_accounts(user_id,ig_user_id,username,token,expires_at,connected,refreshed)
           SELECT user_id,ig_user_id,username,token,expires_at,connected,refreshed FROM ig_connections;
           DROP TABLE ig_connections;`);
       }
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+    });
   }
   private cfg() { const c = igConfig(this.env); if (!c.configured) throw Object.assign(new Error(`Instagram 연결 설정이 없습니다: ${c.missing.join(', ')}`), { status: 503 }); return c; }
   /** Authorization URL with a single-use state bound to this user. */

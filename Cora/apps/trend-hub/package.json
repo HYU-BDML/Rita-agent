@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "dev:cora": "node scripts/run-local.mjs",
-    "test:cora:browser": "node scripts/cora-proof.mjs"
+    "test:cora:browser": "node scripts/cora-proof.mjs",
+    "cora:database": "tsx scripts/cora-database.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

@@ -68,7 +68,7 @@ try{
  await page.getByRole('navigation',{name:'Cora 메뉴',exact:true}).getByRole('button',{name:'이번 주 제작',exact:true}).click();
  assert.equal(await page.getByLabel('카드 제목',{exact:true}).inputValue(),'아직 저장하지 않은 변경');
  await page.getByRole('button',{name:'작업 저장',exact:true}).click();
- await page.getByRole('status').filter({hasText:'버전 2 저장 완료'}).waitFor();check(step,{reloadRecovery:'not implemented'});
+ await page.getByRole('status').filter({hasText:'버전 2 저장 완료'}).waitFor();check(step,{reloadRecovery:'separately verified by cora-recovery-proof.mjs'});
  step='undo restores client binding shown by selector';await page.waitForTimeout(650);await page.getByLabel('작업 고객사',{exact:true}).selectOption(assigned===a.id?b.id:a.id);await page.getByRole('button',{name:'실행 취소',exact:true}).click();assert.equal(await page.getByLabel('작업 고객사',{exact:true}).inputValue(),assigned);check(step);
  step='owner isolation, foreign binding, profile conflicts';
  const second=await browser.newContext();

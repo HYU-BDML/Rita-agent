@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import type { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 
@@ -16,12 +17,14 @@ function cleanBrands(value:unknown):string[] {
 /** Accepted, explicit client grants never inherit legacy name-based access. Empty client scope grants nothing. */
 export class TeamStore {
   constructor(private db:DatabaseSync) {
+    schemaStep(db,'client-team-v2',()=>{
     db.exec(`CREATE TABLE IF NOT EXISTS team_members(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),member_id TEXT NOT NULL REFERENCES users(id),role TEXT NOT NULL CHECK(role IN ('editor','reviewer')),brands TEXT NOT NULL DEFAULT '[]',status TEXT NOT NULL CHECK(status IN ('invited','active','declined','removed')),created TEXT NOT NULL,updated TEXT NOT NULL,UNIQUE(owner_id,member_id));
       CREATE INDEX IF NOT EXISTS team_members_member ON team_members(member_id,status);`);
     const cols=db.prepare('PRAGMA table_info(team_members)').all() as {name:string}[];
     if(!cols.some(c=>c.name==='scope'))db.exec("ALTER TABLE team_members ADD COLUMN scope TEXT NOT NULL DEFAULT 'legacy'");
     if(!cols.some(c=>c.name==='version'))db.exec('ALTER TABLE team_members ADD COLUMN version INTEGER NOT NULL DEFAULT 1');
     db.exec(`CREATE TABLE IF NOT EXISTS team_client_grants(team_id TEXT NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,owner_id TEXT NOT NULL REFERENCES users(id),PRIMARY KEY(team_id,client_id));`);
+    });
   }
   private select(where:string){return `SELECT t.*,o.email as owner_email,m.email as member_email FROM team_members t JOIN users o ON o.id=t.owner_id JOIN users m ON m.id=t.member_id WHERE ${where}`;}
   private granted(id:string,ownerId:string){return this.db.prepare("SELECT c.id,json_extract(c.body,'$.name') as name FROM team_client_grants g JOIN clients c ON c.id=g.client_id AND c.user_id=g.owner_id WHERE g.team_id=? AND g.owner_id=? ORDER BY c.id").all(id,ownerId) as {id:string;name:string}[];}

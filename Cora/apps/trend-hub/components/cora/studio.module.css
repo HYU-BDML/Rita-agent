@@ -28,3 +28,7 @@
  .focused .panel select,.focused .panel textarea,.focused .inspector select,.focused .inspector textarea{font-size:14px;min-height:44px}
  .focused .moveBar button{font-size:12px!important;min-height:44px;white-space:normal}
 }
+
+.recoveryPanel .actions button { min-height: 44px; }
+.recoveryPanel summary { cursor: pointer; padding: 12px 0; overflow-wrap: anywhere; }
+.recoveryPanel b { overflow-wrap: anywhere; }

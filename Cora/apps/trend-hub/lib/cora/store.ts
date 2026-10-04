@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import { DatabaseSync } from 'node:sqlite';
 import { PublicationQueue } from './publishing/queue';
 import { JobScheduler } from './scheduler';
@@ -20,7 +21,9 @@ export class CoraStore {
   constructor(file: string) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.db = new DatabaseSync(file);
-    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;
+    try{
+    this.db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000');
+    schemaStep(this.db,'core-v1',()=>this.db.exec(`
       CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, salt TEXT NOT NULL, hash TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL, version INTEGER NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
@@ -28,11 +31,12 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS brands(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS reviews(id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, owner_id TEXT NOT NULL REFERENCES users(id), reviewer_id TEXT NOT NULL REFERENCES users(id), version INTEGER NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', comment TEXT NOT NULL DEFAULT '', created TEXT NOT NULL, decided TEXT, UNIQUE(project_id,version,reviewer_id));
       CREATE TABLE IF NOT EXISTS publication_drafts(id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, review_id TEXT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE, version INTEGER NOT NULL, account_label TEXT NOT NULL, scheduled_at TEXT NOT NULL, snapshot TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL, UNIQUE(project_id,version,account_label,scheduled_at));
-      CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
+      CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`));
     this.publicationQueue = new PublicationQueue(this.db);
     this.scheduler = new JobScheduler(this.db);
     this.clients = new ClientStore(this.db);
     this.team = new TeamStore(this.db);
+    }catch(e){this.db.close();throw e;}
   }
   signup(email: string, password: string) {
     const salt = randomBytes(16).toString('hex'); const hash = scryptSync(password, salt, 64).toString('hex');

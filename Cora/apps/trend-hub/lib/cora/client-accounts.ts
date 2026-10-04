@@ -1,3 +1,4 @@
+import {schemaStep} from './schema';
 import {randomUUID} from 'node:crypto';
 import type {DatabaseSync} from 'node:sqlite';
 import type {CoraStore} from './store';
@@ -14,7 +15,9 @@ export function validateBindingVersion(value:unknown):BindingVersion|null {
 /** One explicit Instagram binding per client; no token access and no automatic matching by name. */
 export class ClientAccounts {
   constructor(private db:DatabaseSync,private store:CoraStore,private ig:InstagramConnections) {
+    schemaStep(db,'client-instagram-v1',()=>{
     db.exec(`CREATE TABLE IF NOT EXISTS client_instagram_bindings(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,ig_user_id TEXT NOT NULL,version INTEGER NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL,UNIQUE(user_id,client_id),UNIQUE(user_id,ig_user_id),FOREIGN KEY(user_id,ig_user_id) REFERENCES ig_accounts(user_id,ig_user_id) ON DELETE CASCADE);`);
+    });
   }
   private row(ownerId:string,clientId:string){return this.db.prepare('SELECT * FROM client_instagram_bindings WHERE user_id=? AND client_id=?').get(ownerId,clientId) as Row|undefined;}
   private binding(ownerId:string,row?:Row):ClientAccountBinding|null {
