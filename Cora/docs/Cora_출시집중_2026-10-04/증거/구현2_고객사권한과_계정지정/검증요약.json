@@ -19,5 +19,12 @@
   "actual_SNS": 0,
   "external_messages": 0,
   "independent_review": "not performed",
-  "launch_complete": false
+  "launch_complete": false,
+  "synthetic_only": true,
+  "original_user_database_access": false,
+  "test_server_stopped": true,
+  "heartbeat_resumed": false,
+  "typecheck": "passed",
+  "production_build": "passed",
+  "long_term_ledger_changed": false
 }

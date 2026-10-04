@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "name": "owner creates card bound to client",
+      "passed": true
+    },
+    {
+      "name": "focused API denies implicit scope and unaccepted access",
+      "passed": true
+    },
+    {
+      "name": "owner explicitly invites one client in UI",
+      "passed": true
+    },
+    {
+      "name": "editor accepts invitation in UI",
+      "passed": true
+    },
+    {
+      "name": "editor opens, edits and saves owner card in UI",
+      "passed": true
+    },
+    {
+      "name": "client reviewer gets only requested snapshot and owner actions remain blocked",
+      "passed": true
+    },
+    {
+      "name": "synthetic connected account binds in UI without any token response",
+      "passed": true,
+      "detail": {
+        "actualMeta": 0
+      }
+    },
+    {
+      "name": "stale permission mutations fail; revocation blocks edit, binding, review and account export",
+      "passed": true
+    }
+  ],
+  "actualAI": 0,
+  "actualMeta": 0,
+  "actualSNS": 0,
+  "externalMessages": 0,
+  "syntheticOnly": true
+}
