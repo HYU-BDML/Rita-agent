@@ -146,12 +146,16 @@ export class CoraStore {
   save(userId:string,body:Draft,id?:string,version?:number):Project|null {return this.atomic(()=>this.writeDraft(userId,body,id,version));}
   /** Caller must hold a write transaction, and already have resolved owner/grants. */
   private writeDraft(userId:string,body:Draft,id?:string,version?:number):Project|null {
-    const time=new Date().toISOString();let encoded=JSON.stringify(body);
+    const time=new Date().toISOString();
+    const previous=id?this.get(userId,id):null;if(previous&&previous.clientId!==body.clientId)body={...body,brandRules:undefined};
     if(body.clientId&&!this.clients.get(userId,body.clientId))throw new Error('고객사를 찾을 수 없습니다.');
+    // Persist canonical historical rules, never a caller-forged evidence/confirmation snapshot.
+    if(body.clientId){if(body.brandRules&&body.brandRules.clientId!==body.clientId)throw new Error('브랜드 규칙과 고객사 ID가 다릅니다.');body={...body,brandRules:this.clients.rules(userId,body.clientId,body.brandRules?.version)};}else if(body.brandRules)throw new Error('브랜드 규칙과 고객사 ID가 다릅니다.');
+    let encoded=JSON.stringify(body);
     if(id){
       const current=this.get(userId,id);if(!current)return null;
       if(current.version!==version)throw new Error('CONFLICT');
-      if(current.workStatus==='ready'&&JSON.stringify([current.clientId,current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.clientId,body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
+      if(current.workStatus==='ready'&&JSON.stringify([current.clientId,current.brief,current.slides,current.caption,current.design,current.brandRules])!==JSON.stringify([body.clientId,body.brief,body.slides,body.caption,body.design,body.brandRules])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
       this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded,time,id,userId);
     }else{id=randomUUID();this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id,userId,encoded,1,time,time);}
     const result=this.get(userId,id)!;

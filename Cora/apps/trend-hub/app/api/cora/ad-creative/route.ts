@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return json({error:'허용되지 않은 요청입니다.'},403);
   const u=user(req); if (!u) return json({error:'로그인이 필요합니다.'},401);
   try {
-    const b=await body(req),clientId=clientScope(b.clientId),a=ads().forClient(clientId);const owner=store().withClientAccess(u.id,clientId,id=>id);
-    if (b.action==='profile') return store().withClientAccess(u.id,clientId,id=>json({profile:a.saveProfile(id,b.account),clientId},201));
+    const b=await body(req),clientId=clientScope(b.clientId),a=ads().forClient(clientId);const owner=store().withClientAccess(u.id,clientId,id=>id),rules=clientId?store().clients.rules(owner,clientId):undefined;
+    if (b.action==='profile') return store().withClientAccess(u.id,clientId,id=>json({profile:a.saveProfile(id,b.account,rules),clientId},201));
     if (b.action==='generate') {
-      const account=validateAdAccount(b.account),brief=validateAdBrief(b.brief);
+      const account=validateAdAccount(b.account,rules),brief=validateAdBrief(b.brief);
       if (store().generationCount(u.id)>=10) return json({error:'하루 10회 로컬 생성 한도입니다.'},429);
       store().addItem(u.id,'run','계정 맞춤 광고안 생성',{handle:account.handle});
-      const result=await a.generate(owner,account,brief,async prompt=>(await generateText(u.id,prompt)).text,write=>store().withClientAccess(u.id,clientId,id=>{if(id!==owner)throw new Error('NOT_FOUND');return write();}));
-      return json({result},201);
+      const result=await a.generate(owner,account,brief,async prompt=>(await generateText(u.id,prompt)).text,write=>store().withClientAccess(u.id,clientId,id=>{if(id!==owner)throw new Error('NOT_FOUND');return write();}),rules);
+      return json({result,brandRulesChanged:!!rules&&store().clients.get(owner,rules.clientId)!.version!==rules.version},201);
     }
     return json({error:'지원하지 않는 작업입니다.'},400);
   } catch(e) { return fail(e); }

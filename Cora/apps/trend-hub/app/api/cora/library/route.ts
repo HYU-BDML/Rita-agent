@@ -20,7 +20,7 @@ export async function POST(req:NextRequest){
     if(a==='update-template'){l.update(owner,id,Number(b.version),{name:b.name,design:b.design,styles:b.styles,headline:b.headline,body:b.body,slideCount:b.slideCount});return json(view(l,owner,undefined,!!clientId&&owner===u.id));}
     if(a==='favorite'){l.setFavorite(owner,id,b.favorite!==false);return json(view(l,owner,undefined,!!clientId&&owner===u.id));}
     if(a==='delete-template'){if(!l.deleteTemplate(owner,id))throw new Error('NOT_FOUND');return json(view(l,owner,undefined,!!clientId&&owner===u.id));}
-    if(a==='apply-template'){const t=l.template(owner,typeof b.templateId==='string'?b.templateId.slice(0,80):'');if(!t)throw new Error('NOT_FOUND');const draft=validateDraft(b.draft);if(clientScope(draft.clientId)!==clientId)throw new Error('NOT_FOUND');return json({draft:validateDraft(applyTemplate(draft,t))});}
+    if(a==='apply-template'){const t=l.template(owner,typeof b.templateId==='string'?b.templateId.slice(0,80):'');if(!t)throw new Error('NOT_FOUND');const raw=b.draft as {clientId?:unknown}|undefined;if(clientScope(raw?.clientId)!==clientId)throw new Error('NOT_FOUND');const draft=validateDraft(b.draft);return json({draft:validateDraft(applyTemplate(draft,t))});}
     if(a==='add-logo'){l.addLogo(owner,b.name,b.data,b.brand);return json(view(l,owner,undefined,!!clientId&&owner===u.id),201);}
     if(a==='delete-logo'){if(!l.deleteLogo(owner,id))throw new Error('NOT_FOUND');return json(view(l,owner,undefined,!!clientId&&owner===u.id));}
     if(a==='set-default-logo'){l.setDefaultLogo(owner,id);return json(view(l,owner,undefined,!!clientId&&owner===u.id));}

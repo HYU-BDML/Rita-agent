@@ -1,3 +1,4 @@
+import {validateBrandRules,type BrandRules} from './brand-rules';
 import { deckFromCards } from '../producers/deck';
 
 export interface Brief { brand: string; audience: string; goal: string; material: string; sourceUrl: string; accent: string }
@@ -19,7 +20,7 @@ export interface Slide { id: string; headline: string; body: string; image?: str
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
-export interface Draft { clientId?:string; design?:Design; brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline' | 'llmgw'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
+export interface Draft { brandRules?:BrandRules; clientId?:string; design?:Design; brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline' | 'llmgw'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
 export interface Project extends Draft { id: string; version: number; createdAt: string; updatedAt: string }
 export const blankBrief: Brief = { brand: '', audience: '', goal: '저장하고 다시 보는 콘텐츠', material: '', sourceUrl: '', accent: '#205b4a' };
 export const sampleBrief: Brief = { ...blankBrief, brand: '모퉁이 책방', audience: '퇴근 후 조용한 시간을 찾는 직장인', material: '모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.\n책을 읽은 뒤 마음에 남은 문장을 나누는 시간을 갖습니다.', goal: '책 모임을 소개하고 참여를 안내하기' };
@@ -120,7 +121,8 @@ export function validateDraft(value: unknown): Draft {
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
   const design={...defaultDesign,...v.design};if(!['4:5','1:1','9:16'].includes(design.ratio)||!['editorial','minimal','bold'].includes(design.template)||!['sans','serif'].includes(design.font)||![.85,1,1.15].includes(design.textScale))throw new Error('디자인 설정을 확인해 주세요.');
   if(v.clientId!==undefined&&(typeof v.clientId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(v.clientId)))throw new Error('고객사 ID를 확인해 주세요.');
-  return { ...(v.clientId?{clientId:v.clientId}:{}), design, workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: v.origin==='llmgw'?'llmgw':'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
+  const brandRules=v.brandRules===undefined?undefined:validateBrandRules(v.brandRules);if(brandRules&&brandRules.clientId!==v.clientId)throw new Error('브랜드 규칙과 고객사 ID가 다릅니다.');
+  return { ...(brandRules?{brandRules}:{}), ...(v.clientId?{clientId:v.clientId}:{}), design, workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: v.origin==='llmgw'?'llmgw':'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
 }
 
 export interface BrandProfile { id:string; name:string; audience:string; goal:string; accent:string; notes:string }
@@ -133,5 +135,5 @@ export function validateBrand(value: unknown): Omit<BrandProfile,'id'> {
 }
 // Restoring or copying never imports ownership, approval or publication provenance.
 export function importDraft(value:unknown):Draft {
- const {clientId:discarded,...d}=validateDraft(value);void discarded;return {...d,workStatus:'draft',postedUrl:'',slides:d.slides.map(s=>({...s,id:crypto.randomUUID()}))};
+ const {clientId:discarded,brandRules:discardedRules,...d}=validateDraft(value);void discarded;void discardedRules;return {...d,workStatus:'draft',postedUrl:'',slides:d.slides.map(s=>({...s,id:crypto.randomUUID()}))};
 }

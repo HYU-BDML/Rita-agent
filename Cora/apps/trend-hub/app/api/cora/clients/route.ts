@@ -2,7 +2,7 @@ import {NextRequest} from 'next/server';
 import {store} from '@/lib/cora/store';
 import {body,json,sameOrigin,user} from '@/lib/cora/http';
 export const runtime='nodejs';export const dynamic='force-dynamic';
-export function GET(req:NextRequest){const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);const s=store();return json({workspaceId:s.clients.workspace(u.id),clients:s.accessibleClients(u.id)});}
+export function GET(req:NextRequest){const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);const s=store(),id=req.nextUrl.searchParams.get('id');if(id){try{return s.withClientAccess(u.id,id,owner=>json({client:s.clients.get(owner,id),history:s.clients.history(owner,id),rules:s.clients.rules(owner,id)}));}catch{return json({error:'고객사를 찾을 수 없습니다.'},404);}}return json({workspaceId:s.clients.workspace(u.id),clients:s.accessibleClients(u.id)});}
 export async function POST(req:NextRequest){
  if(!sameOrigin(req))return json({error:'허용되지 않은 요청입니다.'},403);
  const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);
