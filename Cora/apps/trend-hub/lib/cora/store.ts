@@ -7,7 +7,7 @@ import { ClientStore, type AccessibleClient } from './clients';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { Draft, Project, BrandProfile } from './model';
+import {validateDraft,type Draft,type Project,type BrandProfile} from './model';
 
 type ReviewRow={id:string;project_id:string;owner_id:string;reviewer_id:string;version:number;current_version:number;snapshot:string;status:string;comment:string;created:string;decided:string|null;owner_email:string;reviewer_email:string};
 type ProjectRow = { id: string; version: number; body: string; created: string; updated: string };
@@ -110,11 +110,12 @@ export class CoraStore {
   }
   /** Synchronous only: resolve current grant while holding the same write lock as the mutation.
    * Never hold this transaction across a network/LLM await. Missing scope means own legacy rows only. */
-  withClientAccess<T>(actorId:string,clientId:string|null,fn:(ownerId:string)=>T):T {
+  withClientAccess<T>(actorId:string,clientId:string|null,fn:(ownerId:string,saveDraft:(draft:Draft)=>Project)=>T):T {
     return this.atomic(()=>{
       const c=clientId?this.accessibleClient(actorId,clientId):null;
       if(clientId&&!c)throw new Error('NOT_FOUND');
-      const result=fn(c?this.clients.owner(c.id)!:actorId);
+      const owner=c?this.clients.owner(c.id)!:actorId;let active=true;let result:T;
+      try{result=fn(owner,draft=>{if(!active)throw new Error('EXPIRED_TRANSACTION');if((draft.clientId??null)!==clientId)throw new Error('NOT_FOUND');return this.writeDraft(owner,validateDraft(draft))!;});}finally{active=false;}
       if(result&&typeof (result as {then?:unknown}).then==='function')throw new Error('ASYNC_TRANSACTION');
       if(clientId&&!this.accessibleClient(actorId,clientId))throw new Error('NOT_FOUND');
       return result;

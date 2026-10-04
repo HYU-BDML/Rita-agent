@@ -31,6 +31,8 @@ test('release rejects archived POST actions before effects, including unknown ac
  for(const kind of ['blog','script','calendar','automation',null])assert.ok(releaseDenial('/api/cora/workbench','POST',{action:'save',kind},'focused'));
  assert.equal(releaseDenial('/api/cora/workbench','POST',{action:'save',kind:'material'},'focused'),null);
  assert.equal(releaseDenial('/api/cora/workbench','POST',{action:'copy-personal'},'focused'),null);
+ for(const action of ['source','candidates','plan','duplicate','draft'])assert.equal(releaseDenial('/api/cora/weekly','POST',{action},'focused'),null);
+ for(const action of ['publish','generate','anything'])assert.ok(releaseDenial('/api/cora/weekly','POST',{action},'focused'));
  for(const action of ['compose','republish','enqueue','anything'])assert.ok(releaseDenial('/api/cora/publications','POST',{action},'focused'));
  assert.equal(releaseDenial('/api/cora/publications','POST',{action:'prepare'},'focused'),null);
  assert.ok(needsReleaseBody('/api/cora/workbench','POST','focused'));assert.equal(needsReleaseBody('/api/cora/workbench','POST','labs'),false);
@@ -39,7 +41,7 @@ test('release rejects archived POST actions before effects, including unknown ac
 test('every current API route has an explicit first-release classification; additions fail this inventory check',()=>{
  const base=path.join(process.cwd(),'app/api/cora');
  const walk=(dir:string):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):e.name==='route.ts'?[path.relative(base,path.join(dir,e.name)).replace(/\/route.ts$/,'').replace(/^route.ts$/,'')]:[]);
- const allowed=new Set(['recovery','session','projects','projects/[id]','client-accounts','clients','brands','generate','reviews','team','library','ideas','revisions','workbench','publications','settings','account','contact','integrations','ad-creative','ops-analytics','ops-report','connect/instagram','connect/instagram/callback']);
+ const allowed=new Set(['weekly','recovery','session','projects','projects/[id]','client-accounts','clients','brands','generate','reviews','team','library','ideas','revisions','workbench','publications','settings','account','contact','integrations','ad-creative','ops-analytics','ops-report','connect/instagram','connect/instagram/callback']);
  const preserved=new Set(['content-list','ops-insights','video-audio/[id]','video-audio','video/[id]','video','video-templates/[id]','billing','ops-recipes','platform-style','import','loop','video-templates','video-templates/[id]/apply','linkpage','video-sources/[id]','ops-calendar','platform-knowledge','apikeys','video-sources','video-motion','export-svg','platform-reference','platform-referral','video-narration','video-sources/[id]/srt','video-sources/[id]/complete','video-sources/[id]/chunk','video-clips','video-shorts','scheduler','video-clips/[id]','ops-threads','platform-script','platform-design','publications/simulation']);
  for(const route of walk(base)){
   assert.ok(allowed.has(route)||preserved.has(route),'Classify new route: '+route);

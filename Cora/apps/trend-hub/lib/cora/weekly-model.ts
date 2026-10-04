@@ -1,0 +1,11 @@
+export type SourceFreshness={state:'unknown'|'recent'|'old'|'future';ageDays:number|null};
+export type WeeklySource={id:string;clientId:string;title:string;text:string;url:string;publishedOn:string;collectedAt:string;kind:'manual'|'url'|'material';truncated:boolean;fingerprint:string;duplicateIds:string[]};
+export type MaterialCandidate={id:string;batchId:string;clientId:string;sourceId:string;title:string;angle:string;excerpt:string;excerptOnly:boolean;fitReason:string;sourceUrl:string;sourceTitle:string;publishedOn:string;collectedAt:string;createdAt:string;freshness:SourceFreshness;fingerprint:string;duplicateIds:string[];sameSourceInBatch:boolean;brandVersion:number};
+export type WeekSlot={candidateId:string;reason:string;assigneeId:string;deadline:string;projectId:string|null};
+export type WeekPlan={id:string;clientId:string;weekStart:string;goal:string;pool:string[];selected:WeekSlot[];version:number;createdAt:string;updatedAt:string};
+export type PresentedPlan=WeekPlan&{candidates:MaterialCandidate[];prepared:boolean;slots:(WeekSlot&{assigneeAvailable:boolean;project:{id:string;version:number;title:string;workStatus:string}|null;missingProject:boolean})[];overlapWarnings:string[]};
+export function validDay(value:unknown):value is string{return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}
+export function shiftDay(day:string,n:number){if(!validDay(day))throw new Error('날짜를 확인해 주세요.');return new Date(Date.parse(day)+n*86400000).toISOString().slice(0,10);}
+export function monday(now=Date.now()){const local=new Date(now+9*3600000),day=local.toISOString().slice(0,10);return shiftDay(day,-((local.getUTCDay()+6)%7));}
+export function freshness(publishedOn:string,now=Date.now()):SourceFreshness{if(!publishedOn)return{state:'unknown',ageDays:null};const ageDays=Math.floor((Date.parse(new Date(now+9*3600000).toISOString().slice(0,10))-Date.parse(publishedOn))/86400000);return{state:ageDays<0?'future':ageDays>30?'old':'recent',ageDays};}
+export const freshnessLabel=(f:SourceFreshness)=>f.state==='unknown'?'게시일 미확인':f.state==='future'?'미래 날짜 입력 · 확인 필요':f.state==='old'?`게시일 기준 ${f.ageDays}일 경과 · 최신 사실 확인`:`게시일 기준 ${f.ageDays}일 경과`;
