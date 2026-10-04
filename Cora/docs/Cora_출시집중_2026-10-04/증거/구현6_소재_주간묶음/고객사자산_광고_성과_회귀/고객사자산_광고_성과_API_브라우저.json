@@ -1,0 +1,85 @@
+{
+  "results": [
+    {
+      "name": "explicit scope and pending/reviewer/stranger rejection",
+      "passed": true
+    },
+    {
+      "name": "assets live in client owner workspace with same-name and personal rows isolated",
+      "passed": true
+    },
+    {
+      "name": "foreign asset IDs, forged owner and stale edits are rejected",
+      "passed": true
+    },
+    {
+      "name": "logo defaults and duplicate CTA are independent by stable client ID",
+      "passed": true
+    },
+    {
+      "name": "owner browser switches same-name clients without carrying assets or editing state",
+      "passed": true
+    },
+    {
+      "name": "owner explicitly copies private asset while editor cannot import owner personal data",
+      "passed": true
+    },
+    {
+      "name": "editor browser sees allowed assets and no private import",
+      "passed": true
+    },
+    {
+      "name": "CSV analysis and report are scoped; wrong client, missing scope and reviewer are denied",
+      "passed": true
+    },
+    {
+      "name": "performance browser reads CSV, downloads scoped report and makes next client-bound experiment",
+      "passed": true
+    },
+    {
+      "name": "wrong-client experiment and implicit merging denied; explicit private analysis copy preserves source",
+      "passed": true
+    },
+    {
+      "name": "an old experiment response cannot switch customer after the user changes context",
+      "passed": true
+    },
+    {
+      "name": "account-style profiles keep same handle independent; default form inherits chosen client",
+      "passed": true
+    },
+    {
+      "name": "fake ad response fixture persists owner results and edit handoff keeps client ID (no LLM call)",
+      "passed": true,
+      "detail": {
+        "fixtureOnly": true,
+        "paidGenerations": 0
+      }
+    },
+    {
+      "name": "template from wrong client cannot be applied or extracted; same-client apply keeps client",
+      "passed": true
+    },
+    {
+      "name": "read routes cache disabled, cross-origin mutation and unauthorized generation denied without side effects",
+      "passed": true,
+      "detail": {
+        "actualAI": 0
+      }
+    },
+    {
+      "name": "revocation immediately blocks assets, ads, analytics, report and new writes; export exposes no owner data",
+      "passed": true
+    },
+    {
+      "name": "mobile assets fit viewport and JS remains error-free",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "actualAI": 0,
+  "actualMeta": 0,
+  "actualSNS": 0,
+  "externalMessages": 0,
+  "syntheticOnly": true
+}
