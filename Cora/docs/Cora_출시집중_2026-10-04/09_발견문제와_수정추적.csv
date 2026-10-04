@@ -1,6 +1,6 @@
 ﻿ID,심각도,증거수준,문제,파일_Cora기준,관찰근거,영향,연결작업,해결후필수검수,발견커밋,상태,수정커밋,독립검수자,독립검수증거
 D01,P2,확인된 UX 구조,제작 시작점이 여러 메뉴로 분산,apps/trend-hub/components/cora/studio.tsx,기존 분산메뉴 보존. 기본 focused에서 네 업무 메뉴와 문맥별 보조 메뉴 구현; 브라우저10경로 통과. 전체 주간 흐름은 남음,신규 고객이 기능 조립을 해야 함,L02,4개 업무 흐름의 브라우저/사람 검수,472c6e6,부분수정_로컬검증,d519bbd,,
-D02,P1 검토대상,구조 위험·유출 재현 아님,브랜드 이름이 권한 조건에 사용됨,apps/trend-hub/lib/cora/team.ts; store.ts,명시 clientId grant와 안정 accountId 지정 구현. 동명/이름변경/회수/다른 세션/옛 DB 시험 통과. legacy 이름 grant는 ID 작업에 미적용; 자산/광고/성과 전체 연결과 L06 복원 미완료,이름 변경/중복/이전의 권한 일관성 검증 필요,L05 L06 L07,동명고객/이름변경/권한회수·이전 반례 검수,472c6e6,부분수정_핵심권한로컬검증,7389d42,,
+D02,P1 검토대상,구조 위험·유출 재현 아님,브랜드 이름이 권한 조건에 사용됨,apps/trend-hub/lib/cora/team.ts; store.ts,"명시 clientId grant와 안정 accountId 지정, 초안 복구 격리 및 합성 DB 복원 확인. legacy 이름 grant는 clientId 작업에 미적용. 자산/광고/성과 전체 연결·독립 검수는 남음",이름 변경/중복/이전의 권한 일관성 검증 필요,L05 L06 L07,동명고객/이름변경/권한회수·이전 반례 검수,472c6e6,부분수정_핵심권한로컬검증,6dcdd25,,
 D03,P2,확인된 기능 제한,검토자는 먼저 Cora에 가입해야 함,apps/trend-hub/lib/cora/store.ts,requestReview가 기존 users의 email 조회,외부 고객 승인 진입 장벽,L16,검토 링크의 신원·만료·철회·모바일 검수,472c6e6,미해결,,,
 D04,P1 출시차단,확인된 미연결,공식 게시 어댑터와 게시 큐 실실행 미연결,apps/trend-hub/lib/cora/publishing/queue.ts; app/api/cora/publications/route.ts,mode simulation과 livePublishing:false,자동게시 제품으로 출시 불가,L31 L33 L34,모의장애+전용시험계정 실제 게시 증거,472c6e6,미해결,,,
 D05,P1 출시차단,확인된 설정 불일치,옛 Trend 시연용 배포 설정,apps/trend-hub/render.yaml; package.json,Node22.11.0과 engines>=22.13.0 불일치; Cora 영구저장 설정 없음,현 파일 그대로 Cora 운영에 부적합,L27 L28,새 staging 기동/재배포 보존/복원,472c6e6,미해결,,,

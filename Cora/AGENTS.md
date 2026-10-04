@@ -32,3 +32,6 @@ The user plans to switch from Astra Extra high for strategy to a smaller model f
 
 ## Next-task phrasing preference (2026-10-04)
 The user asks that each next-task handoff explicitly state the exact recommended model name and include “시작해”. Default implementation: GPT-6.1 Sol · High. Record actual app model changes only if verified; do not infer a switch. Latest client permissions and account-binding implementation is documented in docs/Cora_출시집중_2026-10-04/11_고객사권한과_계정지정_검증.md. L05/L07 remain partial until assets/ads/analytics, recovery and independent review are verified. Next: L06 migration/restore and L02/T02 draft recovery.
+
+## 2026-10-04 recovery handoff
+Latest code 6dcdd25: docs/Cora_출시집중_2026-10-04/12_초안복구와_데이터복원_검증.md. Authenticated briefing/card recovery and operator database-only backup/restore have local unit/browser/CLI evidence. Independent review and staging/media/key recovery remain pending. PR1 was already merged; current follow-up draft PR5 (https://github.com/HYU-BDML/Rita-agent/pull/5) contains pending Cora changes since that merge. Keep the existing branch and check live PR state before future updates. Next implementation: clientId integration for assets/ads/analytics, GPT-6.1 Sol · High — “시작해”. Do not run build and typecheck concurrently on the same .next directory. Preserve production data and paused automation.

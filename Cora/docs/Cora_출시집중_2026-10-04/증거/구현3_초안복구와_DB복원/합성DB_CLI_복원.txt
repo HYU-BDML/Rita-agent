@@ -1,0 +1,15 @@
+
+> trend-hub@0.1.0 cora:database
+> tsx scripts/cora-database.ts restore /tmp/cora-recovery-proof-zh8l93vo/cli-backup /tmp/cora-recovery-proof-zh8l93vo/cli-restored
+
+{
+  "directory": "/tmp/cora-recovery-proof-zh8l93vo/cli-restored",
+  "restoredAt": "2026-10-04T01:52:18.283Z",
+  "backupSha256": "0cf82e94f621b5c9a95c54cd2882a2eb00b72cf76ba450454d29a040ec9de607",
+  "originalRowsPreserved": true,
+  "migrationRepeated": true,
+  "scope": "database-only",
+  "filesAndEncryptionKeyRestored": false
+}
+(node:92019) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
