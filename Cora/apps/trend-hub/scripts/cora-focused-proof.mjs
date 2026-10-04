@@ -76,7 +76,7 @@ try{
  assert.equal(joined.status,200);
  assert.equal((await api('/api/cora/clients',undefined,second)).value.clients.length,0);
  const draft=(await api('/api/cora/projects/'+projectId)).value.project;
- const rejected=await api('/api/cora/projects',{...draft,clientId:assigned},second);assert.equal(rejected.status,400);
+ const rejected=await api('/api/cora/projects',{...draft,clientId:assigned},second);assert.equal(rejected.status,404);
  assert.equal((await api('/api/cora/projects/'+projectId,undefined,second)).status,404);
  assert.equal((await api('/api/cora/clients',{...a,name:'renamed'},context)).status,200);
  assert.equal((await api('/api/cora/clients',{...a,name:'stale'},context)).status,409);
@@ -97,7 +97,7 @@ try{
  for(const name of ['고객사','수정·승인','게시·성과']){await page.getByRole('navigation',{name:'Cora 메뉴',exact:true}).getByRole('button',{name,exact:true}).click();await page.waitForTimeout(300);}
  assert.equal(await page.getByRole('heading',{name:'게시 흐름 모의 실행',exact:true}).count(),0);
  await page.getByRole('button',{name:'Instagram 연결',exact:true}).click();
- await page.getByRole('heading',{name:'Instagram 연결 준비',exact:true}).waitFor();
+ await page.getByRole('heading',{name:'고객사 Instagram 연결',exact:true}).waitFor();
  assert.ok(await page.getByRole('button',{name:'Instagram 읽기 권한 연결',exact:true}).isDisabled());
  await page.getByRole('button',{name:'성과에서 다음 소재',exact:true}).click();await page.getByLabel('CSV 데이터',{exact:true}).waitFor();
  assert.deepEqual(await page.getByRole('navigation',{name:'콘텐츠 작업 메뉴',exact:true}).getByRole('button').allTextContents(),['소재 탐색','성과 분석','자산 보관함']);

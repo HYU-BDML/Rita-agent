@@ -8,11 +8,11 @@ const methods: Record<string, string[]> = {
  workbench:['GET','POST'], publications:['GET','POST'], settings:['GET','POST'],
  account:['GET','POST'], contact:['GET','POST'], integrations:['GET'],
  'ad-creative':['GET','POST'], 'ops-analytics':['GET'], 'ops-report':['GET'],
- 'connect/instagram':['GET','POST'], 'connect/instagram/callback':['GET'],
+ 'client-accounts':['GET','POST'], 'connect/instagram':['GET','POST'], 'connect/instagram/callback':['GET'],
 };
 const actions: Record<string, string[]> = {
  workbench:['discover','fetch','save','analyze','experiment'],
- publications:['prepare','cancel'], 'connect/instagram':['disconnect'],
+ 'client-accounts':['bind','unbind'], publications:['prepare','cancel'], 'connect/instagram':['disconnect'],
 };
 /** null = permitted by scope only. Route authentication/ownership/CSRF checks still apply. */
 export function releaseDenial(path: string, method: string, payload?: unknown, mode: ProductMode = productMode()) {

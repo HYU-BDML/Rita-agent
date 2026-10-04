@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { PublicationQueue } from './publishing/queue';
 import { JobScheduler } from './scheduler';
 import { TeamStore } from './team';
-import { ClientStore } from './clients';
+import { ClientStore, type AccessibleClient } from './clients';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -31,8 +31,8 @@ export class CoraStore {
       CREATE TABLE IF NOT EXISTS revisions(project_id TEXT REFERENCES projects(id) ON DELETE CASCADE, version INTEGER, body TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY(project_id,version));`);
     this.publicationQueue = new PublicationQueue(this.db);
     this.scheduler = new JobScheduler(this.db);
-    this.team = new TeamStore(this.db);
     this.clients = new ClientStore(this.db);
+    this.team = new TeamStore(this.db);
   }
   signup(email: string, password: string) {
     const salt = randomBytes(16).toString('hex'); const hash = scryptSync(password, salt, 64).toString('hex');
@@ -66,44 +66,64 @@ export class CoraStore {
   getAccessible(userId: string, id: string): (Project & { access: 'owner' | 'editor'; ownerEmail?: string }) | null {
     const own = this.get(userId, id); if (own) return { ...own, access: 'owner' };
     const owner = this.projectOwner(id); if (!owner) return null;
-    const p = this.get(owner, id); if (!p || p.clientId || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
+    const p = this.get(owner, id); if (!p || !this.mayEdit(userId, owner, p)) return null;
     const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(owner) as { email: string }).email;
     return { ...p, access: 'editor', ownerEmail: email };
   }
-  /** Saves as the owner when the caller is an allowed editor. An editor cannot move work into a brand outside their grant. */
-  saveAccessible(userId: string, body: Draft, id: string, version: number): Project | null {
-    if (this.get(userId, id)) return this.save(userId, body, id, version);
-    const owner = this.projectOwner(id); if (!owner) return null;
-    const p = this.get(owner, id); if (!p || p.clientId || !this.team.canEdit(userId, owner, p.brief.brand)) return null;
-    if(body.clientId)throw new Error('고객사별 팀 권한 연결 전에는 소유자만 고객사를 지정할 수 있습니다.');
-    if (!this.team.canEdit(userId, owner, body.brief.brand)) throw new Error('권한이 없는 브랜드로 옮길 수 없습니다.');
-    return this.save(owner, body, id, version);
-  }
-  /** Projects in workspaces where this user is an active editor, filtered by granted brands. */
-  sharedProjects(userId: string) {
-    return this.team.editorGrants(userId).flatMap(g => {
-      const email = (this.db.prepare('SELECT email FROM users WHERE id=?').get(g.ownerId) as { email: string }).email;
-      return this.list(g.ownerId).filter(p => !p.clientId && (g.brands.length === 0 || g.brands.includes(p.brand))).map(p => ({ ...p, ownerEmail: email }));
+  private mayEdit(userId:string,ownerId:string,p:Draft){return p.clientId?this.team.canEditClient(userId,ownerId,p.clientId):this.team.canEdit(userId,ownerId,p.brief.brand);}
+  private atomic<T>(fn:()=>T):T {this.db.exec('BEGIN IMMEDIATE');try{const result=fn();this.db.exec('COMMIT');return result;}catch(e){this.db.exec('ROLLBACK');throw e;}}
+  /** Check grants inside the same write transaction. An editor cannot reassign/unassign client identity. */
+  saveAccessible(userId:string,body:Draft,id:string,version:number) {
+    return this.atomic(()=>{
+      const owner=this.projectOwner(id);if(!owner)return null;
+      const p=this.get(owner,id);if(!p)return null;
+      if(owner!==userId){
+        if(!this.mayEdit(userId,owner,p))return null;
+        if(body.clientId!==p.clientId)throw new Error('고객사 변경은 소유자만 할 수 있습니다.');
+        if(!p.clientId&&!this.team.canEdit(userId,owner,body.brief.brand))throw new Error('권한이 없는 브랜드로 옮길 수 없습니다.');
+      }
+      this.writeDraft(owner,body,id,version);return this.getAccessible(userId,id);
     });
   }
-  save(userId: string, body: Draft, id?: string, version?: number): Project | null {
-    const time = new Date().toISOString(); let encoded = JSON.stringify(body);
-    this.db.exec('BEGIN IMMEDIATE');
-    try {
-      if(body.clientId&&!this.clients.get(userId,body.clientId))throw new Error('고객사를 찾을 수 없습니다.');
-      if (id) {
-        const current = this.get(userId, id);
-        if (!current) { this.db.exec('ROLLBACK'); return null; }
-        if (current.version !== version) throw new Error('CONFLICT');
-        if(current.workStatus==='ready' && JSON.stringify([current.clientId,current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.clientId,body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
-        this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded, time, id, userId);
-      } else {
-        id = randomUUID(); this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id, userId, encoded, 1, time, time);
-      }
-      const result = this.get(userId, id)!;
-      this.db.prepare('INSERT INTO revisions VALUES (?,?,?,?)').run(id, result.version, encoded, time);
-      this.db.exec('COMMIT'); return result;
-    } catch (e) { this.db.exec('ROLLBACK'); throw e; }
+  /** Shared creation stays in the client's owner workspace; a request cannot supply a new owner. */
+  saveNewAccessible(userId:string,body:Draft) {
+    return this.atomic(()=>{
+      const owner=body.clientId?this.clients.owner(body.clientId):userId;
+      if(!owner||(owner!==userId&&(!body.clientId||!this.team.canEditClient(userId,owner,body.clientId))))throw new Error('NOT_FOUND');
+      const p=this.writeDraft(owner,body)!;return this.getAccessible(userId,p.id)!;
+    });
+  }
+  accessibleClient(userId:string,id:string):AccessibleClient|null {
+    const owner=this.clients.owner(id);if(!owner)return null;
+    if(owner!==userId&&!this.team.canEditClient(userId,owner,id))return null;
+    const client=this.clients.get(owner,id);if(!client)return null;
+    const email=(this.db.prepare('SELECT email FROM users WHERE id=?').get(owner) as {email:string}).email;
+    return {...client,access:owner===userId?'owner':'editor',...(owner===userId?{}:{ownerEmail:email})};
+  }
+  accessibleClients(userId:string):AccessibleClient[] {
+    const own=this.clients.list(userId).map(c=>({...c,access:'owner' as const}));
+    const shared=this.team.editorGrants(userId).flatMap(g=>g.scope==='clients'?g.clientIds.map(id=>this.accessibleClient(userId,id)).filter((c):c is AccessibleClient=>!!c):[]);
+    return [...own,...shared];
+  }
+  sharedProjects(userId:string) {
+    return this.team.editorGrants(userId).flatMap(g=>{
+      const email=(this.db.prepare('SELECT email FROM users WHERE id=?').get(g.ownerId) as {email:string}).email;
+      return this.list(g.ownerId).filter(p=>p.clientId?g.scope==='clients'&&g.clientIds.includes(p.clientId):g.scope==='legacy'&&(g.brands.length===0||g.brands.includes(p.brand))).map(p=>({...p,access:'editor' as const,ownerEmail:email}));
+    });
+  }
+  save(userId:string,body:Draft,id?:string,version?:number):Project|null {return this.atomic(()=>this.writeDraft(userId,body,id,version));}
+  /** Caller must hold a write transaction, and already have resolved owner/grants. */
+  private writeDraft(userId:string,body:Draft,id?:string,version?:number):Project|null {
+    const time=new Date().toISOString();let encoded=JSON.stringify(body);
+    if(body.clientId&&!this.clients.get(userId,body.clientId))throw new Error('고객사를 찾을 수 없습니다.');
+    if(id){
+      const current=this.get(userId,id);if(!current)return null;
+      if(current.version!==version)throw new Error('CONFLICT');
+      if(current.workStatus==='ready'&&JSON.stringify([current.clientId,current.brief,current.slides,current.caption,current.design])!==JSON.stringify([body.clientId,body.brief,body.slides,body.caption,body.design])){body={...body,workStatus:'draft'};encoded=JSON.stringify(body);}
+      this.db.prepare('UPDATE projects SET body=?,version=version+1,updated=? WHERE id=? AND user_id=?').run(encoded,time,id,userId);
+    }else{id=randomUUID();this.db.prepare('INSERT INTO projects VALUES (?,?,?,?,?,?)').run(id,userId,encoded,1,time,time);}
+    const result=this.get(userId,id)!;
+    this.db.prepare('INSERT INTO revisions VALUES (?,?,?,?)').run(id,result.version,encoded,time);return result;
   }
   items(userId:string):{id:string;kind:string;title:string;data:Record<string,unknown>;createdAt:string}[]{return (this.db.prepare('SELECT * FROM work_items WHERE user_id=? ORDER BY rowid DESC LIMIT 500').all(userId) as {id:string;kind:string;title:string;data:string;created:string}[]).map(r=>({id:r.id,kind:r.kind,title:r.title,data:JSON.parse(r.data),createdAt:r.created}));}
   addItem(userId:string,kind:string,title:string,data:Record<string,unknown>){const id=randomUUID(),createdAt=new Date().toISOString();this.db.prepare('INSERT INTO work_items VALUES (?,?,?,?,?,?)').run(id,userId,kind,title,JSON.stringify(data),createdAt);return {id,kind,title,data,createdAt};}
@@ -129,6 +149,7 @@ export class CoraStore {
       const project=this.get(ownerId,projectId);if(!project)throw new Error('NOT_FOUND');if(project.version!==version)throw new Error('CONFLICT');
       const reviewer=this.db.prepare('SELECT id FROM users WHERE email=?').get(email.trim().toLowerCase()) as {id:string}|undefined;
       if(!reviewer||reviewer.id===ownerId)throw new Error('이미 가입한 다른 검토자의 이메일이 필요합니다.');
+      if(project.clientId&&!this.team.canReviewClient(reviewer.id,ownerId,project.clientId))throw new Error('이 고객사의 초대를 수락한 검토자를 선택해 주세요.');
       const existing=this.db.prepare('SELECT id FROM reviews WHERE project_id=? AND version=? AND reviewer_id=?').get(projectId,version,reviewer.id) as {id:string}|undefined;
       if(existing){const prior=this.review(ownerId,existing.id);if(prior?.status==='cancelled')throw new Error('공유를 회수한 버전입니다. 새 버전을 저장한 뒤 다시 요청하세요.');this.db.exec('COMMIT');return prior;}
       const id=randomUUID();this.db.prepare('INSERT INTO reviews(id,project_id,owner_id,reviewer_id,version,snapshot,created) VALUES (?,?,?,?,?,?,?)').run(id,projectId,ownerId,reviewer.id,version,JSON.stringify(project),new Date().toISOString());
@@ -136,12 +157,14 @@ export class CoraStore {
     }catch(e){this.db.exec('ROLLBACK');throw e;}
   }
   reviews(userId:string){
-    const rows=this.db.prepare(`SELECT r.id,r.project_id,r.owner_id,r.reviewer_id,r.version,r.status,r.comment,r.created,r.decided,json_extract(r.snapshot,'$.brief.brand') as brand,json_extract(r.snapshot,'$.idea') as title,p.version as current_version,o.email as owner_email,u.email as reviewer_email FROM reviews r JOIN projects p ON p.id=r.project_id JOIN users o ON o.id=r.owner_id JOIN users u ON u.id=r.reviewer_id WHERE r.owner_id=? OR (r.reviewer_id=? AND r.status!='cancelled') ORDER BY r.created DESC LIMIT 200`).all(userId,userId) as Omit<ReviewRow,'snapshot'>[];
-    return rows.map(r=>({...r,effectiveStatus:r.status==='cancelled'?'cancelled':r.version!==r.current_version?'stale':r.status}));
+    const rows=this.db.prepare(`SELECT r.id,r.project_id,r.owner_id,r.reviewer_id,r.version,r.status,r.comment,r.created,r.decided,json_extract(r.snapshot,'$.clientId') as client_id,json_extract(r.snapshot,'$.brief.brand') as brand,json_extract(r.snapshot,'$.idea') as title,p.version as current_version,o.email as owner_email,u.email as reviewer_email FROM reviews r JOIN projects p ON p.id=r.project_id JOIN users o ON o.id=r.owner_id JOIN users u ON u.id=r.reviewer_id WHERE r.owner_id=? OR (r.reviewer_id=? AND r.status!='cancelled') ORDER BY r.created DESC LIMIT 200`).all(userId,userId) as (Omit<ReviewRow,'snapshot'>&{client_id:string|null})[];
+    return rows.filter(r=>r.owner_id===userId||!r.client_id||this.team.canReviewClient(userId,r.owner_id,r.client_id)).map(r=>({...r,effectiveStatus:r.status==='cancelled'?'cancelled':r.version!==r.current_version?'stale':r.status}));
   }
   review(userId:string,id:string){
     const row=this.db.prepare(`SELECT r.*,p.version as current_version,o.email as owner_email,u.email as reviewer_email FROM reviews r JOIN projects p ON p.id=r.project_id JOIN users o ON o.id=r.owner_id JOIN users u ON u.id=r.reviewer_id WHERE r.id=? AND (r.owner_id=? OR (r.reviewer_id=? AND r.status!='cancelled'))`).get(id,userId,userId) as ReviewRow|undefined;
-    return row?{...row,snapshot:JSON.parse(String(row.snapshot)) as Project,effectiveStatus:row.status==='cancelled'?'cancelled':row.version!==row.current_version?'stale':row.status}:null;
+    if(!row)return null;const snapshot=JSON.parse(String(row.snapshot)) as Project;
+    if(row.owner_id!==userId&&snapshot.clientId&&!this.team.canReviewClient(userId,row.owner_id,snapshot.clientId))return null;
+    return {...row,snapshot,effectiveStatus:row.status==='cancelled'?'cancelled':row.version!==row.current_version?'stale':row.status};
   }
   decideReview(userId:string,id:string,status:string,comment:string){
     if(!['approved','changes_requested'].includes(status)||typeof comment!=='string'||comment.length>3000)throw new Error('검토 결과 형식을 확인해 주세요.');

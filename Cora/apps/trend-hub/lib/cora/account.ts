@@ -30,7 +30,14 @@ export class AccountService {
       const keys = t.name === 'users' ? ['id'] : t.cols.filter(c => USER_COLUMNS.includes(c));
       if (!keys.length) continue;
       const rows = this.db.prepare(`SELECT * FROM "${t.name}" WHERE ${keys.map(k => `"${k}"=?`).join(' OR ')}`).all(...keys.map(() => userId)) as Record<string, unknown>[];
-      if (rows.length) out[t.name] = rows.map(r => Object.fromEntries(Object.entries(r).filter(([k]) => !SECRET_COLUMNS.has(k))));
+      const visible=t.name==='reviews'?rows.filter(r=>{
+        if(r.owner_id===userId)return true;
+        if(r.reviewer_id!==userId||r.status==='cancelled')return false;
+        const clientId=(JSON.parse(String(r.snapshot)) as {clientId?:string}).clientId;
+        if(!clientId)return true;
+        return !!this.db.prepare("SELECT t.id FROM team_members t JOIN team_client_grants g ON g.team_id=t.id AND g.owner_id=t.owner_id JOIN clients c ON c.id=g.client_id AND c.user_id=t.owner_id WHERE t.member_id=? AND t.owner_id=? AND t.status='active' AND t.scope='clients' AND g.client_id=?").get(userId,r.owner_id as string,clientId);
+      }):rows;
+      if(visible.length)out[t.name]=visible.map(r=>Object.fromEntries(Object.entries(r).filter(([k])=>!SECRET_COLUMNS.has(k))));
     }
     return { exportedAt: new Date().toISOString(), userId, tables: out };
   }
