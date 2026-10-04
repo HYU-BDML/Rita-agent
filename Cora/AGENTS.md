@@ -29,3 +29,6 @@ Use launch backlog/test CSVs as the current release work queue and record actual
 
 ## Development model preference (2026-10-04)
 The user plans to switch from Astra Extra high for strategy to a smaller model for routine implementation. Recommended default: GPT-6.1 Sol High; narrow UI/copy work may use Sol Medium or Luna High. Recommend independent Astra Extra high review for tenant authorization, migrations, live publishing, cost concurrency, recovery and final release candidates. This is a workflow recommendation, not an automatic model change or permission gate: prepare concrete reproductions/fixes and continue independent authorized work. Keep the Cora application's cheap llmgw generation policy unchanged.
+
+## Next-task phrasing preference (2026-10-04)
+The user asks that each next-task handoff explicitly state the exact recommended model name and include “시작해”. Default implementation: GPT-6.1 Sol · High. Record actual app model changes only if verified; do not infer a switch. Latest implemented release foundation is documented in docs/Cora_출시집중_2026-10-04/10_첫구현_검증과_다음작업.md.
