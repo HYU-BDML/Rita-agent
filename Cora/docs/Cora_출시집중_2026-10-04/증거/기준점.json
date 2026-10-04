@@ -34,7 +34,7 @@
     "claude_independent_review": false
   },
   "evidence_files": [
-    "기존회귀_2026-10-04.log",
+    "기존회귀_2026-10-04.txt",
     "dependency-audit.json"
   ]
 }
