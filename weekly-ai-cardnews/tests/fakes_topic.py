@@ -31,16 +31,54 @@ class 가짜실행:
                 "열쇠순번": 0}
 
 
+def 그림머리(가로: int, 세로: int, 꼴: str = "png") -> bytes:
+    """그림 파일의 머리만 — 판정관이 가로·세로를 읽는 자리(계획 4 과제 42+ B). 몸은 없어도 된다."""
+    if 꼴 == "png":
+        return (b"\x89PNG\r\n\x1a\n" + (13).to_bytes(4, "big") + b"IHDR" + 가로.to_bytes(4, "big")
+                + 세로.to_bytes(4, "big") + b"\x08\x02\x00\x00\x00" + b"\x00" * 4)
+    if 꼴 == "gif":
+        return b"GIF89a" + 가로.to_bytes(2, "little") + 세로.to_bytes(2, "little") + b"\x00\x00\x00"
+    if 꼴 in ("jpeg", "jpeg-progressive"):
+        앱 = b"\xff\xe0" + (16).to_bytes(2, "big") + b"JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+        표 = b"\xff\xdb" + (67).to_bytes(2, "big") + b"\x00" + b"\x01" * 64  # 양자화 표 — 크기 앞에 다른 덩이가 있어도
+        틀 = (b"\xff\xc2" if 꼴 == "jpeg-progressive" else b"\xff\xc0") + (17).to_bytes(2, "big") + b"\x08" \
+            + 세로.to_bytes(2, "big") + 가로.to_bytes(2, "big") + b"\x03\x01\x22\x00\x02\x11\x01\x03\x11\x01"
+        return b"\xff\xd8" + 앱 + 표 + 틀
+    if 꼴 == "webp":  # 손실 압축(VP8)
+        덩이 = b"\x10\x02\x00" + b"\x9d\x01\x2a" + 가로.to_bytes(2, "little") + 세로.to_bytes(2, "little")
+        return b"RIFF" + (4 + 8 + len(덩이)).to_bytes(4, "little") + b"WEBP" + b"VP8 " + len(덩이).to_bytes(4, "little") + 덩이
+    if 꼴 == "webp-lossless":  # VP8L — 가로-1·세로-1 을 14비트씩
+        덩이 = b"\x2f" + ((가로 - 1) | ((세로 - 1) << 14)).to_bytes(4, "little")
+        return b"RIFF" + (4 + 8 + len(덩이)).to_bytes(4, "little") + b"WEBP" + b"VP8L" + len(덩이).to_bytes(4, "little") + 덩이
+    if 꼴 == "webp-extended":  # VP8X — 가로-1·세로-1 을 24비트씩
+        덩이 = b"\x10\x00\x00\x00" + (가로 - 1).to_bytes(3, "little") + (세로 - 1).to_bytes(3, "little")
+        return b"RIFF" + (4 + 8 + len(덩이)).to_bytes(4, "little") + b"WEBP" + b"VP8X" + len(덩이).to_bytes(4, "little") + 덩이
+    raise ValueError(꼴)
+
+
 class 가짜판정관:
-    def __init__(self, 사진=None, 문장=None, 같은=False):
+    def __init__(self, 사진=None, 문장=None, 같은=False, 글자=None, 터짐=False, 크기=None, 얼굴=None):
         self.사진, self.문장답, self.같은답, self.받은 = dict(사진 or {}), dict(문장 or {}), 같은, []
+        self.글자, self.터짐, self.크기, self.얼굴 = dict(글자 or {}), 터짐, dict(크기 or {}), dict(얼굴 or {})
+
+    def 얼굴수(self, 주소):
+        self.받은.append(("얼굴", 주소))
+        return self.얼굴.get(주소, 1)
+
+    def 사진보기(self, 후보, 마감초=None):
+        self.받은.append(("사진보기", [x["번호"] for x in 후보]))
+        if self.터짐:
+            raise RuntimeError("판정관 고장")
+        return {x["번호"]: {"갈래": self.사진.get(x["번호"], self.사진.get(x.get("주소"), "장면")),
+                           "글자": self.글자.get(x["번호"], ""),
+                           "크기": self.크기.get(x["번호"])} for x in 후보}
 
     def 사진들(self, 후보):
         self.받은.append(("사진", [x["번호"] for x in 후보]))
         return {x["번호"]: self.사진.get(x["번호"], "장면") for x in 후보}
 
-    def 문장(self, 문장, 발췌):
-        self.받은.append(("문장", 문장, 발췌))
+    def 문장(self, 문장, 발췌, 정보=""):
+        self.받은.append(("문장", 문장, 발췌, 정보))
         return {"판정": self.문장답.get(문장, "받쳐줌"), "까닭": "시험"}
 
     def 같은사건(self, 가, 나):
@@ -52,7 +90,7 @@ def 페이지없음(주소):
     raise page.페이지탈("시험엔 페이지 없음")
 
 
-def 현장만들기(실행=None, 읽기=None, 판정관=None, 분=0, 주문서_=None, s3=None):
+def 현장만들기(실행=None, 읽기=None, 판정관=None, 분=0, 주문서_=None, s3=None, 기억=None):
     o = 주문서_ or 주문서
     재료 = {"작업판": board.새판()}
     시작 = datetime(2026, 10, 1, 3, 0, tzinfo=timezone.utc)
@@ -60,7 +98,7 @@ def 현장만들기(실행=None, 읽기=None, 판정관=None, 분=0, 주문서_=
               창고=증거창고(s3 or 가짜S3(), "통", "20261001-030000-aaaaaaaa"),
               예산=예산(o["예산"], 재료, 시작, lambda: 시작 + timedelta(minutes=분)),
               판정관=판정관 or 가짜판정관(), 실행=실행 or 가짜실행(), 읽기=읽기 or 페이지없음,
-              지금글=lambda: "2026-10-01T03:00:00Z")
+              지금글=lambda: "2026-10-01T03:00:00Z", 기억=기억)
 
 
 def 트윗(번, 계정="CORTIS_official", 시각="2026-09-24T03:00:00Z", 좋아요=100, 영상=False, 글=None):
@@ -73,6 +111,17 @@ def 트윗(번, 계정="CORTIS_official", 시각="2026-09-24T03:00:00Z", 좋아�
             "variants": [{"content_type": "video/mp4", "bitrate": 5000000,
                           "url": f"https://video.twimg.com/v/1920x1080/{번}.mp4"}]}}]}
     return t
+
+
+기본목록 = [{"tool": "x_account", "args": {"account": "CORTIS_official", "deep": True}, "why": "코르티스 공식 계정"}]
+
+
+def _목록붙이기(이름, 인자):
+    """결과 내기에 매주 볼 곳이 없으면 기본 한 줄을 붙인다(계획 4 — 빼먹으면 한 번 재촉하니 대본마다 적지 않게).
+    재촉을 시험하는 곳은 tools.부르기 를 바로 부르거나 weekly_sources 를 None 으로 준다."""
+    if 이름 == "submit_result" and "weekly_sources" not in 인자:
+        return {**인자, "weekly_sources": 기본목록}
+    return 인자
 
 
 class 가짜지휘자:
@@ -92,7 +141,8 @@ class 가짜지휘자:
         if isinstance(걸음, str):
             return {**바탕, "글": 걸음[2:], "메시지": {"role": "assistant", "content": 걸음[2:]}, "도구호출": []}
         n = len(self.받은)
-        호출 = [{"id": f"c{n}_{i}", "이름": 이름, "인자": 인자, "인자탈": ""} for i, (이름, 인자) in enumerate(걸음)]
+        호출 = [{"id": f"c{n}_{i}", "이름": 이름, "인자": _목록붙이기(이름, 인자), "인자탈": ""}
+              for i, (이름, 인자) in enumerate(걸음)]
         원 = [{"id": h["id"], "type": "function", "function": {"name": h["이름"], "arguments": json.dumps(h["인자"])}}
              for h in 호출]
         return {**바탕, "메시지": {"role": "assistant", "content": "", "reasoning_content": f"생각{n}", "tool_calls": 원},
@@ -106,13 +156,16 @@ class 가짜대화:
     def __init__(self, 지휘대본=(), 다듬기대본=(), 문장판정="받쳐줌"):
         self.지휘, self.다듬기, self.문장판정, self.다듬기받은 = 가짜지휘자(지휘대본), list(다듬기대본), 문장판정, []
         self.다듬기한도 = []  # (한도, 읽기) — 넘치면 한도를 올리는지 본다
+        self.지휘모델들, self.얼굴 = [], 1  # 지휘자에게 실린 모델 · 표지 사진 얼굴 수 답(계획 3)
 
     def __call__(self, 메시지들, 한도, 도구들=None, 모델=None, 생각=True, **kw):
         바탕 = {"모델": 모델 or "deepseek-v4-pro", "입력토큰": 500, "캐시토큰": 0, "출력토큰": 50, "생각토큰": 0,
               "초": 1, "넘침": False, "도구호출": []}
-        if 모델 == "deepseek-flash":
+        if 모델 == "deepseek-flash" and not 도구들:  # 도구를 주면 지휘자(flash 지휘 비교)
             내용 = 메시지들[-1]["content"]
-            if isinstance(내용, list):
+            if isinstance(내용, list) and any(p.get("text") == "얼굴이 보이는 사람 수" for p in 내용):
+                글 = json.dumps({"사람": self.얼굴})
+            elif isinstance(내용, list):
                 글 = json.dumps({p["text"][3:]: "장면" for p in 내용 if p.get("type") == "text"
                                 and p["text"].startswith("번호 ")}, ensure_ascii=False)
             elif 내용.startswith("가: "):
@@ -128,6 +181,7 @@ class 가짜대화:
                 return {**바탕, "넘침": True, "글": "", "메시지": {"role": "assistant", "content": ""}}
             글 = 글 if isinstance(글, str) else json.dumps(글, ensure_ascii=False)
             return {**바탕, "글": 글, "메시지": {"role": "assistant", "content": 글}}
+        self.지휘모델들.append(모델 or "deepseek-v4-pro")
         return self.지휘(메시지들, 한도, 도구들=도구들)
 
 

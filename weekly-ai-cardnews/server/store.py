@@ -8,7 +8,7 @@ import secrets
 from datetime import datetime, timezone
 
 보일칸 = ("job", "kind", "week", "year", "order", "field", "state", "pct", "step", "steps", "result", "error", "started",
-        "updated", "cost")
+        "updated", "cost", "평가", "카드다시", "다시시작")  # 평가: 밤새 돈 평가 판(계획 3) — 사람 판의 동시·하루 셈에서 뺀다 · 카드다시: 카드만 다시 구운 횟수(계획 4 D-4)
 자세한칸 = ("board", "lines", "spend")  # 주제 판의 작업판 요약·판단 줄·걸음별 돈 — 한 판 볼 때만(목록엔 무겁다)
 
 
@@ -83,6 +83,9 @@ class 창고:
             이어 = 답["NextContinuationToken"]
         return [f for f in (self._읽기키(k) for k in sorted(열쇠들, reverse=True)) if f]
 
+    def 분야지우기(self, 번호: str) -> None:
+        self.s3.delete_object(Bucket=self.통, Key=f"{self.앞}fields/{번호}.json")
+
     def 미디어올리기(self, job: str, 이름: str, 바이트: bytes, 꼴: str) -> str:
         """주제 판의 소식 미디어 — 인스타·스레드 주소는 며칠이면 만료돼서 정리 때 옮겨 둔다."""
         키 = f"{self.앞}topic/{job}/media/{이름}"
@@ -104,9 +107,11 @@ class 창고:
                 break
             이어 = 답["NextContinuationToken"]
         난것 = []
-        for 열쇠 in sorted(열쇠들, reverse=True)[:몇개]:
+        for 열쇠 in sorted(열쇠들, reverse=True):
+            if len(난것) >= 몇개:
+                break
             기록 = self.읽기(열쇠.rsplit("/", 1)[-1].removesuffix(".json"))
-            if 기록:
+            if 기록 and not 기록.get("평가"):  # 평가 판은 목록에서 뺀다 — 사람 판이 밀렸다(계획 4 D-10)
                 난것.append(요약(기록, 자세히=False))
         return 난것
 

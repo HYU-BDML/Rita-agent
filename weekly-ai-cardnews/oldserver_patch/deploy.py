@@ -23,7 +23,7 @@ REGION = "ap-northeast-2"
 NAME = "cardnews-render"
 REGISTRY = "<AWS 계정 번호>.dkr.ecr.ap-northeast-2.amazonaws.com"
 REPO = f"{REGISTRY}/{NAME}"
-TAG = "patch-20261001c"  # 올릴 때마다 새 이름표
+TAG = "patch-20261005a"  # 올릴 때마다 새 이름표 — 04a: 새 분야 표지 실제 사진 얼굴 · 04b: 얼굴 사진이 오면 낱말과 상관없이 넣음(계획 3) · 04c: 얼굴 사진 진짜 꼴·얼굴 없음이면 얼굴 표 안 봄(계획 4 D-8·D-9) · 05a: 새 분야 표지에 진짜 사진이 오면 그리지 않고 깐다(계획 4 과제 42++ D)
 여기 = Path(__file__).resolve().parent
 
 

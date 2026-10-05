@@ -24,7 +24,8 @@ BUCKET = "<S3 통 이름>"
 서버 = Path(__file__).resolve().parent / "server"
 길들 = ["POST /make", "GET /jobs", "GET /jobs/{job}", "POST /jobs/{job}/retry", "GET /weeks",
        "POST /topic/chat", "GET /topic/chat/{chat}", "POST /topic/make", "GET /wallet",
-       "GET /topic/fields", "POST /topic/fields"]
+       "GET /topic/fields", "POST /topic/fields", "POST /topic/fields/{field}/delete", "POST /topic/fields/{field}/list",
+       "POST /topic/jobs/{job}/cards"]
 열쇠파일 = Path(r"C:\Users\david\project\trend\apify api.txt")
 
 
@@ -90,7 +91,8 @@ def _기록칸막기정책(정책: dict | None) -> dict:
     사용자가 친 말·지휘자 생각이 든 칸이라 주소를 알아도 바깥에선 못 읽게(사용자 2026-10-01 «가»)."""
     정책 = {"Version": "2012-10-17", "Statement": []} if 정책 is None else 정책
     줄 = {"Sid": "WeeklyPrivate", "Effect": "Deny", "Principal": "*", "Action": "s3:GetObject",
-         "Resource": [f"arn:aws:s3:::{BUCKET}/weekly/trace/*", f"arn:aws:s3:::{BUCKET}/weekly/chats/*"],
+         "Resource": [f"arn:aws:s3:::{BUCKET}/weekly/trace/*", f"arn:aws:s3:::{BUCKET}/weekly/chats/*",
+                      f"arn:aws:s3:::{BUCKET}/weekly/memory/*"],  # 긁은 결과·출처 성적표도 서버만(계획 2-1 작은 것 11)
          "Condition": {"StringNotEquals": {"aws:PrincipalAccount": ACCOUNT}}}
     return {**정책, "Statement": [x for x in 정책["Statement"] if x.get("Sid") != "WeeklyPrivate"] + [줄]}
 
@@ -119,6 +121,10 @@ def _역할(iam) -> str:
     iam.put_role_policy(RoleName=ROLE, PolicyName="weekly-ai", PolicyDocument=json.dumps({
         "Version": "2012-10-17", "Statement": [
             {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"arn:aws:s3:::{BUCKET}/weekly/*"},
+            # 저장한 분야 지우기(계획 2-1) — 지우기는 분야 칸만
+            {"Effect": "Allow", "Action": "s3:DeleteObject", "Resource": f"arn:aws:s3:::{BUCKET}/weekly/fields/*"},
+            # 판이 끝날 때 묵은 긁은 결과 치우기(계획 2-1 작은 것 11)
+            {"Effect": "Allow", "Action": "s3:DeleteObject", "Resource": f"arn:aws:s3:::{BUCKET}/weekly/memory/scrapes/*"},
             {"Effect": "Allow", "Action": "s3:ListBucket", "Resource": f"arn:aws:s3:::{BUCKET}",
              "Condition": {"StringLike": {"s3:prefix": ["weekly/*"]}}},
             {"Effect": "Allow", "Action": "lambda:InvokeFunction",

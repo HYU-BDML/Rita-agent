@@ -76,3 +76,15 @@ def test_인스타_묶음글은_낱장마다_훑는다():
     g = n.인스타글들([글])[0]
     assert g["계정"] == "cortis" and g["날짜"] == "2026-09-23"
     assert [m["갈래"] for m in g["미디어"]] == ["사진", "영상"] and g["반응"]["좋아요"] == 50000
+
+
+def test_그림_검색_결과_한_건은_증거_한_건_주소는_글_쪽_미디어는_원본_크기_그림():
+    # 계획 4 과제 42++ A — 레이·리즈 출국 장에 사진을 못 찾았다(이미지 검색이 없었다)
+    원본 = [{"imageUrl": "https://img.sportskh.com/a.jpg", "imageWidth": 1200, "imageHeight": 1600,
+             "title": "아이브 리즈 레이, 파리로 출국", "pageUrl": "https://sports.khan.co.kr/1", "domain": "sports.khan.co.kr",
+             "sourceName": "스포츠경향", "thumbnailUrl": "https://t/a.jpg"},
+            {"imageUrl": "", "pageUrl": "https://x/2"}, "광고"]
+    assert n.그림검색결과(원본) == [{
+        "플랫폼": "web", "계정": "sports.khan.co.kr", "주소": "https://sports.khan.co.kr/1", "제목": "아이브 리즈 레이, 파리로 출국",
+        "글": "", "시각": "", "날짜": "", "반응": {}, "답글": False, "이미지검색": True,
+        "미디어": [{"갈래": "사진", "주소": "https://img.sportskh.com/a.jpg", "대표화면": "", "가로": 1200, "세로": 1600}]}]

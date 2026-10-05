@@ -11,8 +11,9 @@ select, button { width: 100%; font-size: 15px; padding: 10px; border-radius: 8px
 button { background: var(--파랑); color: #fff; border: 0; font-weight: 600; cursor: pointer; }
 button:disabled { opacity: .5; cursor: default; }
 .알림 { color: var(--빨강); font-size: 13px; }
+.알림.안내 { color: var(--파랑); }  /* 성공 안내는 파랑 — 빨강은 오류만(최종 검토) */
 .목록 { list-style: none; padding: 0; margin: 0; font-size: 13px; }
-.목록 li { padding: 8px 6px; border-radius: 6px; cursor: pointer; overflow-wrap: anywhere; }
+.목록 li { padding: 8px 6px; border-radius: 6px; cursor: pointer; overflow-wrap: anywhere; word-break: keep-all; }  /* «3건» 이 «3 / 건» 으로 갈리지 않게(UX 점검 2-1) */
 .목록 li:hover, .목록 li.고름 { background: rgba(59, 108, 246, .14); }
 .막대 { height: 8px; background: rgba(127, 127, 127, .2); border-radius: 4px; overflow: hidden; margin: 10px 0; }
 .막대 > div { height: 100%; background: var(--파랑); transition: width .4s; }
@@ -58,5 +59,15 @@ textarea { width: 100%; font: inherit; font-size: 15px; padding: 10px; border-ra
 .갈래 button.저장 { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .저장칸 table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; }
 .저장칸 th { text-align: left; color: var(--흐림); font-weight: 500; padding: 4px 8px 4px 0; white-space: nowrap; vertical-align: top; }
-.저장칸 td { padding: 4px 0; overflow-wrap: anywhere; }
+.저장칸 td { padding: 4px 0; overflow-wrap: anywhere; white-space: pre-line; }
 .저장하기 { border-top: 1px solid var(--선); margin-top: 14px; padding-top: 10px; }
+
+/* 매주 볼 곳 펼침(계획 4) — 폰 폭에서도 긴 주소가 줄을 밀지 않게 */
+.목록펼침 { margin-top: 8px; }
+.목록줄들 { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 6px; font-size: 13px; }
+.목록줄 { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--선); border-radius: 8px; padding: 8px; }
+.목록줄 .글 { flex: 1; min-width: 0; display: grid; gap: 2px; overflow-wrap: anywhere; }
+.목록줄 .딱지 { justify-self: start; }
+.목록줄 .숫자 { font-size: 12px; }
+.목록줄 button { width: auto; flex: none; margin-top: 0; padding: 8px 12px; font-size: 13px; min-height: 36px; min-width: 44px; }  /* 폰에서 엄지로 누를 만하게(과제 24 점검) */
+.목록줄.뺌 .글 > span:first-child { text-decoration: line-through; opacity: .5; }

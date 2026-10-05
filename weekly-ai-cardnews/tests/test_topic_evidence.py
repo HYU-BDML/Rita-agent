@@ -42,3 +42,25 @@ def test_창고에_쓰고_다시_읽는다():
     다시 = 증거창고(s3, "통", "j1")
     assert 다시.꺼내기("E1")["주소"] == "https://x.com/a/1" and 다시.넣기(글("https://x.com/a/1"), "t") == ("E1", False)
     assert "weekly/topic/j1/evidence.json" in s3.것들
+
+
+def test_같은_주소를_다시_읽으면_더_긴_본문으로():
+    # 검색 요약 114자만 남고 나무위키 본문이 안 남았다(판 4)
+    from fakes import 가짜S3
+    from topic.evidence import 증거창고
+    창 = 증거창고(가짜S3(), "통", "j1")
+    번, _ = 창.넣기({"플랫폼": "web", "계정": "namu.wiki", "주소": "https://namu.wiki/w/A", "글": "짧은 요약"}, "web_search#1")
+    창.넣기({"플랫폼": "page", "계정": "namu.wiki", "주소": "https://namu.wiki/w/A", "글": "긴 본문 " * 50}, "read_page#2")
+    assert 창.꺼내기(번)["글"].startswith("긴 본문") and 창.꺼내기(번)["플랫폼"] == "web"
+    창.넣기({"주소": "https://namu.wiki/w/A", "글": "더 짧음"}, "web_search#3")
+    assert 창.꺼내기(번)["글"].startswith("긴 본문")
+
+
+def test_기사를_다시_읽어도_검색_요약_발췌가_맞는다():
+    # 검색 요약 뒤에 기사를 읽으면 본문이 더 긴 쪽으로 바뀌어 요약에서 따온 발췌가 «원문에 없음» 이 됐다(작은 것 9)
+    창 = 증거창고(가짜S3(), "통", "j1")
+    번, _ = 창.넣기({"플랫폼": "web", "계정": "news.example.com", "주소": "https://n.example.com/1", "날짜": "2026-09-24",
+                   "글": "하츠투하츠, 10월 5일 한국어 버전 공개 — 검색 요약"}, "web_search#1")
+    창.넣기({"플랫폼": "page", "계정": "news.example.com", "주소": "https://n.example.com/1", "날짜": "2026-09-24",
+            "글": "기사 본문 " + "가" * 300}, "read_page#2")
+    assert 창.발췌있나(번, "10월 5일 한국어 버전 공개") and 창.발췌있나(번, "기사 본문")

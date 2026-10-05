@@ -98,7 +98,7 @@ def 잔액() -> float | None:
 
 
 def 도구대화(메시지들: list, 한도: int, 도구들: list | None = None, 모델: str | None = None,
-            생각: bool = True, 읽기: int = 300, 잠자기=time.sleep, 지금=time.monotonic) -> dict:
+            생각: bool = True, 읽기: int = 300, 온도: float | None = None, 잠자기=time.sleep, 지금=time.monotonic) -> dict:
     """대화 한 걸음 — 지휘자·주제 다듬기·판정관이 쓴다.
 
     생각 모드(기본)에서 도구를 부르면 assistant 메시지에 `reasoning_content` 가 실려 온다. 같은 구간
@@ -112,6 +112,8 @@ def 도구대화(메시지들: list, 한도: int, 도구들: list | None = None,
         몸["tools"] = 도구들
     if not 생각:
         몸["thinking"] = {"type": "disabled"}
+    if 온도 is not None:
+        몸["temperature"] = 온도
     시작 = 지금()
     for 몇번째 in range(3):
         try:

@@ -686,14 +686,15 @@ def one_cover(body: dict) -> dict:
     """
     import cover
     slide = _slide(body)
-    난것 = cover.만들기(slide)
+    # 새 분야 표지에 진짜 사진이 오면 그리지 않고 그 사진을 깐다 — 돈 0(주간 소식 계획 4 과제 42++ D)
+    난것 = cover.사진깔기(slide) if slide.get("photo_url") else cover.만들기(slide)
     p = 난것["path"]
     몸 = {k: v for k, v in body.items() if k != "slide"}
     몸["slide"] = slide
     몸["media_url"] = _put(p, f"cover/{uuid.uuid4().hex}{p.suffix}")
     p.unlink(missing_ok=True)
     결과 = compose(몸)
-    결과.update({"via": f'{난것["모델"]}/생성(돈)',
+    결과.update({"via": "사진" if slide.get("photo_url") else f'{난것["모델"]}/생성(돈)',
                  "얼굴": 난것["인물"], "사진출처": 난것["사진출처"],
                  "사용량": 난것.get("사용량")})  # 주간 AI 소식이 쓴 돈을 센다(2026-10-01)
     return 결과

@@ -11,7 +11,8 @@ from datetime import datetime
 import cost
 
 외부도구 = {"web_search": "웹", "x_search": "X 검색", "x_account": "X 계정", "instagram_search": "인스타 검색",
-          "instagram_account": "인스타 계정", "threads_account": "스레드", "read_page": "페이지", "view_images": "그림 보기"}
+          "instagram_account": "인스타 계정", "threads_account": "스레드", "read_page": "페이지", "view_images": "그림 보기",
+          "image_search": "그림 검색"}
 정리선, 끝선, 새로움선 = 0.9, 1.0, 0.2
 
 
@@ -30,7 +31,7 @@ class 예산:
         return self.재료["호출기록"]
 
     def 호출수(self) -> int:
-        return len(self.기록)
+        return sum(1 for x in self.기록 if not x.get("저장해둔"))  # 긁은 결과를 다시 쓴 것은 호출이 아니다(계획 2-1)
 
     def 돈(self) -> float:
         return cost.합계(self.재료)["합계"]
@@ -47,7 +48,7 @@ class 예산:
         return "끝" if 비율 >= 끝선 else "정리" if 비율 >= 정리선 else "여유"
 
     def 한줄(self) -> str:
-        셈 = Counter(x["도구"] for x in self.기록)
+        셈 = Counter(x["도구"] for x in self.기록 if not x.get("저장해둔"))
         나눔 = " · ".join(f"{외부도구.get(k, k)} {v}" for k, v in 셈.items())
         줄 = (f"[남은 예산] 도구 {self.호출수()}/{self.한도['호출']}번" + (f" ({나눔})" if 나눔 else "")
              + f" · 돈 ${self.돈():.2f}/${self.한도['돈']:.2f} · {max(0, self.남은분()):.0f}분 남음")

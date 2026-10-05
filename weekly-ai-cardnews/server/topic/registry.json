@@ -21,5 +21,8 @@
     "입력": {"queries": "{검색어}", "maxPagesPerQuery": 1, "countryCode": "{나라}", "searchLanguage": "{언어}",
              "afterDate": "{시작하루전}", "beforeDate": "{끝다음}"}},
   "web_search_전체": {"도구": "apify~google-search-scraper", "모양": "web", "건당": 0.0045, "시작삯": 0.001, "최소상한": 0.5,
-    "입력": {"queries": "{검색어}", "maxPagesPerQuery": 1, "countryCode": "{나라}", "searchLanguage": "{언어}"}}
+    "입력": {"queries": "{검색어}", "maxPagesPerQuery": 1, "countryCode": "{나라}", "searchLanguage": "{언어}"}},
+  "image_search": {"도구": "simple.actor~google-images", "모양": "image", "건당": 0.0005, "시작삯": 0,
+    "입력": {"queries": "{검색어들}", "maxItems": "{개수}", "imageSize": "large", "timeRange": "{기간말}",
+             "imageType": "photo", "country": "KR", "language": "ko"}}
 }

@@ -138,3 +138,33 @@ def test_본문_뽑기_꾸러미가_깨져도_빈_값으로_내려간다(monkeyp
     monkeypatch.setattr(builtins, "__import__", 막기)
     글 = "<html><body><article>" + "<p>코르티스가 새 앨범을 냈다. 타이틀곡은 많은 사람에게 사랑받고 있다.</p>" * 12 + "</article></body></html>"
     assert page._본문뽑기(글, "https://news.example.com/a") == ("", "")
+
+
+def test_주소를_찾다_시스템_오류가_나도_못읽음으로(monkeypatch):
+    # 람다(리눅스)는 없는 도메인(cyworld.com)의 주소 찾기 실패를 gaierror 가 아니라 OSError(«Device or resource busy»)로
+    # 내기도 해 «못읽음» 이 아닌 «오류» 가 됐다(평가 싸이월드 판 두 번, 계획 4 D-12)
+    def 바쁨(*a, **kw):
+        raise OSError(16, "Device or resource busy")
+
+    monkeypatch.setattr(page.socket, "getaddrinfo", 바쁨)
+    with pytest.raises(page.페이지탈, match="주소를 찾을 수 없어요"):
+        page.읽기("https://cyworld.com")
+
+
+def test_사진_후보는_원본_주소로_받고_원래_주소는_작은주소로(monkeypatch):
+    # 슬리스트 썸네일 300×225 가 카드에서 흐렸다 — 원본 600×450 은 /news/photo/ 에 있다(계획 4 과제 42+ C)
+    assert page.원본주소("https://cdn.slist.kr/news/thumbnail/202610/770822_1179388_820_v150.jpg") == \
+        "https://cdn.slist.kr/news/photo/202610/770822_1179388_820.jpg"
+    assert page.원본주소("https://img1.daumcdn.net/thumb/R658x0.q70/?fname=https%3A%2F%2Ft1.daumcdn.net%2Fnews%2F"
+                       "202610%2F05%2Fa.jpg") == "https://t1.daumcdn.net/news/202610/05/a.jpg"
+    assert page.원본주소("https://imgnews.pstatic.net/image/076/2026/10/05/b.jpg?type=w860") == \
+        "https://imgnews.pstatic.net/image/076/2026/10/05/b.jpg"
+    for 그대로 in ("https://cdn.example.com/photo/1.jpg", "https://imgnews.pstatic.net/image/c.jpg?type=ofullfill",
+                "https://img1.daumcdn.net/thumb/R658x0/?fname=nothttp"):
+        assert page.원본주소(그대로) == 그대로
+    글 = ('<article><p>본문</p><img src="https://cdn.slist.kr/news/thumbnail/202610/770822_1179388_820_v150.jpg" '
+         'alt="무대"><img src="https://cdn.slist.kr/news/photo/202610/770822_1179388_820.jpg" alt="또"></article>')
+    바꿔치기(monkeypatch, 글.encode("utf-8"))
+    assert page.읽기("https://www.slist.kr/news/articleView.html?idxno=1")["사진후보"] == [
+        {"주소": "https://cdn.slist.kr/news/photo/202610/770822_1179388_820.jpg", "설명": "무대", "가로": 0, "세로": 0,
+         "작은주소": "https://cdn.slist.kr/news/thumbnail/202610/770822_1179388_820_v150.jpg"}]  # 같은 원본은 한 번만

@@ -48,7 +48,12 @@ class 증거창고:
         if 주소 in self._주소번호:
             번 = self._주소번호[주소]
             for k, v in 항목.items():
-                if v and not self.것들[번].get(k):
+                기존 = self.것들[번].get(k)
+                # 빈 칸만 채우되, 본문은 더 긴 쪽으로 — 검색 요약 뒤에 기사를 읽으면 본문이 남게(판 4, 계획 2-1)
+                if v and (not 기존 or (k == "글" and isinstance(v, str) and len(v) > len(기존))):
+                    if k == "글" and 기존 and _고르게(기존) not in _고르게(v):
+                        # 옛 글(검색 요약)도 남긴다 — 요약에서 따온 발췌가 «원문에 없음» 이 됐다(작은 것 9)
+                        self.것들[번]["앞글"] = "\n".join(x for x in (self.것들[번].get("앞글"), 기존) if x)
                     self.것들[번][k] = v
             return 번, False
         번 = f"E{len(self.것들) + 1}"
@@ -65,7 +70,7 @@ class 증거창고:
         x = self.꺼내기(번)
         if not x or not _고르게(발췌):
             return False
-        return _고르게(발췌) in _고르게((x.get("제목") or "") + "\n" + (x.get("글") or ""))
+        return _고르게(발췌) in _고르게("\n".join(x.get(k) or "" for k in ("제목", "글", "앞글")))
 
     def 배수(self, 번: str) -> float:
         """«평소의 몇 배 인기» — 그 글 반응 ÷ 같은 계정·같은 플랫폼의 기간 안 글 반응 가운데값(주간 AI 소식과 같은 셈)."""

@@ -6,12 +6,12 @@
 람다 시간이 모자라다(시간)» 에서 끝난다. 예산이 «끝» 이면 submit_result 만 주고, 두 걸음 안에 안 내면 빈 결과로 낸다."""
 from concurrent.futures import ThreadPoolExecutor
 
-from topic import board, instructions, tools, trace
+from topic import board, instructions, tools, trace, watchlist
 
 구간걸음 = 10
 지휘한도 = 20000   # 2026-10-01 시험 18걸음: 생각 최대 9,333 · 상위 5% 6,953 (계획 Task 10 머리)
 최대한도 = 40000   # 넘치면 한 번만 두 배로
-도구기다림초 = 330  # 나란한 도구 몫 — Apify 시작 60 + 기다림 200 + 받기 60(최종 검토). 걸음 시작 전에 읽기초 + 이만큼
+도구기다림초 = 390  # 나란한 도구 몫 — Apify 시작 60 + 기다림 200 + 받기 60(최종 검토) + 모을 때 사진 판정 60(계획 4 B, tools.사진마감초). 걸음 시작 전에 읽기초 + 이만큼
 
 
 def 읽기초(한도: int) -> int:
@@ -66,10 +66,12 @@ def 구간(현, 대화, 남은초, 저장) -> str:
 
 
 def _구간(현, 대화, 남은초, 저장, 메시지들: list, 자리: dict) -> str:
-    메시지들 += [{"role": "system", "content": instructions.지휘자},
-              {"role": "user", "content": board.지휘자글(현.판, 현.주문서, 현.창고, 현.예산.기록, 현.예산.한줄(),
-                                                       현.예산.경고())}]
-    한도, 안낸걸음 = 지휘한도, 0
+    첫글 = board.지휘자글(현.판, 현.주문서, 현.창고, 현.예산.기록, 현.예산.한줄(), 현.예산.경고())
+    if 현.재료.get("목록글") and not 현.재료.get("목록글보임"):  # 목록 판의 첫 구간에만 — 사용자 글 하나로(계획 4 설계 A-4)
+        첫글 += "\n\n" + watchlist.결과글(현.재료["목록글"])  # 다음 구간부터는 작업판 «이미 한 일» 에 남는다
+        현.재료["목록글보임"] = True
+    메시지들 += [{"role": "system", "content": instructions.지휘자}, {"role": "user", "content": 첫글}]
+    한도, 안낸걸음, 안적은걸음 = 지휘한도, 0, 0
     for _ in range(구간걸음):
         if 남은초() < 읽기초(한도) + 도구기다림초:
             return "시간"
@@ -109,6 +111,12 @@ def _구간(현, 대화, 남은초, 저장, 메시지들: list, 자리: dict) ->
         글들 = _걸음돌기(현, 답["도구호출"])
         for h, 글 in zip(답["도구호출"], 글들):
             메시지들.append({"role": "tool", "tool_call_id": h["id"], "content": 글})
+        # 작업판을 잘 안 적어 단계 표시가 멈췄다(진짜 한 판 17걸음에 5번) — 세 걸음이면 재촉한다
+        안적은걸음 = 0 if any(h["이름"] == "update_board" for h in 답["도구호출"]) else 안적은걸음 + 1
+        if 안적은걸음 >= 3 and not 낼것:
+            메시지들.append({"role": "user", "content": "세 걸음 동안 작업판을 안 적었다 — update_board 로 지금 단계와 "
+                                                       "판단을 적어라(대화는 끊기고 작업판만 남는다)."})
+            안적은걸음 = 0
         현.창고.쓰기()
         저장()
         if any(글.startswith("받았다") for h, 글 in zip(답["도구호출"], 글들) if h in 낼것):

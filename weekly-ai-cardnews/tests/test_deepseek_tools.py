@@ -87,3 +87,12 @@ def test_잔액은_달러만_읽고_못_읽으면_None(monkeypatch):
     assert deepseek.잔액() == 56.07
     monkeypatch.setattr(deepseek, "_받기", lambda 길, 시간: (_ for _ in ()).throw(OSError("끊김")))
     assert deepseek.잔액() is None
+
+
+def test_온도를_주면_temperature_를_싣고_안_주면_안_싣는다(monkeypatch):
+    # 판정관이 같은 질문에 «받쳐줌»·«모자람» 을 오갔다(판 3, 2026-10-01) — 판정은 흔들림 0 으로
+    받은 = []
+    monkeypatch.setattr(deepseek, "_보내기", lambda 몸, 시간: 받은.append(몸) or _답({"content": "{}"}, "stop"))
+    deepseek.도구대화([{"role": "user", "content": "판정"}], 300, 모델=deepseek.MODEL_빠름, 생각=False, 온도=0)
+    deepseek.도구대화([{"role": "user", "content": "지휘"}], 300)
+    assert 받은[0]["temperature"] == 0 and "temperature" not in 받은[1]

@@ -29,6 +29,14 @@ def test_목록은_최근부터_몇개만_재료_빼고():
     assert all("재료" not in x for x in 목록)
 
 
+def test_목록은_평가_판을_빼고_몇개를_채운다():
+    # 밤새 돈 평가 18판이 «최근 50판» 에 섞여 주간 판이 목록에서 밀렸다(계획 4 D-10)
+    c = 창()
+    for i in range(5):
+        c.쓰기({"job": f"20260930-00000{i}-aaaaaaaa", "week": f"{i}", **({"평가": True} if i >= 3 else {})})
+    assert [x["week"] for x in c.목록(3)] == ["2", "1", "0"]
+
+
 def test_그림올리기는_png_로_끝나는_주소():
     주소 = 창().그림올리기("20260930-000000-aaaaaaaa", 4, b"PNG")
     assert 주소.split("?")[0].endswith("/weekly/img/20260930-000000-aaaaaaaa/04.png")

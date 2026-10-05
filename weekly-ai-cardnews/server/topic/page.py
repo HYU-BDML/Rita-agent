@@ -27,6 +27,7 @@ _SNS = re.compile(r"^https?://(?:www\.|m\.)?(instagram\.com|x\.com|twitter\.com|
 _안그림 = re.compile(r"logo|icon|sprite|avatar|profile|btn|button|banner|blank|1x1|pixel|emoji|loading|\.svg|\.gif",
                     re.I)
 _건너뛸태그 = {"script", "style", "noscript", "nav", "header", "footer", "aside", "form", "button", "svg"}
+_ndsoft썸네일 = re.compile(r"^(.*/news/)thumbnail/(\d{6})/([^/]+?)_v\d+(\.\w+)$")
 _날짜메타 = ("article:published_time", "og:article:published_time", "datepublished", "pubdate", "publishdate",
            "date", "dc.date.issued", "article:modified_time")
 
@@ -41,7 +42,7 @@ def _안전한가(주소: str) -> None:
         raise 페이지탈("http·https 주소만 읽어요")
     try:
         주소들 = {a[4][0] for a in socket.getaddrinfo(p.hostname, p.port or (443 if p.scheme == "https" else 80))}
-    except (socket.gaierror, UnicodeError):
+    except (OSError, UnicodeError):  # gaierror 도 OSError — 람다(리눅스)는 없는 도메인을 OSError(EAI_SYSTEM)로도 낸다(계획 4 D-12)
         raise 페이지탈("주소를 찾을 수 없어요") from None
     for a in 주소들:
         if not ipaddress.ip_address(a.split("%")[0]).is_global:
@@ -79,6 +80,25 @@ def 받기(주소: str, 최대바이트: int = 최대바이트, 지금=time.mono
         raise
     except Exception as e:
         raise 페이지탈(f"못 열었어요 — {type(e).__name__}: {str(e)[:100]}") from None
+
+
+def 원본주소(주소: str) -> str:
+    """기사 사진의 원본 주소 — 작은 썸네일이 카드에서 흐렸다(계획 4 과제 42+ C). ndsoft 썸네일·다음 thumb·네이버 ?type=w…
+    만 바꾸고 모르는 꼴은 그대로."""
+    p = urllib.parse.urlsplit(주소)
+    호스트 = (p.hostname or "").lower()
+    m = _ndsoft썸네일.match(p.path)
+    if m:
+        return urllib.parse.urlunsplit(p._replace(path=f"{m.group(1)}photo/{m.group(2)}/{m.group(3)}{m.group(4)}"))
+    if 호스트.endswith("daumcdn.net") and "/thumb/" in p.path:
+        fname = urllib.parse.parse_qs(p.query).get("fname") or [""]
+        return fname[0] if fname[0].startswith(("http://", "https://")) else 주소
+    if 호스트.endswith("pstatic.net"):
+        묻기 = urllib.parse.parse_qsl(p.query, keep_blank_values=True)
+        남은 = [(k, v) for k, v in 묻기 if not (k == "type" and v.startswith("w"))]
+        if len(남은) < len(묻기):
+            return urllib.parse.urlunsplit(p._replace(query=urllib.parse.urlencode(남은)))
+    return 주소
 
 
 def _수(값) -> int:
@@ -223,10 +243,11 @@ def 읽기(주소: str) -> dict:
     for x in [{"주소": 뜯.메타[k], "설명": "대표 그림", "가로": 0, "세로": 0}
               for k in ("og:image", "twitter:image") if 뜯.메타.get(k)] + 뜯.그림:
         절대 = urllib.parse.urljoin(마지막, x["주소"])
+        원본 = 원본주소(절대)  # 원래 주소는 «작은주소» — 판정관이 원본을 못 받으면 그것으로(42+ C)
         작다 = (x["가로"] and x["가로"] < 200) or (x["세로"] and x["세로"] < 200)
-        if 작다 or _안그림.search(절대) or any(y["주소"] == 절대 for y in 사진):
+        if 작다 or _안그림.search(절대) or any(y["주소"] == 원본 for y in 사진):
             continue
-        사진.append({**x, "주소": 절대})
+        사진.append({**x, "주소": 원본, **({"작은주소": 절대} if 원본 != 절대 else {})})
     return {"플랫폼": "page", "계정": urllib.parse.urlsplit(마지막).netloc.lower().removeprefix("www."), "주소": 마지막,
             "제목": (뜯.메타.get("og:title") or 뜯.제목).strip(),
             "시각": 시각.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if 시각 else "",

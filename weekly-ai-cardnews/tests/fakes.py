@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """시험용 가짜들 — 돈 드는 것(딥시크·OpenAI·옛 서버 굽기)과 S3 를 대신한다."""
+from datetime import datetime, timezone
 import io
 from types import SimpleNamespace
 
@@ -13,9 +14,15 @@ class 없음탈(Exception):
 class 가짜S3:
     def __init__(self):
         self.것들 = {}
+        self.쓴때 = {}
+        self.때 = lambda: datetime.now(timezone.utc)  # 시험이 바꿔 «며칠 전에 쓴 것» 을 만든다
 
     def put_object(self, Bucket, Key, Body, ContentType=None):
         self.것들[Key] = Body if isinstance(Body, bytes) else Body.encode("utf-8")
+        self.쓴때[Key] = self.때()
+
+    def delete_object(self, Bucket, Key):
+        self.것들.pop(Key, None)
 
     def get_object(self, Bucket, Key):
         if Key not in self.것들:
@@ -26,7 +33,8 @@ class 가짜S3:
         열쇠들 = sorted(k for k in self.것들 if k.startswith(Prefix))
         시작 = int(ContinuationToken or 0)
         조각 = 열쇠들[시작:시작 + 2]  # 두 개씩 끊어 «이어 받기» 도 시험한다
-        답 = {"Contents": [{"Key": k} for k in 조각], "IsTruncated": 시작 + 2 < len(열쇠들)}
+        답 = {"Contents": [{"Key": k, "LastModified": self.쓴때.get(k)} for k in 조각],
+              "IsTruncated": 시작 + 2 < len(열쇠들)}
         if 답["IsTruncated"]:
             답["NextContinuationToken"] = str(시작 + 2)
         return 답

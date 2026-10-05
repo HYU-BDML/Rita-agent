@@ -23,6 +23,7 @@
 
 열쇠는 코드에 없다. 환경변수 `GEMINI_API_KEY` 로만 받는다(`deploy.sh` 가 넣어 준다).
 """
+import io
 import json
 import re
 import uuid
@@ -104,7 +105,7 @@ def gemini_image(prompt: str, 참조: list, 폴더: Path, 이름: str) -> Path:
     조각 = [{"text": prompt[:4000]}]
     for p in 참조:
         p = Path(p)
-        종류 = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+        종류 = {".png": "image/png", ".webp": "image/webp"}.get(p.suffix.lower(), "image/jpeg")  # 얼굴 사진이 webp 일 수 있다(계획 4 D-8)
         조각.append({"inline_data": {"mime_type": 종류,
                                      "data": base64.b64encode(p.read_bytes()).decode()}})
     r = requests.post(GEMINI_URL % GEMINI_MODEL,
@@ -223,7 +224,7 @@ def openai_image_사용량(prompt: str, 참조: list, 폴더: Path, 이름: str)
     파일들 = []
     for i, p in enumerate(참조):
         p = Path(p)
-        종류 = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+        종류 = {".png": "image/png", ".webp": "image/webp"}.get(p.suffix.lower(), "image/jpeg")  # 얼굴 사진이 webp 일 수 있다(계획 4 D-8)
         파일들.append(("image[]", (p.name, p.read_bytes(), 종류)))
     머리 = {"Authorization": f"Bearer {_열쇠('OPENAI_API_KEY')}"}
     if 파일들:
@@ -328,7 +329,7 @@ def 로고찾기(브랜드: str) -> Path | None:
 
 
 def 프롬프트(slide: dict, 인물: str | None, 밈: bool = False, 로고: str | None = None,
-           아래비율: int = 45) -> str:
+           아래비율: int = 45, 여럿: int = 0) -> str:
     """규칙표 §4 의 네 줄 공식으로 조립한다.
 
     ①장면·④화풍은 대본(`gen_prompt_en`)이 들고 온다. ②배역은 얼굴이 있을 때만,
@@ -354,7 +355,13 @@ def 프롬프트(slide: dict, 인물: str | None, 밈: bool = False, 로고: str
         줄.append(f"IMAGE {밈번호} is a meme still. Take ONLY its composition, camera "
                   f"framing, lighting and background mood from it. Remove every caption "
                   f"or subtitle burned into it.")
-    if 얼굴번호:
+    if 얼굴번호 and 여럿 >= 2:
+        # 새 분야 표지 — 그룹이면 단체 사진 속 사람들을 모두 그린다(주간 소식 계획 3, 사용자 2026-10-04)
+        줄.append(f"IMAGE {얼굴번호} is a photo of the {여럿} members of {인물}. "
+                  f"**Draw exactly these {여럿} people.** Every face, hairstyle and hair colour must come from "
+                  f"IMAGE {얼굴번호} so each one is immediately recognizable, and none may look like the people in "
+                  f"IMAGE {밈번호 or '1'}. Keep the composition of the scene, not its people.")
+    elif 얼굴번호:
         줄.append(f"IMAGE {얼굴번호} is a photo of {인물}. "
                   f"**Replace the person entirely with {인물}.** The face, head shape, "
                   f"skin tone and hair in the final image must be {인물}'s, taken from "
@@ -365,7 +372,13 @@ def 프롬프트(slide: dict, 인물: str | None, 밈: bool = False, 로고: str
         줄.append(f"IMAGE {로고번호} is the {로고} logo. Place it clearly in the upper "
                   f"area of the frame as a clean graphic element. Keep its shape and "
                   f"colours exact — do not restyle or recolour it.")
-    줄.append(조판제약.replace("bottom 45 percent", f"bottom {아래비율} percent"))
+    제약 = 조판제약.replace("bottom 45 percent", f"bottom {아래비율} percent")
+    if 얼굴번호 and 여럿 >= 2:
+        제약 = 제약.replace(
+            "Exactly one hero fills the frame — one person, one object, or one character "
+            "(a pair only when the idea needs two), taking up more than half the picture.",
+            f"The whole group of {여럿} people stands together as one hero unit, filling more than half the picture.")
+    줄.append(제약)
     return "\n\n".join(줄)
 
 
@@ -393,6 +406,45 @@ def _그림에로고있나(프롬: str) -> bool:
     return bool(_로고낱말.search(프롬 or ""))
 
 
+def _그림꼴(몸: bytes) -> str | None:
+    """그림 바이트의 앞머리로 꼴을 본다 — 주소 끝·내용꼴 머리글은 틀릴 때가 있다."""
+    if 몸[:2] == b"\xff\xd8":
+        return "jpg"
+    if 몸[:8] == b"\x89PNG\r\n\x1a\n":
+        return "png"
+    if 몸[:4] == b"RIFF" and 몸[8:12] == b"WEBP":
+        return "webp"
+    if 몸[:6] in (b"GIF87a", b"GIF89a"):
+        return "gif"
+    return None
+
+
+def _사진받기(주소: str, 폴더: Path, 인물: str) -> dict | None:
+    """새 분야 표지 얼굴 — 그 소식의 실제 사진(주간 소식 창고)을 받는다. 못 받으면 얼굴 없이 간다.
+    받은 그림의 진짜 꼴로 둔다 — png·webp 도 .jpg 로 두어 고치기에 다른 꼴로 보냈다. 고치기는 GIF 를 안 받아
+    GIF·모르는 꼴은 첫 장을 PNG 로 바꾸고, 그림으로 못 읽으면 얼굴 없이(계획 4 D-8)."""
+    try:
+        r = requests.get(주소, timeout=60)
+        r.raise_for_status()
+    except Exception as e:
+        print(f"  (소식 사진을 못 받음 — 얼굴 없이 간다: {type(e).__name__})")
+        return None
+    Path(폴더).mkdir(parents=True, exist_ok=True)
+    꼴 = _그림꼴(r.content)
+    p = Path(폴더) / f"face-{uuid.uuid4().hex[:8]}.{꼴 if 꼴 in ('jpg', 'png', 'webp') else 'png'}"
+    if 꼴 in ("jpg", "png", "webp"):
+        p.write_bytes(r.content)
+    else:
+        try:
+            from PIL import Image
+            with Image.open(io.BytesIO(r.content)) as im:
+                im.convert("RGB").save(p, "PNG")
+        except Exception as e:
+            print(f"  (소식 사진을 그림으로 못 읽음 — 얼굴 없이 간다: {type(e).__name__})")
+            return None
+    return {"person": 인물, "path": p, "license": "소식 사진", "author": 주소.split("?")[0][-80:]}
+
+
 def _사람있나(프롬: str) -> bool:
     """그림 지시가 «진짜 사람» 을 세웠나. `dify/07_훅검증.py` 와 같은 낱말이다.
 
@@ -401,6 +453,31 @@ def _사람있나(프롬: str) -> bool:
     둘 다 고쳐야 한다.
     """
     return bool(_사람낱말.search(프롬)) and not _비인간낱말.search(프롬)
+
+
+표지크기 = (1080, 1350)
+사진위몫 = 0.15  # 세로로 넘친 몫 가운데 위에서 자르는 비율 — 얼굴이 대개 위쪽에 있다
+
+
+def 사진깔기(slide: dict, 폴더: Path | None = None) -> dict:
+    """새 분야 표지 — 그 소식의 진짜 사진(photo_url)을 그대로 배경으로 깐다. GPT 로 다시 그리지 않는다(사람은 AI 로 그리지
+    않는다, 주간 소식 계획 4 과제 42++ D). 1080×1350 으로 꽉 차게 키우고 자른다 — 가로는 가운데, 세로는 넘친 몫의 위 15%
+    지점부터. 돌려주는 것은 만들기와 같은 꼴, 그림 돈은 0."""
+    from PIL import Image
+    r = requests.get(slide["photo_url"], timeout=60)
+    r.raise_for_status()
+    폴더 = Path(폴더 or (TMP / "cover"))
+    폴더.mkdir(parents=True, exist_ok=True)
+    가, 세 = 표지크기
+    with Image.open(io.BytesIO(r.content)) as im:
+        im = im.convert("RGB")
+        배 = max(가 / im.width, 세 / im.height)
+        새 = im.resize((max(가, round(im.width * 배)), max(세, round(im.height * 배))), Image.LANCZOS)
+        왼, 위 = (새.width - 가) // 2, round((새.height - 세) * 사진위몫)
+        p = 폴더 / f"cover-{uuid.uuid4().hex[:8]}.jpg"
+        새.crop((왼, 위, 왼 + 가, 위 + 세)).save(p, "JPEG", quality=92)
+    return {"path": p, "인물": slide.get("brand") or None, "사진출처": slide["photo_url"], "참조": [],
+            "모델": "사진", "사용량": {"입력글토큰": 0, "입력그림토큰": 0, "출력토큰": 0}}
 
 
 def 만들기(slide: dict, 폴더: Path | None = None,
@@ -426,14 +503,23 @@ def 만들기(slide: dict, 폴더: Path | None = None,
         로고그림 = 로고찾기(브랜드)
 
     import faces                                   # deploy.sh 가 procure/ 에서 넣어 준다
-    얼굴 = faces.for_company(브랜드, 폴더) if 브랜드 else None
+    # 새 분야 표지(주간 소식 계획 3) — 그 소식의 실제 사진이 얼굴 참조다. 없으면 예전처럼 위키미디어 얼굴 표
+    여럿 = int(slide.get("face_count") or 0) if slide.get("face_url") else 0
+    if slide.get("face_url"):
+        얼굴 = _사진받기(slide["face_url"], 폴더, slide.get("face_person") or 브랜드)
+    elif slide.get("face_none"):  # 새 분야 표지에 얼굴이 없다 — 주인공 이름으로 회사 대표 얼굴 표를 보지 않는다(계획 4 D-9)
+        얼굴 = None
+    else:
+        얼굴 = faces.for_company(브랜드, 폴더) if 브랜드 else None
 
     # **안전망: 그림에 사람이 없으면 얼굴 사진을 안 붙인다.**
     # 붙이면 「얼굴·머리 모양을 그 사람 것으로 바꿔라」 명령이 함께 나가는데,
     # 그림 지시가 점토 인형이면 모델이 둘을 못 합쳐 **인형 얼굴을 지워 버린다**
     # (실측 2026-08-21: 머리가 통째로 민둥민둥한 표지). 훅 검증이 먼저 막지만
     # 두 번 다 못 고치면 그대로 굽히므로 여기서도 막는다.
-    if 얼굴 and not _사람있나(slide.get("gen_prompt_en") or slide.get("gen_prompt") or ""):
+    # 새 분야 표지(face_url)는 얼굴을 센 사진이라 낱말과 상관없이 넣는다 — «soccer player» 를 사람이 아니라고 보고 얼굴을
+    # 버려 밈 속 아이가 그대로 남았다(손흥민 표지, 주간 소식 계획 3). 주간 AI 소식은 예전 그대로.
+    if 얼굴 and not slide.get("face_url") and not _사람있나(slide.get("gen_prompt_en") or slide.get("gen_prompt") or ""):
         print("  (얼굴 안 붙임 — 그림 지시에 사람이 없다. 로고 전략으로 간다)")
         얼굴 = None
 
@@ -460,13 +546,13 @@ def 만들기(slide: dict, 폴더: Path | None = None,
     이름 = f"cover-{uuid.uuid4().hex[:8]}"
     if 어디 == "gemini":
         # 4:5 를 바로 받으니 자르지도, 프롬프트를 고치지도 않는다.
-        글 = 프롬프트(slide, 인물, bool(밈그림), 로고이름)
+        글 = 프롬프트(slide, 인물, bool(밈그림), 로고이름, 여럿=여럿 if 얼굴 else 0)
         p, 사용량 = gemini_image(글, 쓸것, 폴더, 이름), None
         모델 = GEMINI_MODEL
     elif 어디 == "openai":
         # 1088x1360(4:5)로 바로 받으니 자르지도, 프롬프트를 고치지도 않는다 — 아래 45% 그대로.
         # (예전엔 2:3 을 뽑아 위를 잘라서 «아래 38%» 로 줄여 적었다)
-        글 = 프롬프트(slide, 인물, bool(밈그림), 로고이름)
+        글 = 프롬프트(slide, 인물, bool(밈그림), 로고이름, 여럿=여럿 if 얼굴 else 0)
         p, 사용량 = openai_image_사용량(글, 쓸것, 폴더, 이름)
         모델 = OPENAI_MODEL
     else:

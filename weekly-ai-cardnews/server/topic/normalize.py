@@ -205,3 +205,22 @@ def 구글결과(원본: list) -> list:
                         "제목": o.get("title") or "", "글": o.get("description") or "", "시각": _시각글(시각),
                         "날짜": 한국날짜(시각), "미디어": [], "반응": {}, "답글": False})
     return 난것
+
+
+# ── 이미지 검색(계획 4 과제 42++ A) ─────────────────────────────────────────
+
+def 그림검색결과(원본: list) -> list:
+    """결과 한 건 = 증거 한 건 — 주소는 그림이 실린 쪽, 미디어는 원본 크기를 아는 그림 한 장. 날짜는 모른다(기간은 액터가
+    거른다) — «이미지검색» 표시로 사진 찾기가 날짜 거르기 대신 제목을 본다."""
+    난것 = []
+    for o in 원본 or []:
+        if not isinstance(o, dict):
+            continue
+        그림, 쪽 = o.get("imageUrl") or "", o.get("pageUrl") or ""
+        if not 그림.startswith("http") or not 쪽.startswith("http"):
+            continue
+        난것.append({"플랫폼": "web", "계정": (o.get("domain") or urlparse(쪽).netloc).lower().removeprefix("www."),
+                    "주소": 쪽, "제목": o.get("title") or "", "글": "", "시각": "", "날짜": "", "반응": {}, "답글": False,
+                    "이미지검색": True, "미디어": [{"갈래": "사진", "주소": 그림, "대표화면": "",
+                                               "가로": _수(o, "imageWidth"), "세로": _수(o, "imageHeight")}]})
+    return 난것
