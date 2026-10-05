@@ -79,3 +79,24 @@ def test_카드_다시_굽기_길이_앞문에_있다():
 def test_매주_볼_곳_바꾸기_길이_앞문에_있다():
     # 앞문(API Gateway)은 길들에 적은 길만 받는다 — 없으면 배포 뒤 «매주 볼 곳 바꾸기» 가 404 를 받는다(계획 4)
     assert "POST /topic/fields/{field}/list" in deploy.길들
+
+
+def test_판_지우기_길과_권한이_있다():
+    # 지난 결과 지우기(사용자 2026-10-05) — 앞문 길이 없으면 404, 권한이 없으면 운영에서 늘 500
+    import json
+    assert "POST /jobs/{job}/delete" in deploy.길들
+    받은 = {}
+
+    class 가짜iam:
+        def get_role(self, RoleName):
+            return {"Role": {"Arn": "arn:aws:iam::0:role/x"}}
+
+        def attach_role_policy(self, **kw):
+            pass
+
+        def put_role_policy(self, **kw):
+            받은.update(kw)
+
+    deploy._역할(가짜iam())
+    지우기 = [s["Resource"] for s in json.loads(받은["PolicyDocument"])["Statement"] if s["Action"] == "s3:DeleteObject"]
+    assert any(r.endswith("/weekly/jobs/*") for r in 지우기)

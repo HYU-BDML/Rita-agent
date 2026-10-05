@@ -5,19 +5,10 @@ export function 주차글(w) {
   return `${w.label} (${sm}/${sd}~${em}/${ed})`;
 }
 
-export function 시각(iso) {
-  if (!iso) return "";
-  const k = new Date(Date.parse(iso) + 9 * 3600e3);
-  const 두 = (n) => String(n).padStart(2, "0");
-  return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${두(k.getUTCHours())}:${두(k.getUTCMinutes())}`;
-}
-
 export function 걸린시간(started, updated) {
   const s = Math.max(0, Math.round((Date.parse(updated) - Date.parse(started)) / 1000));
   return `${Math.floor(s / 60)}분 ${s % 60}초`;
 }
-
-const 아이콘 = { "됨": "✅", "만드는 중": "⏳", "실패": "❌", "멈춤": "⏸" };
 
 export function 단계줄(단계) {
   const 표 = { "됨": "✅", "하는 중": "⏳", "실패": "❌" }[단계.state] || "⬜";
@@ -54,13 +45,16 @@ function 건수글(job) {
   return 목표 ? `${목표}건 중 ${n}건` : `${n}건`;
 }
 
+// 지난 결과 한 줄 — 카드뉴스가 된 판만 온다(사용자 2026-10-05). 이름(카드이름)은 서버가 카드 표지와 같은 셈으로 짓는다
 export function 목록줄(job) {
-  const 주제 = job.kind === "주제";
-  const 뒤 = job.state === "됨" ? (주제 ? 건수글(job) : `${job.result?.slides ?? "?"}장`)
-    : job.state === "만드는 중" ? `만드는 중 ${job.pct ?? 0}%`
-    : (job.error || job.state);
-  const 이름 = 주제 ? `🔎 ${판이름(job)} (${짧은날(job.order?.시작)}~${짧은날(job.order?.끝)})` : job.week;
-  return `${아이콘[job.state] || "•"} ${이름} · ${시각(job.started)} · ${뒤}`;
+  const 장수 = job.kind === "주제" ? job.result?.카드?.장수 : job.result?.slides;
+  return `${job.카드이름} · ${장수 ?? "?"}장`;
+}
+
+// 넘겨보기 주소 — 다 된(«됨») 판에 카드뉴스가 있을 때만. AI 소식 판은 viewer, 새 분야 판은 카드.보기
+export function 카드주소(job) {
+  if (job?.state !== "됨") return "";
+  return (job.kind === "주제" ? job.result?.카드?.보기 : job.result?.viewer) || "";
 }
 
 // 카드가 실패했거나 빠진 장이 있는 «됨» 판 — 카드만 대본부터 다시 굽는다(계획 4 D-4). 한 판에 두 번까지, 누구나
@@ -84,24 +78,6 @@ export function 카드줄(result) {
   if (카?.오류) return { 글: `카드뉴스를 못 만들었어요 — ${사람말(카.오류)}` };
   if (result && !(result.bundle || []).length) return { 글: "소식이 없어서 카드뉴스는 만들지 않았어요" };
   return null;
-}
-
-export function 빠진것들(result) {
-  if (!result) return [];
-  if (result.bundle) {
-    return [
-      ...(result.dropped || []).map((x) => `빠진 소식: ${x.사건} — ${뺀까닭(x.까닭)}`),
-      ...(result.unfilled || []).map((x) => `못 채운 칸: ${x.slot} — ${사람말(x.why)}`
-        + ((x.searched || []).length ? ` (찾아본 곳: ${x.searched.map(곳말).join(", ")})` : "")
-        + (x.more_cost ? ` · 더 쓰면 ${사람말(x.more_cost)}` : "")),
-      ...끈도구줄들(result.blocked),
-      ...((result.카드 || {}).빠진장 || []).map((x) => `못 구운 장: ${x.no}번 — ${x.why}`),
-    ];
-  }
-  return [
-    ...(result.missing_slides || []).map((x) => `빠진 장: ${x.no}번 (${x.why})`),
-    ...(result.missing_brands || []).map((x) => `빠진 브랜드: ${x.brand} — ${x.why}`),
-  ];
 }
 
 // 주제 판은 자료 수집(Apify)도 짐작해서 더한다 — 주간 판은 옛 서버가 긁어서 «Apify 뺌».
@@ -173,31 +149,20 @@ export function 칸줄(칸) {
   return `${표} ${칸.사건 || "빈칸"}` + (칸.미디어 && 칸.미디어 !== "없음" ? ` · ${칸.미디어}` : "");
 }
 
-const 플랫폼이름 = { x: "X", instagram: "인스타", threads: "스레드", page: "기사", web: "웹" };
-
-export function 소식머리(d) {
-  return `${d.순서}. ${d.주인공} · ${d.사건}`;
-}
-
-export function 소식밑줄(d) {
-  const r = d.반응 || {};
-  const 계정 = ["page", "web"].includes(d.출처.플랫폼) ? d.출처.계정 : `@${d.출처.계정}`;  // 기사는 계정이 아니라 사이트
-  return `${d.날짜} · ${플랫폼이름[d.출처.플랫폼] || d.출처.플랫폼} ${계정}`
-    + (r.좋아요 ? ` · ♥ ${r.좋아요.toLocaleString("ko-KR")}` : "")
-    + (d.배수 >= 1.5 ? ` · 평소의 ${d.배수}배 인기` : "");
-}
-
-// 분야 지우기 표를 브라우저에 간직하는 열쇠 — 저장한 브라우저에서만 지운다(계획 2-1 설계 4장)
-export const 지우기표열쇠 = (field) => `분야표:${field}`;
-
 // 대화를 기다리는 동안 흐르는 초 — «생각 중이에요…» 만 보고 기다렸다(판 3 대화). 보통 10~40초는 판 3 대화 실측(9·29·40초).
 export function 생각중줄(보낸때, 지금) {
   const 초 = Math.round((Date.parse(지금) - Date.parse(보낸때)) / 1000);
-  return Number.isFinite(초) ? `지휘자가 생각 중이에요… ${Math.max(0, 초)}초 (보통 10~40초)` : "지휘자가 생각 중이에요… (보통 10~40초)";
+  return Number.isFinite(초) ? `생각 중이에요… ${Math.max(0, 초)}초 (보통 10~40초)` : "생각 중이에요… (보통 10~40초)";
 }
 
 export function 대화줄(m) {
-  return `${m.who === "사람" ? "나" : "지휘자"}: ${m.text}`;
+  return m.who === "사람" ? `나: ${m.text}` : m.text;  // «지휘자:» 이름표는 뺀다(사용자 10-05) — 말풍선이 왼쪽이라 누가 했는지 보인다
+}
+
+// 주문서가 뜨면 채팅이 아래를 가리킨다 — «모아볼게요» 만 하고 주문서가 조용히 떠 사람이 몰랐다(사용자 10-05)
+export function 주문서안내(d) {
+  if (!d?.order || d.job || d.state === "생각 중") return "";
+  return "아래 «주문서»를 보고 괜찮으면 «이대로 모으기»를 눌러 주세요. 고칠 점은 여기에 말로 적어 보내 주세요.";
 }
 
 export function 지갑띠글(w) {
@@ -210,11 +175,6 @@ export function 지갑띠글(w) {
 
 export function 새분야막힘(w) {
   return Boolean(w?.apify?.멈춤 || w?.deepseek?.멈춤);
-}
-
-// 기록에서 온 주소는 http(s) 만 링크·미디어로 쓴다
-export function 안전주소(u) {
-  return /^https?:\/\//i.test(u || "") ? u : "";
 }
 
 const 넓이 = { A: "좁음", B: "보통", C: "넓음" };
@@ -236,30 +196,6 @@ function 곳말(곳) {
   const 핵 = 뒤.join(":").trim();
   if (!핵) return String(곳);
   return 플랫폼말[앞] ? `${플랫폼말[앞]} @${핵.replace(/^@/, "")}` : 핵;
-}
-
-// 관문이 뺀 까닭(관문 말)을 사람 말로 — «…발췌로 받쳐지지 않음(모자람: )» 이 그대로 떴다(판 3)
-const 뺀까닭꼴 = [[/글자 그대로 없음/, "따온 문구가 원문과 달라서"], [/기간\(.*\) 밖/, "기간 밖 글이라서"],
-  [/날짜를 모름/, "원문 날짜를 몰라서"], [/원문 날짜 .* 와 다름/, "날짜가 원문과 달라서"],
-  [/같은 사건/, "다른 소식과 같은 일이라서"], [/같은 출처/, "다른 소식과 같은 글이라서"],
-  [/숫자 .* 발췌에 없음/, "원문에 없는 숫자가 있어서"], [/없는 증거 번호/, "찾은 적 없는 글이라서"],
-  [/절대 날짜로/, "«지난주» 같은 말을 써서"], [/미디어|사진 후보|기사 사진|^media/, "사진·영상이 그 글 것이 아니라서"],
-  [/^빈 칸/, "내용이 덜 채워져서"]];
-// «발췌»(받침 없음) → «원문»(받침 있음) — 조사도 바꾼다. «원문는» 이 떴다(배포 뒤 확인 10-03)
-function 원문말(글) {
-  return 글.replace(/발췌(는|가|를|와|로)/g, (_, 조) => `원문${{ 는: "은", 가: "이", 를: "을", 와: "과", 로: "으로" }[조]}`)
-    .replace(/발췌/g, "원문");
-}
-
-function 뺀까닭(글) {
-  const 판정 = String(글 || "").match(/받쳐지지 않음\((모자람|어긋남): ?([\s\S]*)\)$/);
-  if (판정) {
-    const 첫 = 판정[1] === "어긋남" ? "원문과 반대되는 내용이라서" : "원문에 없는 내용이 들어가 있어서";
-    const 까닭 = 원문말(사람말(판정[2]));
-    return 까닭 ? `${첫} (${까닭})` : 첫;
-  }
-  const 맞은 = 뺀까닭꼴.find(([식]) => 식.test(String(글 || "")));
-  return 맞은 ? 맞은[1] : 사람말(글);
 }
 
 // 지휘자 판단 줄·단계 메모를 화면용 사람 말로 — 판단 기록(모으는 동안엔 펼쳐짐)·상세 보기에 E52·read_page·«발췌로 받쳐지지»
@@ -352,46 +288,4 @@ export function 남길번호들(줄들) {
 export function 줄단추글(줄) {
   if (줄.켬) return "✕";
   return 줄.갈래 === "새로 찾은 곳" ? "넣기" : "되살리기";
-}
-
-// 목록 판 결과 맨 위 한 줄 — 저장한 목록 중 몇 곳을 봤고 어디를 못 봤나
-export function 목록결과줄(result) {
-  const m = result?.목록;
-  if (!m) return "";
-  const 못 = (m.못본곳 || []).map((x) => `${x.글} (${x.까닭})`);
-  return `매주 볼 곳 ${m.전체}곳 중 ${m.본곳}곳 봄` + (못.length ? ` · 못 본 곳: ${못.join(", ")}` : "");
-}
-
-const 도구이름 = { x_search: "X 검색", x_account: "X 계정", instagram_search: "인스타 검색", instagram_account: "인스타 계정",
-  threads_account: "스레드", web_search: "웹 검색", read_page: "기사 읽기", view_images: "사진 판정" };
-
-// 도중에 끈 도구를 까닭마다 한 줄로 — «Apify 분량» 같은 말은 사람 말로(최종 검토 I5)
-function 끈도구줄들(blocked) {
-  const 묶음 = new Map();
-  for (const x of blocked || []) {
-    const 까닭 = /Apify 분량/.test(x.까닭) ? "자료 모으기 분량이 떨어져서"
-      : /^두 번 실패/.test(x.까닭) ? "두 번 고장 나서" : 사람말(x.까닭);
-    묶음.set(까닭, [...(묶음.get(까닭) || []), 도구이름[x.도구] || x.도구]);
-  }
-  return [...묶음].map(([까닭, 도구들]) => `도중에 끈 도구: ${도구들.join("·")} — ${까닭}`);
-}
-
-// 수리공 까닭의 안쪽 말 — «재현: 고장: 실행 FAILED» 를 처음 온 사람이 못 읽었다(과제 35 화면 점검)
-function 수리까닭(글) {
-  return 사람말(글)
-    .replace(/^(?:\s*(?:재현|고장|입력|이상함|막힘|돈)\s*:\s*)+/, "")
-    .replace(/\bFAILED\b/g, "실패").replace(/\bTIMED-OUT\b/g, "시간 초과").replace(/\bABORTED\b/g, "중단");
-}
-
-// 수리공이 이 판에서 고친·못 고친 도구(계획 4 C-5) — 사람 말로 한 줄씩
-export function 수리줄들(result) {
-  const 수 = result?.수리;
-  if (!수) return [];
-  const 이름 = (x) => 도구이름[x] || x;
-  return [
-    ...(수.고침 || []).map((x) => `고친 도구: ${이름(x.도구)} — ${사람말(x.까닭)}` + (x.돈 ? ` (${달러(x.돈)})` : "")),
-    ...(수.못고침 || []).map((x) => `못 고친 도구: ${이름(x.도구)} — ${수리까닭(x.까닭)}`
-      + (x["사람이 할 일"] ? ` · 사람이 할 일: ${x["사람이 할 일"]}` : "")),
-    ...(수.고치는중 || []).map((x) => `고치는 중이던 도구: ${이름(x)} — 다음 판부터 고쳐진 채로 써요`),
-  ];
 }

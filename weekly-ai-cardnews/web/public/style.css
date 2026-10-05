@@ -48,10 +48,6 @@ textarea { width: 100%; font: inherit; font-size: 15px; padding: 10px; border-ra
 .단계표 li.지남 { color: CanvasText; }
 .단계표 li.지금 { background: var(--파랑); border-color: var(--파랑); color: #fff; }
 .칸들 { list-style: none; padding: 0; font-size: 14px; line-height: 1.9; }
-.소식 { border: 1px solid var(--선); border-radius: 12px; padding: 12px; margin: 12px 0; }
-.소식 h3 { font-size: 16px; margin: 0 0 8px; }
-.소식그림 { display: block; width: 100%; max-height: 520px; object-fit: contain; background: #111; border-radius: 8px; }
-.소식 blockquote { margin: 8px 0; padding: 6px 10px; border-left: 3px solid var(--선); color: var(--흐림); font-size: 13px; white-space: pre-wrap; }
 .딱지 { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(199, 122, 0, .14); color: var(--경고); margin-right: 6px; }
 .판단줄 { font-size: 13px; line-height: 1.7; padding-left: 20px; }
 .갈래 { flex-wrap: wrap; }
@@ -71,3 +67,12 @@ textarea { width: 100%; font: inherit; font-size: 15px; padding: 10px; border-ra
 .목록줄 .숫자 { font-size: 12px; }
 .목록줄 button { width: auto; flex: none; margin-top: 0; padding: 8px 12px; font-size: 13px; min-height: 36px; min-width: 44px; }  /* 폰에서 엄지로 누를 만하게(과제 24 점검) */
 .목록줄.뺌 .글 > span:first-child { text-decoration: line-through; opacity: .5; }
+
+/* 지난 결과 줄 — 이름을 눌러 열고, 오른쪽 «지우기» 는 누구나. 묻는 동안 «정말 지우기 / 그만» 이 같은 줄에(폰 폭이면 아래로 접힘) */
+.목록 li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.목록 li .이름 { flex: 1 1 160px; min-width: 0; }
+.지우기칸 { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-left: auto; }
+.지우기칸 button { width: auto; margin-top: 0; padding: 6px 12px; font-size: 13px; min-height: 36px; }
+.지우기칸 .묻는글 { color: var(--빨강); font-size: 13px; }
+button.위험 { background: var(--빨강); color: #fff; }
+.저장칸 > .지우기칸 { justify-content: flex-start; margin: 10px 0 0; }

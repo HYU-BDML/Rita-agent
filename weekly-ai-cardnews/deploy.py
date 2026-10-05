@@ -22,7 +22,7 @@ REGION, ACCOUNT = "ap-northeast-2", "<AWS 계정 번호>"
 NAME, ROLE = "weekly-ai", "weekly-ai-role"
 BUCKET = "<S3 통 이름>"
 서버 = Path(__file__).resolve().parent / "server"
-길들 = ["POST /make", "GET /jobs", "GET /jobs/{job}", "POST /jobs/{job}/retry", "GET /weeks",
+길들 = ["POST /make", "GET /jobs", "GET /jobs/{job}", "POST /jobs/{job}/retry", "POST /jobs/{job}/delete", "GET /weeks",
        "POST /topic/chat", "GET /topic/chat/{chat}", "POST /topic/make", "GET /wallet",
        "GET /topic/fields", "POST /topic/fields", "POST /topic/fields/{field}/delete", "POST /topic/fields/{field}/list",
        "POST /topic/jobs/{job}/cards"]
@@ -121,8 +121,9 @@ def _역할(iam) -> str:
     iam.put_role_policy(RoleName=ROLE, PolicyName="weekly-ai", PolicyDocument=json.dumps({
         "Version": "2012-10-17", "Statement": [
             {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"arn:aws:s3:::{BUCKET}/weekly/*"},
-            # 저장한 분야 지우기(계획 2-1) — 지우기는 분야 칸만
+            # 저장한 분야·지난 결과 지우기(누구나, 사본은 weekly/memory/backup/)
             {"Effect": "Allow", "Action": "s3:DeleteObject", "Resource": f"arn:aws:s3:::{BUCKET}/weekly/fields/*"},
+            {"Effect": "Allow", "Action": "s3:DeleteObject", "Resource": f"arn:aws:s3:::{BUCKET}/weekly/jobs/*"},
             # 판이 끝날 때 묵은 긁은 결과 치우기(계획 2-1 작은 것 11)
             {"Effect": "Allow", "Action": "s3:DeleteObject", "Resource": f"arn:aws:s3:::{BUCKET}/weekly/memory/scrapes/*"},
             {"Effect": "Allow", "Action": "s3:ListBucket", "Resource": f"arn:aws:s3:::{BUCKET}",

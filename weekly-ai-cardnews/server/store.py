@@ -84,7 +84,18 @@ class 창고:
         return [f for f in (self._읽기키(k) for k in sorted(열쇠들, reverse=True)) if f]
 
     def 분야지우기(self, 번호: str) -> None:
-        self.s3.delete_object(Bucket=self.통, Key=f"{self.앞}fields/{번호}.json")
+        self._사본두고지우기(f"fields/{번호}.json")
+
+    def 판지우기(self, job: str) -> None:
+        """지난 결과에서 빼기 — 카드 그림·넘겨보기는 그대로 둔다(사용자 2026-10-05)."""
+        self._사본두고지우기(f"jobs/{job}.json")
+
+    def _사본두고지우기(self, 뒤: str) -> None:
+        """누구나 지우니 창고(서버만 읽는 memory/)에 사본을 남긴다."""
+        몸 = self.s3.get_object(Bucket=self.통, Key=self.앞 + 뒤)["Body"].read()
+        self.s3.put_object(Bucket=self.통, Key=f"{self.앞}memory/backup/{뒤}", Body=몸,
+                           ContentType="application/json; charset=utf-8")
+        self.s3.delete_object(Bucket=self.통, Key=self.앞 + 뒤)
 
     def 미디어올리기(self, job: str, 이름: str, 바이트: bytes, 꼴: str) -> str:
         """주제 판의 소식 미디어 — 인스타·스레드 주소는 며칠이면 만료돼서 정리 때 옮겨 둔다."""
@@ -95,7 +106,8 @@ class 창고:
     def 서명주소(self, 키: str, 초: int = 3600) -> str:
         return self.s3.generate_presigned_url("get_object", Params={"Bucket": self.통, "Key": 키}, ExpiresIn=초)
 
-    def 목록(self, 몇개: int = 50) -> list[dict]:
+    def 목록(self, 몇개: int = 50, 거르개=None) -> list[dict]:
+        """최근 판부터 몇개 — 거르개(기록 → 참/거짓)를 지난 것만 센다."""
         열쇠들, 이어 = [], None
         while True:
             kw = {"Bucket": self.통, "Prefix": f"{self.앞}jobs/"}
@@ -111,7 +123,7 @@ class 창고:
             if len(난것) >= 몇개:
                 break
             기록 = self.읽기(열쇠.rsplit("/", 1)[-1].removesuffix(".json"))
-            if 기록 and not 기록.get("평가"):  # 평가 판은 목록에서 뺀다 — 사람 판이 밀렸다(계획 4 D-10)
+            if 기록 and not 기록.get("평가") and (거르개 is None or 거르개(기록)):  # 평가 판은 목록에서 뺀다 — 사람 판이 밀렸다(계획 4 D-10)
                 난것.append(요약(기록, 자세히=False))
         return 난것
 

@@ -119,35 +119,21 @@ def test_분야로_저장할_때_공식_출처_명단을_같이_남긴다():
     assert 상태 == 201 and 창.분야읽기(몸["field"])["출처명단"] == ["x:cortis_official"]
 
 
-def test_분야는_표가_맞을_때만_지운다():
-    import hashlib
+def test_분야는_누구나_지우고_사본을_남긴다():
+    # 저장한 브라우저의 «표» 검사를 없앴다 — 모두가 보고 모두가 지운다(사용자 2026-10-05)
     창, _, kw = 준비()
     번호 = 끝난판(창)
     상태, 몸 = 부르기("POST", "/topic/fields", {"job": 번호}, **kw)
-    표, 분야 = 몸["표"], 몸["field"]
-    assert 상태 == 201 and len(표) == 32 and 창.분야읽기(분야)["지우기지문"] == hashlib.sha256(표.encode()).hexdigest()
-    목록 = 부르기("GET", "/topic/fields", **kw)[1]["fields"][0]
-    assert "지우기지문" not in 목록 and "표" not in 목록
-    assert 부르기("POST", f"/topic/fields/{분야}/delete", {"표": "틀린표"}, **kw) == (403, {"error": "저장한 브라우저에서만 지울 수 있어요"})
-    assert 부르기("POST", f"/topic/fields/{분야}/delete", {}, **kw)[0] == 403
-    assert 부르기("POST", "/topic/fields/20000101-000000-00000000/delete", {"표": 표}, **kw)[0] == 404
-    assert 부르기("POST", f"/topic/fields/{분야}/delete", {"표": 표}, **kw) == (200, {"지움": 분야})
+    분야 = 몸["field"]
+    assert (상태, 몸) == (201, {"field": 분야}) and "지우기지문" not in 창.분야읽기(분야)
+    원본 = 창.분야읽기(분야)
+    assert 부르기("POST", "/topic/fields/20000101-000000-00000000/delete", {}, **kw)[0] == 404
+    assert 부르기("POST", f"/topic/fields/{분야}/delete", {}, **kw) == (200, {"지움": 분야})
     assert 창.분야읽기(분야) is None and 창.읽기(번호)["state"] == "됨"  # 판 기록은 그대로
+    assert 창._읽기키(f"weekly/memory/backup/fields/{분야}.json") == 원본
     옛 = "20261001-030000-99999999"
-    창.분야쓰기({"field": 옛, "이름": "옛것", "본": {}, "job": 번호, "saved": ""})  # 표 없이 저장된 옛 분야
-    assert 부르기("POST", f"/topic/fields/{옛}/delete", {"표": 표}, **kw)[0] == 403
-
-
-def test_500_기록에_지우기_표를_남기지_않는다(monkeypatch, capsys):
-    class 흔들창고:
-        def 분야읽기(self, 번호):
-            raise RuntimeError("S3 흔들림")
-
-    monkeypatch.setattr(app, "_창고", lambda: 흔들창고())
-    event = {"rawPath": "/topic/fields/20261001-030000-dddddddd/delete", "requestContext": {"http": {"method": "POST"}},
-             "body": json.dumps({"표": "비밀표1234567890abcdefghijklmnopq"}, ensure_ascii=False)}
-    assert app.handler(event, None)["statusCode"] == 500
-    assert "비밀표1234567890" not in capsys.readouterr().out
+    창.분야쓰기({"field": 옛, "이름": "옛것", "본": {}, "job": 번호, "saved": "", "지우기지문": "ab" * 32})  # 표를 받던 옛 분야
+    assert 부르기("POST", f"/topic/fields/{옛}/delete", None, **kw) == (200, {"지움": 옛})
 
 
 def test_500_기록엔_몸통의_칸_이름과_길이만(monkeypatch, capsys):
@@ -241,25 +227,22 @@ def test_목록이_있는_분야로_모으면_목록보기부터_없으면_모�
     assert 불린[-1] == (d["job"], "모으기") and "목록" not in 창.읽기(d["job"])
 
 
-def test_매주_볼_곳_바꾸기는_저장한_브라우저와_그_분야로_끝난_판에서만():
+def test_매주_볼_곳_바꾸기는_누구나_그_분야로_끝난_판에서만():
     창, _, kw = 준비()
     _, 몸 = 부르기("POST", "/topic/fields", {"job": 목록판(창), "남길줄": [0]}, **kw)
-    분야, 표 = 몸["field"], 몸["표"]
+    분야 = 몸["field"]
     새판 = 끝난판(창, "20261001-040000-aaaaaaaa", field=분야, result={
         "bundle": [{"순서": 1, "출처": {"플랫폼": "instagram", "계정": "cortis_official"}, "딱지": []}], "unfilled": [],
         "dropped": [], "목록후보": [{**후보들[0], "갈래": "지금 목록"}, {**후보들[2], "갈래": "새로 찾은 곳"}]})
     길 = f"/topic/fields/{분야}/list"
-    assert 부르기("POST", 길, {"표": "틀린표", "job": 새판, "남길줄": [0]}, **kw) == (
-        403, {"error": "저장한 브라우저에서만 바꿀 수 있어요"})
-    assert 부르기("POST", "/topic/fields/20000101-000000-00000000/list", {"표": 표, "job": 새판, "남길줄": [0]}, **kw)[0] == 404
-    assert 부르기("POST", 길, {"표": 표, "job": 목록판(창, "20261001-050000-bbbbbbbb"), "남길줄": [0]}, **kw)[0] == 409  # 다른 판
-    assert 부르기("POST", 길, {"표": 표, "job": 끝난판(창, "20261001-060000-cccccccc", field=분야, state="만드는 중"),
+    assert 부르기("POST", "/topic/fields/20000101-000000-00000000/list", {"job": 새판, "남길줄": [0]}, **kw)[0] == 404
+    assert 부르기("POST", 길, {"job": 목록판(창, "20261001-050000-bbbbbbbb"), "남길줄": [0]}, **kw)[0] == 409  # 다른 판
+    assert 부르기("POST", 길, {"job": 끝난판(창, "20261001-060000-cccccccc", field=분야, state="만드는 중"),
                           "남길줄": [0]}, **kw)[0] == 409
-    assert 부르기("POST", 길, {"표": 표, "job": "없는판", "남길줄": [0]}, **kw)[0] == 409
-    assert 부르기("POST", 길, {"표": 표, "job": 새판, "남길줄": [5]}, **kw)[0] == 400
-    assert 부르기("POST", 길, {"표": 표, "job": 새판}, **kw)[0] == 400
-    상태, d = 부르기("POST", 길, {"표": 표, "job": 새판, "남길줄": [0, 1]}, **kw)
+    assert 부르기("POST", 길, {"job": "없는판", "남길줄": [0]}, **kw)[0] == 409
+    assert 부르기("POST", 길, {"job": 새판, "남길줄": [5]}, **kw)[0] == 400
+    assert 부르기("POST", 길, {"job": 새판}, **kw)[0] == 400
+    상태, d = 부르기("POST", 길, {"job": 새판, "남길줄": [0, 1]}, **kw)
     assert (상태, d) == (200, {"field": 분야, "목록": ["X @CORTIS_official 최근 글 40개", "인스타 @cortis_official 최근 글 30개"]})
     f = 창.분야읽기(분야)
     assert f["목록"] == [줄들[0], 줄들[2]] and f["출처명단"] == ["instagram:cortis_official"]
-    assert 부르기("POST", f"/topic/fields/{분야}/delete", {"표": 표}, **kw) == (200, {"지움": 분야})  # 표 확인은 지우기와 같다

@@ -10,6 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "server"))
+import app  # noqa: E402  (지난 결과 거르기·카드 이름은 진짜 서버 것을 그대로)
 import weeks  # noqa: E402
 from topic import order  # noqa: E402
 
@@ -130,9 +131,8 @@ from urllib.parse import unquote  # noqa: E402  (맨 위 import 들 옆으로 �
                                  "사람이 할 일": "Apify 가게에서 같은 일을 하는 도구를 골라 장부를 고친다"}],
                      "고치는중": []}}},
 })
-# 매주 볼 곳으로 돈 판(계획 4) — 저장한 분야 «아이브»(표가 있는 브라우저만 «매주 볼 곳 바꾸기»)
+# 매주 볼 곳으로 돈 판(계획 4) — 저장한 분야 «아이브»(누구나 «매주 볼 곳 바꾸기»)
 아이브분야 = "20260930-090000-ff000001"
-아이브표 = "가짜표아이브" + "0" * 26  # 32자 — 화면 점검 때 localStorage «분야표:아이브분야» 에 넣는다
 아이브후보 = [
     {"글": "X @IVEstarship 최근 글 60개", "까닭": "아이브 공식 계정", "숫자": "이번 판: 기간 안 글 21개 · 소식 2건에 쓰임"},
     {"글": "인스타 @ivestarship 최근 글 40개", "까닭": "공식 인스타 — 티저", "숫자": "이번 판: 기간 안 글 11개 · 소식 1건에 쓰임"},
@@ -157,14 +157,21 @@ for _x in 아이브후보:
     "cost": {"딥시크": 0.21, "그림": 0, "그림장수": 0, "아피파이": 0.09, "합계": 0.30, "표지값모름": False},
     "result": {"bundle": 판들["20261001-110000-ffffffff"]["result"]["bundle"], "unfilled": [], "dropped": [],
                "목록": {"전체": 4, "본곳": 3, "못본곳": [{"글": "X @gone_ive 최근 글 40개", "까닭": "글이 없거나 못 읽음"}]},
-               "목록후보": 아이브후보}}
+               "목록후보": 아이브후보,
+               "카드": {"보기": "https://<S3 통 이름>.s3.ap-northeast-2.amazonaws.com/viewer/<넘겨보기 번호>.html",
+                        "장수": 5, "빠진장": []}}}
+# 카드를 못 구운 새 분야 판 — 지난 결과엔 안 나오고, 주소(?job=)로 열면 까닭·«카드 다시 굽기»
+판들["20261001-150000-ab000002"] = {**판들["20261001-140000-ab000001"], "job": "20261001-150000-ab000002", "field": None,
+                                  "started": 전(20), "updated": 전(5),
+                                  "result": {**판들["20261001-140000-ab000001"]["result"],
+                                             "카드": {"오류": "옛 서버 굽기 시간 초과"}}}
 받은기간 = []  # 저장한 분야로 모으기 — 화면이 보낸 기간(주차 고르기 점검: {"종류": "주차", "앞": 2})
 대화들 = {}
 지갑 = {"apify": {"쓸수있는합": 1.6, "낮음": True, "멈춤": False, "모름": False}, "deepseek": {"남은": 56.07, "멈춤": False}}
 분야들 = [{"field": "20260925-090000-ff000000", "이름": "엔비디아 주가", "job": "20260925-080000-aaaaaaaa", "saved": 전(9000),
           "본": {"주제": "엔비디아(NVDA) 주가와 주가를 움직인 사건", "범위": "엔비디아 한 종목", "넣을것": ["실적", "발표"],
                 "뺄것": ["단순 시세"], "목표건수": 5, "한장단위": "소식 하나", "분야이름": "엔비디아 주가", "등급": "A"}},
-         {"field": 아이브분야, "이름": "아이브", "job": "20260930-080000-aaaa0001", "saved": 전(3000), "_표": 아이브표,
+         {"field": 아이브분야, "이름": "아이브", "job": "20260930-080000-aaaa0001", "saved": 전(3000),
           "본": {"주제": "아이브(IVE)", "범위": "그룹 + 멤버 개인", "넣을것": ["컴백", "음악방송"], "뺄것": ["팬 잡담"],
                 "목표건수": 5, "한장단위": "소식 하나", "분야이름": "아이브", "등급": "B"},
           "목록": [x["글"] for x in 아이브후보 if x["갈래"] == "지금 목록"]}]
@@ -221,18 +228,18 @@ class 받기(BaseHTTPRequestHandler):
         if self.path.startswith("/topic/chat/"):
             d = 대화들.get(self.path[len("/topic/chat/"):])
             return self._답(200, _대화답(d)) if d else self._답(404, {"error": "없는 대화입니다"})
-        if self.path == "/topic/fields":  # 지우기 표(_표)는 안 내보낸다
-            return self._답(200, {"fields": [{k: v for k, v in f.items() if k != "_표"} for f in 분야들],
-                                 "기간들": _기간들()})
+        if self.path == "/topic/fields":
+            return self._답(200, {"fields": 분야들, "기간들": _기간들()})
         if self.path == "/fake/made":  # 화면 점검 — 저장한 분야로 모으기에 화면이 보낸 기간들
             return self._답(200, {"기간": 받은기간})
         if self.path == "/weeks":
             return self._답(200, {"weeks": weeks.최근주차들(datetime.now(timezone(timedelta(hours=9))).date())})
-        if self.path == "/jobs":
-            return self._답(200, {"jobs": sorted(판들.values(), key=lambda x: x["job"], reverse=True)})
+        if self.path == "/jobs":  # 진짜 서버처럼 카드뉴스가 된 판만, 줄마다 카드이름
+            return self._답(200, {"jobs": [{**x, "카드이름": app._카드이름(x)} for x in sorted(
+                판들.values(), key=lambda x: x["job"], reverse=True) if app._카드있나(x)]})
         if self.path.startswith("/jobs/"):
             판 = 판들.get(self.path[len("/jobs/"):])
-            return self._답(200, 판) if 판 else self._답(404, {"error": "없는 결과입니다"})
+            return self._답(200, {**판, "카드이름": app._카드이름(판)}) if 판 else self._답(404, {"error": "없는 결과입니다"})
         return self._답(404, {"error": "모르는 길"})
 
     def do_POST(self):
@@ -256,15 +263,12 @@ class 받기(BaseHTTPRequestHandler):
                            "본": {k: 판["order"].get(k) for k in ("주제", "범위", "넣을것", "뺄것", "목표건수", "한장단위",
                                                                  "분야이름", "등급")},
                            "목록": [x["글"] for x in 고른]})
-            분야들[0]["_표"] = 표 = "가짜표" + 번호[-6:] + "0" * 23  # 32자
-            return self._답(201, {"field": 번호, "표": 표})
+            return self._답(201, {"field": 번호})
         if self.path.startswith("/topic/fields/") and self.path.endswith("/delete"):
             번호 = self.path[len("/topic/fields/"):-len("/delete")]
             f = next((x for x in 분야들 if x["field"] == 번호), None)
             if not f:
                 return self._답(404, {"error": "없는 분야입니다"})
-            if not f.get("_표") or 몸.get("표") != f["_표"]:
-                return self._답(403, {"error": "저장한 브라우저에서만 지울 수 있어요"})
             분야들.remove(f)
             return self._답(200, {"지움": 번호})
         if self.path.startswith("/topic/fields/") and self.path.endswith("/list"):
@@ -272,8 +276,6 @@ class 받기(BaseHTTPRequestHandler):
             f = next((x for x in 분야들 if x["field"] == 번호), None)
             if not f:
                 return self._답(404, {"error": "없는 분야입니다"})
-            if not f.get("_표") or 몸.get("표") != f["_표"]:
-                return self._답(403, {"error": "저장한 브라우저에서만 바꿀 수 있어요"})
             후보 = ((판들.get(몸.get("job")) or {}).get("result") or {}).get("목록후보") or []
             f["목록"] = [후보[i]["글"] for i in 몸.get("남길줄") or [] if isinstance(i, int) and 0 <= i < len(후보)]
             return self._답(200, {"field": 번호, "목록": f["목록"]})
@@ -299,6 +301,10 @@ class 받기(BaseHTTPRequestHandler):
             return self._답(202, {"job": 판["job"]})
         if self.path == "/make":
             return self._답(202, {"job": "20260930-030000-bbbbbbbb"})
+        if self.path.startswith("/jobs/") and self.path.endswith("/delete"):  # 지난 결과 지우기 — 누구나
+            if not 판들.pop(self.path[len("/jobs/"):-len("/delete")], None):
+                return self._답(404, {"error": "없는 결과입니다"})
+            return self._답(200, {"지움": self.path[len("/jobs/"):-len("/delete")]})
         if self.path.startswith("/jobs/") and self.path.endswith("/retry"):
             판 = 판들.get(self.path[len("/jobs/"):-len("/retry")])
             if not 판:

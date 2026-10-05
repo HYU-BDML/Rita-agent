@@ -2,17 +2,18 @@
 """지휘 서버 입구 (람다 weekly-ai, 핸들러 app.handler).
 
     POST /make {week, year}  → 202 {job}      뒤에서 «소식» 달리기 시작
-    GET  /jobs               → {jobs: [...]}  최근 50판 (모두 같은 목록)
+    GET  /jobs               → {jobs: [...]}  카드뉴스가 된 최근 50판 (모두 같은 목록, 줄마다 카드이름)
     GET  /jobs/{job}         → 한 판 (재료 빼고). 30분 넘게 안 바뀌면 «멈춤»
     POST /jobs/{job}/retry   → 202 {job}      실패·멈춘 판을 실패한 단계부터 이어서 다시
+    POST /jobs/{job}/delete  → 200 {지움}     누구나 — 지난 결과에서 뺀다(사본은 weekly/memory/backup/jobs/)
     GET  /weeks              → {weeks: [...]} 고를 수 있는 최근 12주
     POST /topic/chat {chat?, text} → 202 {chat}  주제 다듬기 한 턴을 뒤에서
     GET  /topic/chat/{chat}  → 대화 (재료 빼고). 5분 넘게 «생각 중» 이면 «실패»
     GET  /topic/fields       → 저장된 분야 목록 (새것부터, 모두가 같이 본다)
-    POST /topic/fields {job, 남길줄?} → 201 {field, 표}  끝난 새 분야 판을 «분야» 로 저장 (표 = 그 브라우저만 간직하는 지우기 표,
-                             남길줄 = 매주 볼 곳 후보 중 남길 번호 — 없으면 전부)
-    POST /topic/fields/{field}/delete {표} → 200 {지움}  저장한 브라우저에서만 지운다(창고엔 표의 지문만)
-    POST /topic/fields/{field}/list {표, job, 남길줄} → 200 {field, 목록}  저장한 브라우저에서만, 이 분야로 끝난 판의
+    POST /topic/fields {job, 남길줄?} → 201 {field}  끝난 새 분야 판을 «분야» 로 저장
+                             (남길줄 = 매주 볼 곳 후보 중 남길 번호 — 없으면 전부)
+    POST /topic/fields/{field}/delete → 200 {지움}  누구나 지운다(사본은 weekly/memory/backup/fields/)
+    POST /topic/fields/{field}/list {job, 남길줄} → 200 {field, 목록}  누구나, 이 분야로 끝난 판의
                              매주 볼 곳 후보로 목록을 바꾼다(계획 4)
     POST /topic/make {chat} 또는 {field, 기간} → 202 {job}  주문서로 «모으기» 시작 (지갑이 바닥이면 503)
     POST /topic/jobs/{job}/cards → 202 {job}  카드가 실패했거나 빠진 장이 있는 «됨» 판의 카드만 대본부터 다시(누구나, 판마다 2번)
@@ -23,12 +24,9 @@
 수리공은 {"_repair": 요청} — topic/repair.py(계획 4).
 """
 import base64
-import hashlib
-import hmac
 import json
 import os
 import re
-import secrets
 import time
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -165,11 +163,20 @@ def _출처명단(기록: dict) -> list:
     return 명단
 
 
-def _표맞나(f: dict, 표) -> bool:
-    """저장한 브라우저만 간직한 지우기 표가 맞나 — 창고엔 지문만(계획 2-1 설계 4장). 지우기·매주 볼 곳 바꾸기가 같이 쓴다."""
-    표 = str(표 or "")
-    return bool(표) and bool(f.get("지우기지문")) and hmac.compare_digest(
-        hashlib.sha256(표.encode("utf-8")).hexdigest(), f["지우기지문"])
+def _카드있나(기록: dict) -> bool:
+    """지난 결과에 올릴 판 — 넘겨보기 주소가 있는 «됨» 판만(AI 소식 판·새 분야 판 모두, 사용자 2026-10-05)."""
+    결과 = 기록.get("result") or {}
+    주소 = (결과.get("카드") or {}).get("보기") if 기록.get("kind") == "주제" else 결과.get("viewer")
+    return 기록.get("state") == "됨" and bool(주소)
+
+
+def _카드이름(기록: dict) -> str:
+    """«아이브(IVE) 9월 4주차 카드뉴스» · «9월 3주차 AI 소식 카드뉴스» — 기간 이름표는 카드 표지와 같은 셈."""
+    if 기록.get("kind") == "주제":
+        o = 기록.get("order") or {}
+        return f"{o.get('분야이름')} {cards.이름표(o['시작'], o['끝'])} 카드뉴스" if o.get("시작") and o.get("끝") \
+            else f"{o.get('분야이름')} 카드뉴스"  # 기간 없는 판도 한 판 보기가 터지지 않게
+    return f"{기록.get('week')} AI 소식 카드뉴스"
 
 
 def _남길목록(후보: list, 남길) -> tuple[list, str]:
@@ -270,7 +277,13 @@ def 처리(event: dict, 창고, 다음부르기, 오늘=None, 지금=None, 대�
         다음부르기(job, "소식")
         return _답(202, {"job": job})
     if 방법 == "GET" and 길 == "/jobs":
-        return _답(200, {"jobs": [_멈춤판정(x, 지금) for x in 창고.목록(50)]})
+        return _답(200, {"jobs": [{**x, "카드이름": _카드이름(x)} for x in 창고.목록(50, 거르개=_카드있나)]})
+    if 방법 == "POST" and 길.startswith("/jobs/") and 길.endswith("/delete"):
+        job = 길[len("/jobs/"):-len("/delete")]
+        if not (_번호모양.match(job) and 창고.읽기(job)):
+            return _답(404, {"error": "없는 결과입니다"})
+        창고.판지우기(job)
+        return _답(200, {"지움": job})
     if 방법 == "POST" and 길.startswith("/jobs/") and 길.endswith("/retry"):
         job = 길[len("/jobs/"):-len("/retry")]
         기록 = 창고.읽기(job) if _번호모양.match(job) else None
@@ -293,7 +306,7 @@ def 처리(event: dict, 창고, 다음부르기, 오늘=None, 지금=None, 대�
         if 기록 is None:
             return _답(404, {"error": "없는 결과입니다"})
         _되부르기(기록, 창고, 다음부르기, 지금)
-        요약 = _멈춤판정(store.요약(기록), 지금)
+        요약 = {**_멈춤판정(store.요약(기록), 지금), "카드이름": _카드이름(기록)}
         if 기록.get("kind") == "주제" and 요약.get("result"):
             요약["result"] = _서명붙이기(요약["result"], 창고)
         return _답(200, 요약)
@@ -351,19 +364,16 @@ def 처리(event: dict, 창고, 다음부르기, 오늘=None, 지금=None, 대�
         if 탈:
             return _답(400, {"error": 탈})
         번호 = store.새번호표()
-        표 = secrets.token_urlsafe(24)  # 32자 — 그 브라우저만 간직한다. 창고(누구나 읽음)에는 지문만(계획 2-1 설계 4장)
         본 = {k: o.get(k) for k in 분야본칸}
         본["주제"] = _기간말빼기(본["주제"])
         창고.분야쓰기({"field": 번호, "이름": o["분야이름"], "본": 본, "job": job, "출처명단": _출처명단(기록), "목록": 목록,
-                     "지우기지문": hashlib.sha256(표.encode("utf-8")).hexdigest(), "saved": store.지금시각()})
-        return _답(201, {"field": 번호, "표": 표})
+                     "saved": store.지금시각()})
+        return _답(201, {"field": 번호})
     if 방법 == "POST" and 길.startswith("/topic/fields/") and 길.endswith("/delete"):
         번호 = 길[len("/topic/fields/"):-len("/delete")]
         f = 창고.분야읽기(번호) if _번호모양.match(번호) else None
         if f is None:
             return _답(404, {"error": "없는 분야입니다"})
-        if not _표맞나(f, _몸(event).get("표")):
-            return _답(403, {"error": "저장한 브라우저에서만 지울 수 있어요"})
         창고.분야지우기(번호)
         return _답(200, {"지움": 번호})
     if 방법 == "POST" and 길.startswith("/topic/fields/") and 길.endswith("/list"):
@@ -372,8 +382,6 @@ def 처리(event: dict, 창고, 다음부르기, 오늘=None, 지금=None, 대�
         if f is None:
             return _답(404, {"error": "없는 분야입니다"})
         몸 = _몸(event)
-        if not _표맞나(f, 몸.get("표")):
-            return _답(403, {"error": "저장한 브라우저에서만 바꿀 수 있어요"})
         job = str(몸.get("job") or "")
         기록 = 창고.읽기(job) if _번호모양.match(job) else None
         if 기록 is None or 기록.get("field") != 번호 or 기록.get("state") != "됨":

@@ -33,8 +33,54 @@ def test_같은_주차를_둘이_눌러도_따로_돈다():
     _, 첫 = 부르기("POST", "/make", {"week": "9월 3주차", "year": 2026}, **kw)
     _, 둘 = 부르기("POST", "/make", {"week": "9월 3주차", "year": "2026"}, **kw)
     assert 첫["job"] != 둘["job"]
-    상태, 목록 = 부르기("GET", "/jobs", **kw)
-    assert {x["job"] for x in 목록["jobs"]} == {첫["job"], 둘["job"]}
+    assert {x["job"] for x in 창.목록()} == {첫["job"], 둘["job"]}
+
+
+def _주간판(창, 번호, **더):
+    import runs
+    기록 = runs.새기록(번호, "9월 3주차", 2026)
+    기록.update(더)
+    창.쓰기(기록)
+    return 번호
+
+
+def _주제판(창, 번호, **더):
+    from fakes_topic import 주문서
+    from topic import flow
+    기록 = flow.새기록(번호, {**주문서, "분야이름": "아이브(IVE)", "시작": "2026-09-28", "끝": "2026-10-04"})
+    기록.update(더)
+    창.쓰기(기록)
+    return 번호
+
+
+def test_지난_결과는_카드뉴스가_된_판만_카드이름과_함께():
+    # 새 분야로 넓히는 과정은 지난 결과에 섞이지 않는다 — 카드뉴스들만(사용자 2026-10-05)
+    창, 불린, kw = 준비()
+    주간 = _주간판(창, "20261001-000001-aaaaaaaa", state="됨", result={"viewer": "https://x/v.html", "slides": 9})
+    _주간판(창, "20261001-000002-aaaaaaaa")  # 만드는 중
+    _주간판(창, "20261001-000003-aaaaaaaa", state="실패", error="소식 0건")
+    주제 = _주제판(창, "20261001-000004-aaaaaaaa", state="됨",
+                result={"bundle": [{"순서": 1}], "카드": {"보기": "https://x/w.html", "장수": 8, "빠진장": []}})
+    _주제판(창, "20261001-000005-aaaaaaaa", state="됨", result={"bundle": [{"순서": 1}], "카드": {"오류": "막힘"}})
+    _주제판(창, "20261001-000006-aaaaaaaa", state="됨", result={"bundle": []})
+    _주제판(창, "20261001-000007-aaaaaaaa")  # 모으는 중
+    상태, 몸 = 부르기("GET", "/jobs", **kw)
+    assert 상태 == 200 and [x["job"] for x in 몸["jobs"]] == [주제, 주간]
+    assert [x["카드이름"] for x in 몸["jobs"]] == ["아이브(IVE) 9월 4주차 카드뉴스", "9월 3주차 AI 소식 카드뉴스"]
+    _, 판 = 부르기("GET", f"/jobs/{주제}", **kw)
+    assert 판["카드이름"] == "아이브(IVE) 9월 4주차 카드뉴스"
+    assert app._카드이름({"kind": "주제", "order": {"분야이름": "아이브(IVE)"}}) == "아이브(IVE) 카드뉴스"  # 기간 없는 판
+
+
+def test_판_지우기는_누구나_사본을_남기고_지난_결과에서_뺀다():
+    창, 불린, kw = 준비()
+    번호 = _주간판(창, "20261001-000001-aaaaaaaa", state="됨", result={"viewer": "https://x/v.html", "slides": 9})
+    원본 = 창.읽기(번호)
+    assert 부르기("POST", f"/jobs/{번호}/delete", {}, **kw) == (200, {"지움": 번호})
+    assert 창.읽기(번호) is None and 부르기("GET", "/jobs", **kw)[1]["jobs"] == []
+    assert 창._읽기키(f"weekly/memory/backup/jobs/{번호}.json") == 원본
+    assert 부르기("POST", f"/jobs/{번호}/delete", {}, **kw) == (404, {"error": "없는 결과입니다"})
+    assert 부르기("POST", "/jobs/..%2Fx/delete", {}, **kw)[0] == 404
 
 
 def test_없는_주차는_400():

@@ -1,7 +1,7 @@
 import {
-  주차글, 목록줄, 단계줄, 빠진것들, 계속볼까, 총시간줄, 제목줄, 주문서줄들, 예산줄, 단계표, 칸줄, 소식머리, 소식밑줄, 대화줄,
-  지갑띠글, 새분야막힘, 안전주소, 걸음돈줄, 대화돈줄, 사람말, 분야줄들, 생각중줄, 판단말, 지우기표열쇠, 카드줄, 카드다시, 기간고르기들, 기본기간, 기간몸,
-  목록펼침줄들, 목록머리, 남길번호들, 줄단추글, 목록결과줄, 목록최대, 수리줄들,
+  주차글, 목록줄, 단계줄, 계속볼까, 총시간줄, 제목줄, 주문서줄들, 주문서안내, 예산줄, 단계표, 칸줄, 대화줄,
+  지갑띠글, 새분야막힘, 걸음돈줄, 대화돈줄, 분야줄들, 생각중줄, 판단말, 카드줄, 카드다시, 카드주소, 기간고르기들, 기본기간, 기간몸,
+  목록펼침줄들, 목록머리, 남길번호들, 줄단추글, 목록최대,
 } from "./draw.js";
 
 const $ = (id) => document.getElementById(id);
@@ -35,12 +35,6 @@ function 글줄(태그, 모양, 글) {
   if (모양) e.className = 모양;
   e.textContent = 글;
   return e;
-}
-
-function 링크(글, 주소, 모양 = "") {
-  const a = 글줄("a", 모양, 글);
-  if (안전주소(주소)) { a.href = 주소; a.target = "_blank"; a.rel = "noopener"; }
-  return a;
 }
 
 function 주소고치기() {
@@ -112,34 +106,50 @@ function 저장칸그리기() {
   단추.disabled = 새분야막힘(지갑);
   단추.onclick = () => 분야로모으기(f.field, 고르기.value, 단추);
   저장칸.append(표, 이름표, 고르기, 단추, 글줄("p", "흐림", "모으기는 10~40분쯤 걸려요."));
-  const 지우기표 = 표꺼내기(f.field);
-  if (지우기표) {  // 저장한 이 브라우저에서만 — 한 번 누르면 묻고, 한 번 더 누르면 지운다(확인 창은 쓰지 않는다)
-    const 지우기 = 글줄("button", "버금", "이 분야 지우기");  // 버금 단추 — 위험한 일이 «모으기» 처럼 보이지 않게(UX 점검 2-1)
-    지우기.type = "button";
-    let 물은때 = 0;
-    지우기.onclick = async () => {
-      if (!물은때) {
-        물은때 = Date.now();
-        지우기.textContent = "모두의 목록에서 사라져요 — 한 번 더 누르면 지워요";
-        // 5초 안에 안 누르면 묻기를 푼다 — 몇 분 뒤 한 번 눌러 지워지지 않게(최종 검토)
-        setTimeout(() => { if (!지우기.disabled) { 물은때 = 0; 지우기.textContent = "이 분야 지우기"; } }, 5000);
-        return;
-      }
-      if (Date.now() - 물은때 < 800) return;  // 습관처럼 두 번 누른 것(더블클릭)은 «한 번 더» 가 아니다(UX 점검 2-1)
-      지우기.disabled = true;
-      const { 상태, 몸 } = await 부르기(`/topic/fields/${encodeURIComponent(f.field)}/delete`, 보낼몸({ 표: 지우기표 }));
-      if (상태 !== 200) {
-        지우기.disabled = false;
-        지우기.textContent = 몸.error || `지우기 실패 (${상태})`;
-        return;
-      }
-      표버리기(f.field);
-      await 분야채우기();
-      갈래고르기("새");
-      말하기(`«${f.이름}» 분야를 지웠어요 — 그 분야로 만든 지난 결과는 그대로 있어요`, true);
+  // 누구나 지운다(사용자 2026-10-05) — 버금 단추라 위험한 일이 «모으기» 처럼 보이지 않는다(UX 점검 2-1)
+  저장칸.append(지우기묻기("이 분야 지우기", "모두의 분야 목록에서 사라져요", `${f.이름} 분야 지우기`, async () => {
+    const { 상태, 몸 } = await 부르기(`/topic/fields/${encodeURIComponent(f.field)}/delete`, 보낼몸({}));
+    if (상태 !== 200) return 말하기(몸.error || `지우기 실패 (${상태})`);
+    await 분야채우기();
+    갈래고르기("새");
+    말하기(`«${f.이름}» 분야를 지웠어요 — 그 분야로 만든 카드뉴스는 «지난 결과» 에 그대로 있어요`, true);
+    return true;
+  }));
+}
+
+// 지우기 → 같은 줄에 «정말 지우기 / 그만»(리타 안 iframe 이라 confirm() 창은 쓰지 않는다). 지우기()가 참이면 지운 것
+function 지우기묻기(글, 묻는글, 이름표, 지우기) {
+  const 칸 = document.createElement("span");
+  칸.className = "지우기칸";
+  칸.onclick = (e) => e.stopPropagation();  // 묻는 글 자리를 눌러도(더블클릭의 두 번째) 줄이 열리지 않게
+  let 되돌림 = null;
+  const 처음 = () => {
+    clearTimeout(되돌림);
+    칸.classList.remove("묻는중");
+    const 단추 = 글줄("button", "버금", 글);
+    단추.type = "button";
+    단추.setAttribute("aria-label", 이름표);
+    단추.onclick = 묻기;
+    칸.replaceChildren(단추);
+  };
+  const 묻기 = () => {
+    const 물은때 = Date.now();
+    칸.classList.add("묻는중");
+    const 정말 = 글줄("button", "위험", "정말 지우기");
+    const 그만 = 글줄("button", "버금", "그만");
+    정말.type = 그만.type = "button";
+    정말.onclick = async () => {
+      if (Date.now() - 물은때 < 600) return;  // 습관처럼 두 번 누른 것(더블클릭)은 «정말» 이 아니다(UX 점검 2-1)
+      clearTimeout(되돌림);
+      정말.disabled = 그만.disabled = true;
+      if (!(await 지우기())) 처음();
     };
-    저장칸.append(지우기);
-  }
+    그만.onclick = 처음;
+    칸.replaceChildren(글줄("span", "묻는글", 묻는글), 정말, 그만);
+    되돌림 = setTimeout(처음, 10000);  // 안 누르고 두면 묻기를 푼다 — 나중에 한 번 눌러 지워지지 않게(최종 검토)
+  };
+  처음();
+  return 칸;
 }
 
 async function 분야로모으기(분야, 값, 단추) {
@@ -182,11 +192,10 @@ function 분야저장칸(job) {
   칸.className = "저장하기";
   if (f) {
     칸.append(글줄("p", "흐림", `저장된 분야 «${f.이름}» — 분야 목록(«AI 소식» 옆)에서 고르면 기간만 골라 다시 모을 수 있어요`));
-    const 표 = job.field === f.field ? 표꺼내기(f.field) : null;
-    if (표 && (job.result.목록후보 || []).length) {  // 저장한 이 브라우저에서만 — 이 판의 후보로 매주 볼 곳을 바꾼다(계획 4)
+    if (job.field === f.field && (job.result.목록후보 || []).length) {  // 이 분야로 돈 판의 후보로 매주 볼 곳을 바꾼다(계획 4) — 누구나
       const 바꾸기 = 글줄("button", "버금", "매주 볼 곳 바꾸기");
       바꾸기.type = "button";
-      바꾸기.onclick = () => 바꾸기.replaceWith(목록펼침(job, true, (남길, 단추) => 목록바꾸기(f, job, 표, 남길, 단추)));
+      바꾸기.onclick = () => 바꾸기.replaceWith(목록펼침(job, true, (남길, 단추) => 목록바꾸기(f, job, 남길, 단추)));
       칸.append(바꾸기);
     }
     return 칸;
@@ -196,7 +205,7 @@ function 분야저장칸(job) {
   // 누르면 그 자리에 매주 볼 곳이 펼쳐진다 — 줄을 빼고 «이대로 저장»(계획 4 설계 A-3)
   단추.onclick = () => 단추.replaceWith(목록펼침(job, false, (남길, 저장) => 분야저장(job, 남길, 저장)));
   칸.append(단추, 글줄("p", "흐림", "결과가 마음에 들면 저장해 두세요. 분야 목록(«AI 소식» 옆)에 생기고, 다음부터는 대화 없이 기간만 골라 "
-    + "모을 수 있어요. 저장한 분야는 모두에게 보여요."));
+    + "모을 수 있어요. 저장한 분야는 모두에게 보이고, 누구나 지울 수 있어요."));
   return 칸;
 }
 
@@ -250,14 +259,13 @@ async function 분야저장(job, 남길, 단추) {
     단추.textContent = 몸.error || `저장 실패 (${상태})`;
     return;
   }
-  if (몸.표) 표두기(몸.field, 몸.표);
   await 분야채우기();
   한번보기();
 }
 
-async function 목록바꾸기(f, job, 표, 남길, 단추) {
+async function 목록바꾸기(f, job, 남길, 단추) {
   단추.disabled = true;
-  const { 상태, 몸 } = await 부르기(`/topic/fields/${encodeURIComponent(f.field)}/list`, 보낼몸({ 표, job: job.job, 남길줄: 남길 }));
+  const { 상태, 몸 } = await 부르기(`/topic/fields/${encodeURIComponent(f.field)}/list`, 보낼몸({ job: job.job, 남길줄: 남길 }));
   if (상태 !== 200) {
     단추.disabled = false;
     단추.textContent = 몸.error || `바꾸기 실패 (${상태})`;
@@ -268,11 +276,6 @@ async function 목록바꾸기(f, job, 표, 남길, 단추) {
   await 한번보기();
   알림.scrollIntoView({ block: "center", behavior: "smooth" });  // 아래에서 누른 사람이 위에 뜬 알림을 못 봤다(과제 35)
 }
-
-// 지우기 표 — 브라우저가 막으면(사생활 보호 창 등) 그냥 지우기 단추가 안 보일 뿐
-function 표두기(field, 표) { try { localStorage.setItem(지우기표열쇠(field), 표); } catch (e) { /* 못 둠 */ } }
-function 표꺼내기(field) { try { return localStorage.getItem(지우기표열쇠(field)); } catch (e) { return null; } }
-function 표버리기(field) { try { localStorage.removeItem(지우기표열쇠(field)); } catch (e) { /* 못 버림 */ } }
 
 async function 지갑보기() {
   const { 상태, 몸 } = await 부르기("/wallet");
@@ -367,6 +370,7 @@ function 대화그리기() {
     return;
   }
   for (const m of d.messages || []) 대화목록.append(글줄("li", m.who === "사람" ? "나" : "그쪽", 대화줄(m)));
+  if (주문서안내(d)) 대화목록.append(글줄("li", "그쪽", 주문서안내(d)));
   if (대화돈줄(d.cost)) 대화목록.append(글줄("li", "흐림", 대화돈줄(d.cost)));
   if (d.state === "생각 중") {  // 보낸 때(updated)부터 흐르는 초 — 1초마다 고쳐 쓴다
     const 줄 = 글줄("li", "흐림", 생각중줄(d.updated, new Date().toISOString()));
@@ -406,17 +410,37 @@ async function 모으기시작(대화번호, 단추) {
 }
 
 // ── 지난 결과 · 한 판 보기 ─────────────────────────────────────────────────
-async function 목록그리기() {
+// 지난 결과엔 카드뉴스가 된 판만 온다(서버가 거른다, 사용자 2026-10-05). 줄마다 누구나 «지우기»
+async function 목록그리기(묻는중이어도 = false) {
+  const 묻는중 = () => !묻는중이어도 && 목록.querySelector(".묻는중");  // «정말 지우기» 를 묻는 동안엔 15초 새로 그리기가 덮지 않게
+  if (묻는중()) return;
   const { 상태, 몸 } = await 부르기("/jobs");
-  if (상태 !== 200) return;
+  if (상태 !== 200 || 묻는중()) return;
   목록.innerHTML = "";
-  if (!몸.jobs.length) { 목록.append(글줄("li", "흐림", "아직 만든 결과가 없어요")); return; }
+  if (!몸.jobs.length) { 목록.append(글줄("li", "흐림", "아직 만든 카드뉴스가 없어요")); return; }
   for (const job of 몸.jobs) {
-    const 줄 = 글줄("li", job.job === 지금번호 ? "고름" : "", 목록줄(job));
+    const 줄 = document.createElement("li");
+    if (job.job === 지금번호) 줄.className = "고름";
     줄.dataset.job = job.job;
     줄.onclick = () => 보기(job.job);
+    줄.append(글줄("span", "이름", 목록줄(job)),
+      지우기묻기("지우기", "모두의 목록에서 사라져요", `${목록줄(job)} 지우기`, () => 판지우기(job)));
     목록.append(줄);
   }
+}
+
+async function 판지우기(job) {
+  const { 상태, 몸 } = await 부르기(`/jobs/${encodeURIComponent(job.job)}/delete`, 보낼몸({}));
+  if (상태 !== 200) return 말하기(몸.error || `지우기 실패 (${상태})`);
+  if (지금번호 === job.job) {
+    지금번호 = null;
+    주소고치기();
+    clearTimeout(보는타이머);
+    오른쪽.replaceChildren(글줄("p", "흐림", "만들거나 «지난 결과» 를 누르면 여기에 보여요."));
+  }
+  말하기(`«${job.카드이름}» 를 지웠어요`, true);
+  await 목록그리기(true);
+  return true;
 }
 
 async function 이어서다시(번호, 단추) {
@@ -466,34 +490,6 @@ async function 한번보기() {
   if (계속볼까(몸)) 보는타이머 = setTimeout(한번보기, 3000);
 }
 
-function 소식카드(d) {
-  const 카드 = document.createElement("article");
-  카드.className = "소식";
-  카드.append(글줄("h3", "", 소식머리(d)));
-  const m = d.미디어;
-  if (m && 안전주소(m.주소)) {
-    const 판 = document.createElement(m.갈래 === "영상" ? "video" : "img");
-    if (m.갈래 === "영상") {
-      판.controls = true;
-      판.preload = "metadata";
-      if (안전주소(m.대표주소)) 판.poster = m.대표주소;
-    } else {
-      판.alt = d.사건;
-    }
-    판.src = m.주소;
-    판.className = "소식그림";
-    카드.append(판);
-  } else if (m && 안전주소(m.원주소)) {
-    카드.append(링크(`${m.갈래} 원본 보기 (옮기지 못함 — 주소가 곧 만료될 수 있어요)`, m.원주소, "흐림"));
-  }
-  카드.append(글줄("p", "", 사람말(d.요약)));
-  const 밑 = 글줄("p", "흐림", 소식밑줄(d) + " · ");
-  밑.append(링크("원문", d.출처.주소));
-  카드.append(밑, 글줄("blockquote", "", d.발췌));
-  for (const t of d.딱지 || []) 카드.append(글줄("span", "딱지", t === "2차" ? "2차 출처" : t));
-  return 카드;
-}
-
 function 주제그리기(job) {
   if (job.state === "만드는 중") {
     const 표 = document.createElement("ol");
@@ -505,22 +501,6 @@ function 주제그리기(job) {
     칸들.className = "칸들";
     for (const 칸 of job.board?.칸 || []) 칸들.append(글줄("li", "", 칸줄(칸)));
     오른쪽.append(칸들);
-  }
-  if (job.state === "됨" && job.result) {
-    const 목록글 = 목록결과줄(job.result);  // 매주 볼 곳으로 돈 판 — 맨 위에 몇 곳을 봤나(계획 4)
-    if (목록글) 오른쪽.append(글줄("p", (job.result.목록.못본곳 || []).length ? "빠진것" : "흐림", 목록글));
-    const 카 = 카드줄(job.result);  // 새 분야도 카드뉴스까지(계획 3) — 맨 위에 보기, 못 만들었으면 까닭 한 줄
-    if (카?.보기) 보기붙이기(카.보기, `${job.order?.분야이름 || "새 분야"} 카드뉴스`);
-    if (카) 오른쪽.append(글줄("p", 카.보기 ? "흐림" : "빠진것", 카.글));
-    const 다시 = 카드다시(job);  // 카드가 실패했거나 빠진 장이 있으면 카드만 다시(계획 4 D-4)
-    if (다시) 오른쪽.append(카드다시칸(job, 다시));
-    if (!job.result.bundle.length) {
-      오른쪽.append(글줄("p", "흐림", "이 기간에 조건에 맞는 소식을 찾지 못했어요. 아래에 어디까지 찾아봤는지 적었어요."));
-    }
-    for (const d of job.result.bundle) 오른쪽.append(소식카드(d));
-    for (const 글 of 빠진것들(job.result)) 오른쪽.append(글줄("p", "빠진것", 글));
-    for (const 글 of 수리줄들(job.result)) 오른쪽.append(글줄("p", "흐림", 글));  // 고친·못 고친 도구(계획 4)
-    if (job.result.bundle.length) 오른쪽.append(분야저장칸(job));
   }
   if (job.lines?.length) {
     const 판단 = document.createElement("details");
@@ -550,9 +530,18 @@ function 주제그리기(job) {
   }
 }
 
-function 주간결과그리기(job) {
-  보기붙이기(job.result.viewer, `${job.week} 카드뉴스`);
-  for (const 글 of 빠진것들(job.result)) 오른쪽.append(글줄("p", "빠진것", 글));
+// 다 된 판 — 카드뉴스(넘겨보기)와 «주소 복사»·«새 창으로» 만. 소식 묶음·못 채운 칸·단계·돈 같은 과정 기록은
+// 안 보인다(사용자 2026-10-05). 새 분야 판은 카드를 다시 굽거나(빠진 장·실패) 분야로 저장하는 단추가 아래에 붙는다
+function 결과그리기(job) {
+  const 주소 = 카드주소(job);
+  오른쪽.append(글줄("h2", "", 주소 ? 목록줄(job) : 제목줄(job, new Date().toISOString())));
+  if (주소) 보기붙이기(주소, job.카드이름);
+  if (job.kind !== "주제" || !job.result) return;
+  const 다시 = 카드다시(job);  // 카드가 실패했거나 빠진 장이 있으면 카드만 다시(계획 4 D-4)
+  const 카 = 카드줄(job.result);  // 못 만들었거나 빠진 장이 있을 때만 까닭 한 줄
+  if (카 && (!주소 || 다시)) 오른쪽.append(글줄("p", "빠진것", 카.글));
+  if (다시) 오른쪽.append(카드다시칸(job, 다시));
+  if (job.result.bundle.length) 오른쪽.append(분야저장칸(job));
 }
 
 // 카드뉴스 넘겨보기 틀 + «주소 복사»·«새 창으로» — AI 소식과 새 분야가 같이 쓴다
@@ -579,6 +568,7 @@ function 보기붙이기(주소, 제목) {
 function 그리기(job) {
   오른쪽.innerHTML = "";
   clearInterval(초타이머);
+  if (job.state === "됨") return 결과그리기(job);
   const 주제 = job.kind === "주제";
   const 제목 = 글줄("h2", "", 제목줄(job, new Date().toISOString()));
   오른쪽.append(제목);
@@ -589,7 +579,7 @@ function 그리기(job) {
     const 속 = document.createElement("div");
     속.style.width = `${job.pct || 0}%`;
     막대.append(속);
-    오른쪽.append(막대, 글줄("p", "흐림", "창을 닫아도 계속 만들어집니다. «지난 결과» 목록에서 다시 볼 수 있어요."));
+    오른쪽.append(막대, 글줄("p", "흐림", "창을 닫아도 계속 만들어져요. 카드뉴스가 다 되면 «지난 결과» 에 올라와요."));
   }
   if (job.state === "실패" || job.state === "멈춤") {
     오른쪽.append(글줄("p", "알림", job.error || job.state));
@@ -609,10 +599,9 @@ function 그리기(job) {
       : "«이어서 다시» 는 멈춘 단계부터 합니다 — 긁은 소식과 써 둔 대본은 다시 안 만들어요."));
   }
   if (주제) 주제그리기(job);
-  else if (job.state === "됨" && job.result) 주간결과그리기(job);
   const 자세히 = document.createElement("details");
   자세히.className = "자세히";
-  자세히.open = job.state !== "됨";
+  자세히.open = true;
   자세히.append(글줄("summary", "", "상세 보기"));
   if (총시간줄(job)) 자세히.append(글줄("p", "", 총시간줄(job)));
   const 단계들 = document.createElement("ul");
