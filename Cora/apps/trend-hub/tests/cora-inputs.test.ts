@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';import{deflateSync}from'node:zlib';import type{DatabaseSync}from'node:sqlite';
 import{CoraStore}from'../lib/cora/store';import{validateDraft,blankBrief}from'../lib/cora/model';
 import{extractPdfText,decodePdfBase64,draftFromText,paragraphsOf,parseToUnicode,MAX_PDF_BYTES}from'../lib/cora/pdf-text';
-import{parseYouTubeId,parseDuration,YouTubeAdapter,youtubeMaterial}from'../lib/cora/youtube';
+import{parseYouTubeId,parseDuration,YouTubeAdapter,youtubeMaterial,youtubeNote}from'../lib/cora/youtube';
 import{LinkPages,renderLinkPage,validateLinkPage,LINK_PAGE_CSP}from'../lib/cora/linkpage';
 import{ContactInbox,DAILY_CAP}from'../lib/cora/help';
 import{ApiKeys,authenticateApiKey,MAX_ACTIVE_KEYS}from'../lib/cora/apikeys';
@@ -75,6 +75,8 @@ test('YouTube material: title + description + optional pasted transcript, short 
  const a=youtubeMaterial({title:'짧은 제목',description:''});assert.equal(a.enough,false);assert.equal(a.hasTranscript,false);
  const b=youtubeMaterial({title:'제목',description:'설명'},'자막 문장입니다. '.repeat(10));assert.equal(b.enough,true);assert.equal(b.hasTranscript,true);assert.ok(b.text.startsWith('제목\n설명\n'));
  assert.throws(()=>youtubeMaterial({title:'a',description:''},'x'.repeat(20001)),/20,000/);
+ assert.match(youtubeNote(youtubeMaterial({title:'룸메가 해주는 스킨케어 ASMR',description:'#shorts'})),/짧아 카드 초안을 만들지 못했습니다/);
+ assert.match(youtubeNote(youtubeMaterial({title:'제목',description:'설명 '.repeat(30)})),/제목과 설명만 사용했습니다/);assert.equal(youtubeNote(b),'');
  validateDraft(draftFromText({...blankBrief,brand:'채널'},'소재',b.text).draft);
 });
 

@@ -58,3 +58,9 @@ export function youtubeMaterial(v: Pick<YouTubeVideo, 'title' | 'description'>, 
   const text = parts.join('\n');
   return { text, hasDescription: !!v.description.trim(), hasTranscript: !!t, enough: text.length >= 80 };
 }
+
+/** Notice shown with an import result. Too-short material produces no draft, so say that first instead of the transcript tip. */
+export function youtubeNote(m: Pick<ReturnType<typeof youtubeMaterial>, 'enough' | 'hasTranscript'>) {
+  if (!m.enough) return '제목과 설명이 짧아 카드 초안을 만들지 못했습니다. 영상 자막 텍스트를 붙여 넣은 뒤 다시 가져와 주세요.';
+  return m.hasTranscript ? '' : '자막은 API 키로 내려받을 수 없어 제목과 설명만 사용했습니다. 자막 텍스트를 붙여 넣으면 카드에 함께 담깁니다.';
+}

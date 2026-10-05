@@ -4,7 +4,7 @@ import type { Brief } from '@/lib/cora/model';
 import { json, sameOrigin, user } from '@/lib/cora/http';
 import { Limiter } from '@/lib/cora/apikeys';
 import { decodePdfBase64, draftFromText, extractPdfText } from '@/lib/cora/pdf-text';
-import { YouTubeAdapter, parseYouTubeId, youtubeMaterial } from '@/lib/cora/youtube';
+import { YouTubeAdapter, parseYouTubeId, youtubeMaterial, youtubeNote } from '@/lib/cora/youtube';
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic';
 const limiter = new Limiter(10, 60_000);
 /** 5MB PDF as base64 is about 6.7MB, so this route reads its own stream with a 7.5MB bound instead of http.body's 3MB. */
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       const m = youtubeMaterial(v, typeof b.transcript === 'string' ? b.transcript : '');
       let draft = null;
       if (m.enough) { const brand = text(b.brand, 80, v.channel || v.title.slice(0, 80)); const brief = briefOf(b, brand, v.url); draft = validateDraft(draftFromText(brief, ideasFor({ ...brief, brand })[1].title, m.text).draft); }
-      return json({ video: v, material: m.text, hasTranscript: m.hasTranscript, draft, note: m.hasTranscript ? '' : '자막은 API 키로 내려받을 수 없어 제목과 설명만 사용했습니다. 자막 텍스트를 붙여 넣으면 카드에 함께 담깁니다.' });
+      return json({ video: v, material: m.text, hasTranscript: m.hasTranscript, draft, note: youtubeNote(m) });
     }
     throw new Error('지원하지 않는 가져오기 작업입니다.');
   } catch (e) { return json({ error: e instanceof Error ? e.message : '가져오기 실패' }, 400); }
