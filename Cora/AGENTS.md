@@ -1,5 +1,8 @@
 # Cora working rules
 
+## 2026-10-05 user-defined core value
+The user defines Cora's primary functional advantage as answering what content to make and continue making. Prioritize actionable, evidence-backed content decisions: for whom, what to make next, why it fits, which format/assets to use, how it forms a series, and what to observe before the next decision. Acquisition of sources, generation/editing, approval/publishing and analytics support this decision-to-execution-to-feedback flow. New channels must be able to start from goals/audience/assets/capacity without prior posts or mandatory Instagram connection. Preserve the first small-agency target, original119 ledger, focused release boundaries and required authorization/recovery/cost checks. This is the intended differentiator, not an already proven growth-performance claim. Read docs/Cora_출시집중_2026-10-04/16_콘텐츠결정_핵심기준_2026-10-05.md. Existing rules and passing software tests do not establish recommendation quality or causal growth effects. Record human quality, actual adoption/production and growth evaluation separately.
+
 - Product: Cora (Content Operations Run by Agents), provisional name.
 - Build direction updated 2026-09-30: aim for an intensive 1–2-day integrated prototype; retain all 109 Mirr features and the additional benchmark features in the development ledger. The 12 weeks now describe subsequent use, validation and improvement, not a reason to defer implementation. User + Jo Yukyung + AI target90%+ of accepted release functionality; not a guaranteed effort/cost ratio. Student availability4–5h/week.
 - All Cora changes belong under this directory. Preserve sibling projects unchanged. Copy reusable code here before adapting it.
