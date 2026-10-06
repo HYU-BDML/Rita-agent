@@ -84,7 +84,7 @@ async function 분야채우기() {
 function 저장칸그리기() {
   const f = 지금분야;
   저장칸.innerHTML = "";
-  저장칸.append(글줄("p", "설명", `«${f.이름}» 분야를 같은 주문서로 다시 모아요. 기간만 고르세요.`));
+  저장칸.append(글줄("p", "설명", `«${f.이름}» 분야를 같은 주문서로 다시 모아요. 매주 볼 곳만 봐요. 기간만 고르세요.`));
   const 표 = document.createElement("table");
   for (const [이름, 값] of 분야줄들(f)) {
     const 줄 = document.createElement("tr");
@@ -105,7 +105,7 @@ function 저장칸그리기() {
   단추.type = "button";
   단추.disabled = 새분야막힘(지갑);
   단추.onclick = () => 분야로모으기(f.field, 고르기.value, 단추);
-  저장칸.append(표, 이름표, 고르기, 단추, 글줄("p", "흐림", "모으기는 10~40분쯤 걸려요."));
+  저장칸.append(표, 이름표, 고르기, 단추, 글줄("p", "흐림", "모으기는 15~20분쯤 걸려요."));
   // 누구나 지운다(사용자 2026-10-05) — 버금 단추라 위험한 일이 «모으기» 처럼 보이지 않는다(UX 점검 2-1)
   저장칸.append(지우기묻기("이 분야 지우기", "모두의 분야 목록에서 사라져요", `${f.이름} 분야 지우기`, async () => {
     const { 상태, 몸 } = await 부르기(`/topic/fields/${encodeURIComponent(f.field)}/delete`, 보낼몸({}));

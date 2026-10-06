@@ -102,4 +102,6 @@ def test_목록_판이면_작업판_맨_위에_매주_볼_곳_줄():
     줄 = board.지휘자글(판, 주문서, 창고(), 예.기록, 예.한줄(), []).splitlines()
     assert 줄[:3] == ["# 작업판", "## 매주 볼 곳으로 이미 모은 판", f"저장한 목록 3곳 중 2곳 봄. {instructions.목록판}"]
     assert 줄[3] == "## 주문서" and "건너뛰고" in instructions.목록판
+    # 저장한 분야는 고르기만 — 지휘자에게 바깥 도구가 없다(사용자 10-05)
+    assert "더 찾아라" not in instructions.목록판 and "새로 찾지 않는다" in instructions.목록판
     assert "매주 볼 곳" not in board.지휘자글(board.새판(), 주문서, 창고(), 예.기록, 예.한줄(), [])

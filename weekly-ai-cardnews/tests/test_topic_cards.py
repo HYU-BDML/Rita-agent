@@ -26,11 +26,16 @@ def test_넣는_글은_소식N_으로_짝짓는다():
     assert [x["brand"] for x in 순서] == ["소식1", "소식2", "소식3"] and [x["brand"] for x in picked] == ["소식1", "소식2", "소식3"]
 
 
-def test_덧붙임은_분야를_말하고_표지_그림엔_사람이_없다():
-    # 표지는 진짜 사진을 깔거나, 없으면 사람 없이 그린다 — 사람 수를 묻지 않는다(42++ D)
+def test_덧붙임은_분야를_말하고_표지_인물이_없으면_사람_없이():
     덧 = cards.덧붙임("아이브")
     assert "«아이브» 소식" in 덧 and "[ ] 안 글자 그대로" in 덧 and "no person" in 덧 and "single" not in 덧
     assert "AI 소식" in 덧  # 표지 2행은 검사 꼴대로 쓰고 코드가 바꾼다
+
+
+def test_덧붙임은_표지_인물이_있으면_그_사람_한_명의_밈_장면과_그_소식_중심():
+    # 주간 AI 소식처럼 밈 장면 + 그 사람 얼굴(사용자 «ㅇㅇ», 10-06)
+    덧 = cards.덧붙임("미국 경제", {"키": "k/face.jpg", "사람": "제롬 파월", "소식": 2, "출처": "위키"})
+    assert "제롬 파월 한 사람이 나오는 밈 장면" in 덧 and "소식2" in 덧 and "no person" not in 덧
 
 
 def _재():
@@ -119,26 +124,117 @@ def test_마지막_장만_넘치면_표지_2행은_그대로():
     assert 재["굽기장"][-1]["headline"][1] == "소식이 더 궁금하다면?"
 
 
-def test_표지_사진이_있으면_그_사진을_깔고_얼굴_없음():
-    # 표지는 진짜 사진을 그대로 — GPT 가 사진을 참고해 다시 그려 얼굴이 바뀌었다(42++ D). 얼굴 바꾸기 칸은 안 쓴다
+def test_표지_얼굴이_있으면_주간_AI_소식처럼_얼굴_칸을_싣는다():
+    # 진짜 사진을 그대로 깔던 표지(photo_url)는 얼굴이 잘리고 다른 소식 사진이었다 — 이제 그 사람 얼굴을 밈 장면에(10-06)
     재 = _재()
-    재["표지"]["face_url"] = "https://old/face.jpg"  # 앞 판의 칸이 남아 있어도 지운다
-    cards.고쳐쓰기(재, _묶음(), "아이브", "9월 3주차", {"키": "w/t/j/media/01.jpg", "주인공": "리즈", "사람": 1},
-                 주소, _넘침없음, _틀())
+    재["표지"].update(photo_url="https://old/p.jpg", face_none=True)  # 앞 판의 칸이 남아 있어도 지운다
+    칸 = {"키": "w/t/j/media/face.jpg", "사람": "리즈", "소식": 1, "출처": "위키"}
+    cards.고쳐쓰기(재, _묶음(), "아이브", "9월 3주차", 칸, 주소, _넘침없음, _틀())
     표 = 재["표지"]
-    assert (표["photo_url"], 표["face_none"], 표["brand"]) == ("https://s3/w/t/j/media/01.jpg", True, "리즈")
-    assert not {"face_url", "face_person", "face_count"} & set(표) and 표["gen_prompt_en"] == "A single woman"
+    assert (표["face_url"], 표["face_person"], 표["face_count"], 표["brand"]) == (
+        "https://s3/w/t/j/media/face.jpg", "리즈", 1, "리즈")
+    assert not {"face_none", "photo_url"} & set(표) and 표["gen_prompt_en"] == "A single woman"
 
 
-def test_표지_사진이_없으면_사람_없이_그린다():
+def test_표지_얼굴이_없으면_사람_없이_그린다():
     # 옛 서버가 주인공 이름(엔비디아)으로 위키미디어 얼굴 표를 찾아 그 회사 대표 얼굴을 붙였다(계획 4 D-9)
     재 = _재()
+    재["표지"]["face_url"] = "https://old/face.jpg"
     cards.고쳐쓰기(재, _묶음(), "엔비디아", "9월 3주차", None, 주소, _넘침없음, _틀())
     표 = 재["표지"]
-    assert 표["face_none"] is True and "photo_url" not in 표 and 표["brand"] == "하츠투하츠"
-    assert 표["gen_prompt_en"] == "A single woman" + cards.사람없이
-    cards.표지사진(표, None, 주소, _묶음())  # 다시 해도 두 번 붙이지 않는다
+    assert 표["face_none"] is True and not {"photo_url", "face_url", "face_person", "face_count"} & set(표)
+    assert 표["brand"] == "하츠투하츠" and 표["gen_prompt_en"] == "A single woman" + cards.사람없이
+    cards.표지얼굴(표, None, 주소, _묶음())  # 다시 해도 두 번 붙이지 않는다
     assert 표["gen_prompt_en"].count("no people") == 1
+
+
+# ── 표지 인물 — 이름 먼저, 그 이름으로 얼굴 사진(사용자 «ㅇㅇ», 10-06) ──
+
+def _인물답(d):
+    return {"글": d if isinstance(d, str) else json.dumps(d, ensure_ascii=False), "넘침": False, "입력토큰": 900,
+            "캐시토큰": 0, "출력토큰": 50, "생각토큰": 100, "초": 3}
+
+
+def test_표지_인물은_딥시크_pro_가_소식_목록에서_고른다():
+    물음 = []
+
+    def 딥(시스템, 사용자, 한도):
+        물음.append((시스템, 사용자))
+        return _인물답({"사람": "제롬 파월", "검색어": "Jerome Powell", "소식": 2})
+    소식들 = [소식(1, "국채"), 소식(2, "연준") | {"요약": "제롬 파월 의장이 금리를 묶었다 [E2]."}]
+    재 = {}
+    assert cards.표지인물고르기(소식들, 딥, 재) == {"사람": "제롬 파월", "검색어": "Jerome Powell", "소식": 2}
+    assert 물음[0][0] == cards.표지인물지시 and "[소식2] 주인공: 연준" in 물음[0][1] and "제롬 파월 의장" in 물음[0][1]
+    assert 재["딥시크기록"][-1]["열쇠"] == "카드표지인물"  # 돈은 «카드» 줄로
+    지 = cards.표지인물지시
+    assert "소식 목록에 이름이 나온" in 지 and "한 사람" in 지 and '"검색어"' in 지 and '"사람": ""' in 지
+
+
+def test_표지_인물_소식_번호가_틀리면_이름이_나온_첫_소식_검색어가_없으면_이름():
+    소식들 = [소식(1, "국채"), 소식(2, "연준") | {"발췌": "파월 의장은 말했다"}]
+    인물 = cards.표지인물고르기(소식들, lambda *a: _인물답({"사람": "제롬 파월", "소식": 9}), {})
+    assert 인물 == {"사람": "제롬 파월", "검색어": "제롬 파월", "소식": 2}
+
+
+def test_표지_인물이_없거나_지어낸_이름이거나_못_읽으면_버린다():
+    소식들 = [소식(1, "메이플스토리")]
+    for 답 in ({"사람": ""}, {"사람": "김철수", "검색어": "김철수", "소식": 1}, "모르겠다", {"사람": 3}):
+        assert cards.표지인물고르기(소식들, lambda *a, 답=답: _인물답(답), {}) is None, 답
+
+    def 터짐(*a):
+        raise RuntimeError("딥시크 잔액 부족")
+    assert cards.표지인물고르기(소식들, 터짐, {}) is None  # 표지 인물은 덤 — 못 고르면 사람 없이
+
+
+def test_얼굴_사진은_위키백과_먼저_얼굴이_한_명일_때만():
+    인물 = {"사람": "제롬 파월", "검색어": "Jerome Powell", "소식": 2}
+    찾은 = cards.얼굴사진찾기(인물, lambda 이름, 검색어: "https://wiki/p.jpg",
+                         lambda 질: pytest.fail("위키에 한 명이면 검색 안 함"), lambda 주소: 1)
+    assert 찾은 == {"주소": "https://wiki/p.jpg", "출처": "위키"}
+
+
+def test_위키가_없으면_이미지_검색에서_크고_제목에_이름이_있고_얼굴_한_명인_것():
+    인물 = {"사람": "리즈", "검색어": "아이브 리즈", "소식": 1}
+    결과 = [{"주소": "https://a/small.jpg", "가로": 500, "세로": 700, "제목": "아이브 리즈 출국"},   # 짧은 변 500
+            {"주소": "https://a/other.jpg", "가로": 2000, "세로": 3000, "제목": "공항 패션"},       # 제목에 이름 없음
+            {"주소": "https://a/two.jpg", "가로": 1800, "세로": 2400, "제목": "아이브 레이 리즈"},  # 얼굴 2명
+            {"주소": "https://a/one_small.jpg", "가로": 800, "세로": 1000, "제목": "IVE 리즈"},
+            {"주소": "https://a/one.jpg", "가로": 1000, "세로": 1500, "제목": "리즈 화보"}]
+    질들, 센 = [], []
+    얼굴 = {"https://wiki/group.jpg": 6, "https://a/two.jpg": 2}
+
+    def 세기(주소):
+        센.append(주소)
+        return 얼굴.get(주소, 1)
+    찾은 = cards.얼굴사진찾기(인물, lambda 이름, 검색어: "https://wiki/group.jpg", lambda 질: 질들.append(질) or 결과, 세기)
+    assert 찾은 == {"주소": "https://a/one.jpg", "출처": "검색"} and 질들 == ["아이브 리즈"]
+    assert 센 == ["https://wiki/group.jpg", "https://a/two.jpg", "https://a/one.jpg"]  # 넓이 큰 것부터
+
+
+def test_얼굴_두_명_사진뿐이거나_세기가_터지면_얼굴_없이():
+    인물 = {"사람": "리즈", "검색어": "아이브 리즈", "소식": 1}
+    두명 = [{"주소": "https://a/two.jpg", "가로": 1800, "세로": 2400, "제목": "아이브 레이 리즈"}]
+    assert cards.얼굴사진찾기(인물, lambda *a: None, lambda 질: 두명, lambda 주소: 2) is None
+
+    def 터짐(주소):
+        raise RuntimeError("판정 실패")
+    assert cards.얼굴사진찾기(인물, lambda *a: "https://wiki/p.jpg", lambda 질: 두명, 터짐) is None
+
+
+def test_위키사진은_한국어_문서_먼저_동음이의_문서는_안_쓰고_영어_검색어면_영어_문서():
+    물은 = []
+
+    def 받기(주소, 최대):
+        물은.append(주소)
+        if "ko.wikipedia" in 주소:
+            p = {"title": "파월", "pageprops": {"disambiguation": ""}, "thumbnail": {"source": "https://up/ko.jpg"}}
+        else:
+            p = {"title": "Jerome Powell", "pageprops": {}, "thumbnail": {"source": "https://up/en.jpg"}}
+        return json.dumps({"query": {"pages": {"1": p}}}).encode(), "application/json", 주소
+    assert cards.위키사진("파월", "Jerome Powell", 받기) == "https://up/en.jpg"
+    assert "ko.wikipedia" in 물은[0] and "en.wikipedia" in 물은[1] and "Jerome+Powell" in 물은[1]
+    물은.clear()
+    assert cards.위키사진("리즈", "아이브 리즈", 받기) is None and len(물은) == 1  # 검색어가 영어가 아니면 영어 문서는 안 본다
 
 
 # ── 카드 네 단계가 판 흐름에 이어지나 (계획 3 과제 4) ──
@@ -148,7 +244,7 @@ from types import SimpleNamespace  # noqa: E402
 import pytest  # noqa: E402
 
 import runs  # noqa: E402
-from fakes_topic import KAITO, 가짜대화, 가짜실행, 주문서, 주제손, 트윗  # noqa: E402
+from fakes_topic import KAITO, 가짜대화, 가짜실행, 그림머리, 주문서, 주제손, 트윗  # noqa: E402
 from topic import flow  # noqa: E402
 
 JOB = "20261001-030000-cccccccc"
@@ -181,6 +277,8 @@ def 카드판(monkeypatch, 소식들=(좋은,), 표지탈=None, 영상=True, **�
 
     def 딥(시스템, 사용자, 한도):
         받은["지시"].append(시스템)
+        if 시스템 == cards.표지인물지시:  # 표지 인물 — 기본은 사람 없음
+            return _인물답({"사람": ""})
         if 시스템 == cards.그림설명지시:  # 사진 없는 소식의 그림 설명(42+ F)
             return {"글": '{"설명": "떡집 가게 앞을 그린다.", "사람": ""}', "넘침": False, "입력토큰": 900, "캐시토큰": 0,
                     "출력토큰": 300, "생각토큰": 0, "초": 1}
@@ -231,6 +329,33 @@ def 끝까지(손, 부른다음, 최대=12):
     return 손.창고.읽기(JOB), 단계들
 
 
+마틴 = {**좋은, "summary": "코르티스 마틴이 9월 24일 뮤직비디오 «FaSHioN» 을 공개했다 [E1]."}
+그림액터 = "simple.actor~google-images"
+
+
+def 얼굴판(monkeypatch, 위키=True, 그림결과=(), **기록칸):
+    """표지 인물 «마틴» — 딥시크가 고르고, 위키백과(없으면 이미지 검색)에 얼굴 사진이 있다."""
+    손, 부른다음, 받은, 옛, 대화 = 카드판(monkeypatch, 소식들=(마틴,), **기록칸)
+    원딥, 원받기 = 손.딥시크한번, 손.받기
+
+    def 딥(시스템, 사용자, 한도):
+        if 시스템 == cards.표지인물지시:
+            return _인물답({"사람": "마틴", "검색어": "CORTIS Martin", "소식": 1})
+        return 원딥(시스템, 사용자, 한도)
+
+    def 받기(주소, 최대바이트=0):
+        if "wikipedia.org/w/api.php" in 주소:
+            p = ({"title": "마틴", "thumbnail": {"source": "https://upload.wikimedia.org/martin.jpg"}} if 위키
+                 else {"title": "마틴", "missing": ""})
+            return json.dumps({"query": {"pages": {"1": p}}}).encode(), "application/json", 주소
+        if 주소.endswith("martin.jpg"):
+            return 그림머리(1280, 1600, "jpeg"), "image/jpeg", 주소
+        return 원받기(주소, 최대바이트)
+    손.딥시크한번, 손.받기 = 딥, 받기
+    손.실행.답들[그림액터] = list(그림결과)
+    return 손, 부른다음, 받은, 옛, 대화
+
+
 def test_정리_다음은_카드_넷을_지나_보기_주소가_결과에(monkeypatch):
     손, 부른다음, 받은, 옛, _ = 카드판(monkeypatch)
     기록, 단계들 = 끝까지(손, 부른다음)
@@ -238,7 +363,8 @@ def test_정리_다음은_카드_넷을_지나_보기_주소가_결과에(monkey
     assert 기록["result"]["bundle"][0]["사건"] == "뮤직비디오 공개"
     assert 기록["result"]["카드"] == {"보기": "https://v/1.html", "장수": 3, "빠진장": [{"no": 3, "why": "x"}]}
     assert 받은["본문"] == ("9월 3주차", "[소식1] 주인공: 그룹 · 사건: 뮤직비디오 공개 ·", ["소식1"])
-    assert 받은["지시"][0].startswith("SYS") and "«코르티스» 소식" in 받은["지시"][0]
+    본문지시 = [x for x in 받은["지시"] if x.startswith("SYS")]
+    assert len(본문지시) == 1 and "«코르티스» 소식" in 본문지시[0]
     assert 받은["틀"]["slide_types"]["뉴스"]["brand_chip"]["format"] == "{brand}" and 받은["그림"]
     assert 옛.제목들 == ["9월 3주차 코르티스 소식"]
     장 = 기록["재료"]["굽기장"]
@@ -290,16 +416,18 @@ def test_카드_단계는_주제_판으로_간다(monkeypatch):
     assert 간곳 == [("주제", "카드대본"), ("주제", "카드표지"), ("주제", "카드그림"), ("주제", "카드굽기"), ("주간", "본문")]
 
 
-def test_얼굴은_작은_대표_그림으로_세고_못_세면_0명(monkeypatch):
-    # 2MB 넘는 원본 사진은 판정관이 못 받아 조용히 0명이 됐고, 판정이 터지면 카드 전체가 실패했다(최종 검토 중요 2)
-    손, 부른다음, _, _, 대화 = 카드판(monkeypatch)
+def test_얼굴_세기가_터져도_카드는_얼굴_없이_굽는다(monkeypatch):
+    # 판정이 터지면 카드 전체가 실패했다(최종 검토 중요 2)
+    손, 부른다음, _, _, _ = 얼굴판(monkeypatch)
 
     def 터짐(*a, **kw):
         raise RuntimeError("딥시크 잔액 부족")
 
     monkeypatch.setattr(cards.judge.판정관, "얼굴수", 터짐)
     기록, 단계들 = 끝까지(손, 부른다음)
-    assert 단계들[-1] == "카드굽기" and 기록["result"]["카드"].get("보기") and 기록["재료"]["카드"]["표지칸"] is None
+    카 = 기록["재료"]["카드"]
+    assert 단계들[-1] == "카드굽기" and 기록["result"]["카드"].get("보기") and 카["표지칸"] is None
+    assert 카["표지인물"]["사람"] == "마틴" and 기록["재료"]["표지"]["face_none"] is True
 
 
 def test_카드_굽기_중에_람다가_죽어도_창고엔_소식_묶음이_남는다(monkeypatch):
@@ -445,9 +573,9 @@ def test_카드_그림은_사진_없는_장마다_사람_없이_그려_주간_�
     assert not hasattr(cards, "얼굴그림") and not hasattr(flow.손, "고쳐그리기")
 
 
-def test_그림_표지가_안전_검사에_막히면_사진_없이_한_번만_다시_굽는다(monkeypatch):
-    # 아이브 9월 4주차 표지가 OpenAI 안전 검사에 막혀 표지 없이 나갔다(10-05). 사진 표지는 그리지 않아 막힐 일이 없다(42++ D)
-    손, 부른다음, 받은, _, _ = 카드판(monkeypatch)
+def test_그림_표지가_안전_검사에_막히면_얼굴_없이_한_번만_다시_굽는다(monkeypatch):
+    # 아이브 9월 4주차 표지가 OpenAI 안전 검사에 막혀 표지 없이 나갔다(10-05)
+    손, 부른다음, 받은, _, _ = 얼굴판(monkeypatch)
     구운표지 = []
     거절 = ("굽기 실패 — RuntimeError: OpenAI 그림 실패 HTTP 400: {\n  \"error\": {\n    \"message\": "
             "\"Your request was rejected by the safety system.")
@@ -460,7 +588,9 @@ def test_그림_표지가_안전_검사에_막히면_사진_없이_한_번만_�
     monkeypatch.setattr(runs, "굽기", 굽기)
     기록, 단계들 = 끝까지(손, 부른다음)
     assert 단계들[-2:] == ["카드굽기", "카드굽기"] and 기록["state"] == "됨" and len(구운표지) == 2
-    assert 구운표지[1].get("face_none") and "photo_url" not in 구운표지[1]
+    assert 구운표지[0]["face_url"] and "face_none" not in 구운표지[0]
+    assert 구운표지[1].get("face_none") and not {"face_url", "face_person", "photo_url"} & set(구운표지[1])
+    assert 구운표지[1]["gen_prompt_en"].endswith(cards.사람없이)
     assert 기록["재료"]["카드"]["표지다시"] == 1 and 기록["result"]["카드"]["보기"] == "https://v/2.html"
 
 
@@ -478,38 +608,48 @@ def test_표지가_다른_까닭으로_빠지면_다시_굽지_않는다(monkeyp
     assert 단계들.count("카드굽기") == 1 and len(횟수) == 1 and 기록["state"] == "됨"
 
 
+# ── 표지 인물 — 카드 대본이 고르고 찾아 표지 장에(사용자 «ㅇㅇ», 10-06) ──
 
-# ── 계획 4 과제 42++ D — 표지는 진짜 사진 ──
-
-def test_표지_사진은_소식_차례로_큰_사진이고_얼굴이_있는_첫_것():
-    사진 = lambda 키, 크기, **더: {"갈래": "사진", "키": 키, "크기": 크기, **더}  # noqa: E731
-    소식들 = [소식(1, "아이브", {"갈래": "영상", "키": "m/1.mp4", "대표키": "m/1_t.jpg"}),   # 영상 대표화면은 작다 — 안 쓴다
-             소식(2, "그룹", 사진("m/2.jpg", [800, 500])),                             # 짧은 변 500
-             소식(3, "안유진", 사진("m/3.jpg", [1200, 900])),                           # 얼굴 0
-             소식(4, "리즈", 사진("m/4.jpg", [1200, 1600], 대표키="m/4_t.jpg", 자료사진=True)),
-             소식(5, "레이", 사진("m/5.jpg", [2000, 3000]))]
-    센 = []
-
-    def 얼굴수(주소):
-        센.append(주소)
-        return {"https://s3/m/3.jpg": 0}.get(주소, 1)
-    assert cards.표지사진고르기(소식들, 얼굴수, 주소, "아이브") == {"키": "m/4.jpg", "주인공": "리즈", "사람": 1}
-    assert 센 == ["https://s3/m/3.jpg", "https://s3/m/4_t.jpg"]  # 작은 대표 그림이 있으면 그것으로 센다
-    그룹 = [소식(1, "그룹", 사진("m/9.jpg", [1080, 1350]))]
-    assert cards.표지사진고르기(그룹, lambda 주소: 3, 주소, "아이브")["주인공"] == "아이브"
-    assert cards.표지사진고르기(소식들[:3], 얼굴수, 주소, "아이브") is None
-
-    def 터짐(주소):
-        raise RuntimeError("판정 실패")
-    assert cards.표지사진고르기(그룹, 터짐, 주소, "아이브") is None  # 못 세면 그 사진은 안 쓴다
+def _굽기적기(구운):
+    return lambda 기록, 손r: 구운.append(dict(기록["재료"]["표지"])) or 기록.update(
+        result={"viewer": "https://v/1.html", "slides": 2, "missing_slides": [], "missing_brands": []})
 
 
-def test_카드_대본이_고른_표지_사진이_표지_장에_깔린다(monkeypatch):
-    손, 부른다음, 받은, _, _ = 카드판(monkeypatch)
-    monkeypatch.setattr(cards, "표지사진고르기", lambda 소식들, 얼굴수, 주소r, 분야: {"키": "k/01.jpg", "주인공": "리즈", "사람": 1})
+def test_표지_인물의_위키백과_얼굴을_창고로_옮겨_표지_장에_얼굴_칸으로(monkeypatch):
+    손, 부른다음, 받은, _, _ = 얼굴판(monkeypatch)
     구운 = []
-    monkeypatch.setattr(runs, "굽기", lambda 기록, 손r: 구운.append(dict(기록["재료"]["표지"])) or 기록.update(
-        result={"viewer": "https://v/1.html", "slides": 2, "missing_slides": [], "missing_brands": []}))
+    monkeypatch.setattr(runs, "굽기", _굽기적기(구운))
     기록, _ = 끝까지(손, 부른다음)
-    assert 구운[0]["photo_url"].endswith("/k/01.jpg") and 구운[0]["face_none"] is True and 구운[0]["brand"] == "리즈"
-    assert "no person" in 받은["지시"][0]
+    카 = 기록["재료"]["카드"]
+    assert 카["표지인물"] == {"사람": "마틴", "검색어": "CORTIS Martin", "소식": 1}
+    assert 카["표지칸"]["출처"] == "위키" and 카["표지칸"]["키"].endswith("/media/face.jpg")
+    표 = 구운[0]
+    assert 표["face_url"] == cards.공개주소("통", 카["표지칸"]["키"])
+    assert (표["face_person"], 표["face_count"], 표["brand"]) == ("마틴", 1, "마틴")
+    assert not {"face_none", "photo_url"} & set(표)
+    assert "마틴 한 사람이 나오는 밈 장면" in 받은["지시"][0] and "no person" not in 받은["지시"][0]
+
+
+def test_위키에_없으면_이미지_검색으로_찾고_그_호출은_사진찾기로_적는다(monkeypatch):
+    그림 = [{"imageUrl": "https://img.example/martin.jpg", "pageUrl": "https://news.example/a",
+            "title": "CORTIS Martin 화보", "imageWidth": 1200, "imageHeight": 1500, "domain": "news.example"}]
+    손, 부른다음, _, _, _ = 얼굴판(monkeypatch, 위키=False, 그림결과=그림)
+    구운 = []
+    monkeypatch.setattr(runs, "굽기", _굽기적기(구운))
+    기록, _ = 끝까지(손, 부른다음)
+    assert 기록["재료"]["카드"]["표지칸"]["출처"] == "검색" and 구운[0]["face_url"].endswith("/media/face.jpg")
+    입력 = [입 for 도구, 입, _ in 손.실행.받은 if 도구 == 그림액터]
+    assert len(입력) == 1 and 입력[0]["queries"] == ["CORTIS Martin"] and 입력[0]["timeRange"] == "year"
+    표지호출 = [x for x in 기록["재료"]["호출기록"] if x["도구"] == "image_search"]
+    assert len(표지호출) == 1 and 표지호출[0]["사진찾기"]  # 지휘자가 부른 호출과 가른다
+
+
+def test_표지_인물이_없으면_찾지_않고_얼굴_없이(monkeypatch):
+    손, 부른다음, 받은, _, _ = 카드판(monkeypatch)  # 딥시크가 표지 인물 물음에 빈 답 — 사람 없음
+    구운 = []
+    monkeypatch.setattr(runs, "굽기", _굽기적기(구운))
+    기록, _ = 끝까지(손, 부른다음)
+    카 = 기록["재료"]["카드"]
+    assert 카["표지인물"] is None and 카["표지칸"] is None and cards.표지인물지시 in 받은["지시"]
+    assert 구운[0]["face_none"] is True and not {"face_url", "photo_url"} & set(구운[0])
+    assert not [x for x in 기록["재료"]["호출기록"] if x["도구"] == "image_search"]

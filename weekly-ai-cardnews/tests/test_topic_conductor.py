@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from fakes_topic import KAITO, 가짜실행, 가짜지휘자, 트윗, 현장만들기
-from topic import conductor, instructions
+from topic import conductor, instructions, tools
 
 
 def 돌리기(대본, 현=None, 남은=900.0):
@@ -148,3 +148,35 @@ def test_목록_판의_첫_구간에만_목록_결과를_작업판_뒤에_붙인
     assert 현.재료["목록글보임"] is True
     _, _, 대화, _ = 돌리기([[제출]], 현=현)
     assert "저장한 목록으로 이미 모았다" not in 대화.받은[0]["메시지들"][1]["content"]
+
+
+# ── 저장한 분야는 «고르기만»(사용자 10-05 «주간 AI 소식은 금방 만들던데») ──────────────────────
+
+def 고르기만돌리기(대본, 실행=None):
+    현 = 현장만들기(실행 or 가짜실행({KAITO: [트윗(1)]}))
+    대화 = 가짜지휘자(대본)
+    끝 = conductor.구간(현, 대화, lambda: 900.0, lambda: None, 고르기만=True)
+    return 끝, 현, 대화
+
+
+def test_새_분야_판의_지휘자는_도구를_다_받는다():
+    _, _, 대화, _ = 돌리기([[제출]])
+    assert 대화.받은[0]["도구"] == [d["function"]["name"] for d in tools.도구설명]
+
+
+def test_고르기만_판의_지휘자는_안쪽_도구만_받고_첫머리에_새로_찾지_말라는_말을_본다():
+    끝, _, 대화 = 고르기만돌리기([[제출]])
+    assert 끝 == "냄" and 대화.받은[0]["도구"] == ["update_board", "get_evidence", "submit_result"]
+    assert "새로 찾지 말고" in 대화.받은[0]["메시지들"][1]["content"]
+
+
+def test_고르기만_판에서_바깥_도구를_불러도_부르지_않는다():
+    실행 = 가짜실행({KAITO: [트윗(1)]})
+    끝, 현, 대화 = 고르기만돌리기([[("x_search", {"query": "CORTIS"})], [제출]], 실행=실행)
+    assert 끝 == "냄" and 실행.받은 == [] and 현.예산.기록 == []
+    assert "새로 찾지 않는다" in 대화.받은[1]["메시지들"][-1]["content"]
+
+
+def test_고르기만_판은_여섯_걸음_안에_안_내면_낸_것으로_끝낸다():
+    끝, 현, 대화 = 고르기만돌리기([[("update_board", {"judgment": f"판단 {i}"})] for i in range(20)])
+    assert 끝 == "냄" and len(대화.받은) <= 6 and 현.재료["제출"]["강제"] is True
