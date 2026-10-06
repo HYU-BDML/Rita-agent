@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주간 소식 모으기</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="판">
+  <section class="왼쪽">
+    <h1>주간 소식 모으기</h1>
+    <p class="설명">AI 소식은 주차만 고르면 바로, 다른 주제(아이돌·주식·회사 등)는 «새 분야» 에서 말로 정해 모아요.</p>
+    <div class="갈래" id="갈래들" role="tablist">
+      <button id="갈래AI" class="고름" type="button" role="tab" aria-selected="true" data-갈래="AI">AI 소식</button>
+      <button id="갈래새" type="button" role="tab" aria-selected="false" data-갈래="새">＋ 새 분야</button>
+    </div>
+    <div id="AI칸">
+      <p class="설명">주차를 고르고 «만들기» 를 누르면 그 주 AI 소식을 카드뉴스로 만들어 드려요. 10~15분쯤 걸려요.</p>
+      <label class="이름표" for="주차">주차</label>
+      <select id="주차"><option>불러오는 중…</option></select>
+      <button id="만들기" type="button">만들기</button>
+    </div>
+    <div id="새칸" hidden>
+      <p class="설명">보고 싶은 소식을 말해 주세요. AI가 몇 가지 되물어 주문서를 만들고, «이대로 모으기» 를 누르면
+        X·인스타그램·스레드·웹·기사를 직접 찾아 들어가 그 기간 소식을 모아 카드뉴스로 만들어 드려요.</p>
+      <p id="지갑띠" class="띠" hidden></p>
+      <ul id="대화" class="대화"></ul>
+      <label class="이름표" for="말칸">말하기 (Ctrl+Enter 로 보내기)</label>
+      <textarea id="말칸" rows="3" placeholder="예: 코르티스 이번 주 소식 / 엔비디아 주가 지난주 소식"></textarea>
+      <div class="줄단추">
+        <button id="보내기" type="button">보내기</button>
+        <button id="새대화" class="버금" type="button">새로 시작</button>
+      </div>
+      <div id="주문서" class="주문서" hidden></div>
+    </div>
+    <div id="저장칸" class="저장칸" hidden></div>
+    <p id="알림" class="알림" hidden></p>
+    <h2>지난 결과</h2>
+    <p class="설명">다 만든 카드뉴스가 모두에게 보여요. 누구나 지울 수 있어요.</p>
+    <ul id="목록" class="목록"><li class="흐림">불러오는 중…</li></ul>
+  </section>
+  <section class="오른쪽" id="오른쪽">
+    <p class="흐림">만들거나 «지난 결과» 를 누르면 여기에 보여요.</p>
+  </section>
+</main>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
