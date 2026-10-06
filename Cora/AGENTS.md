@@ -1,3 +1,7 @@
+## 2026-10-06 활성 개발 저장소 이전
+
+활성 저장소는 https://github.com/brhyu614/Cora (비공개), 로컬 work/cora-source/Cora/다. 이 checkout은 Rita 이력과 기존 교수DB를 보존하며 새 제품코드를 여기서 동시 개발하지 않는다. 새저장소 main + 각자 task branch + main 대상PR이 기준이다. 아래 기존 PR5/브랜치는 역사적 기록이다. 최신 안내는 새checkout의 Cora/docs/Cora_팀협업/00_함께_시작하기.md와 공동 현재상태를 읽는다. 키/DB를 새 Git에 넣지 않는다.
+
 # Cora working rules
 
 ## 2026-10-05 user-defined core value
