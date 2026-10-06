@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-04",
+  "code_commit": "6dcdd25",
+  "title": "미저장 자료·카드 초안 복구와 검증된 SQLite 백업·복원",
+  "note": "인증 서버의 복구함, CAS/폐기 tombstone, 저장중 추가 입력 보존, 권한 회수·사용자 전환 보호. 합성 구버전2종과 현재 DB의 스냅샷·복원·중단재시작을 로컬 검수했다. DB 외부 media/암호화키 복원, 운영 staging·독립 검수와 자산/광고/성과 clientId 연결·실제 Meta/SNS는 남는다.",
+  "unit_tests": {
+    "total": 532,
+    "passed": 531,
+    "failed": 0,
+    "skipped": 1
+  },
+  "new_recovery_backup_unit_tests": 14,
+  "browser_api_checks": 22,
+  "recovery_checks": 12,
+  "client_access_checks": 0,
+  "prior_client_access_checks": 8,
+  "focused_regression_checks": 10,
+  "server_mode_checks": 0,
+  "prior_server_mode_checks": 3,
+  "operator_cli_checks": 2,
+  "actual_AI": 0,
+  "actual_Meta": 0,
+  "actual_SNS": 0,
+  "external_messages": 0,
+  "production_data_access": false,
+  "independent_review": "not performed",
+  "launch_complete": false,
+  "backup_scope": "database-only",
+  "pull_request": "https://github.com/HYU-BDML/Rita-agent/pull/5",
+  "prior_pr_1": "merged; not reopened",
+  "runtime_node": "24.14.0"
+}

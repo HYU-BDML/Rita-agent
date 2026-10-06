@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "labs import view mounts after synthetic local login",
+    "no draft displays insufficiency and paste-transcript action; does not claim a draft was made",
+    "failed draft attempt preserves input and re-enables the import button"
+  ],
+  "errors": [],
+  "passed": true,
+  "fixture": "synthetic title/description; intercepted import HTTP; no real provider call"
+}

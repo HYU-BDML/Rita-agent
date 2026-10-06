@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "desktop render",
+    "48 tasks",
+    "task search",
+    "65 test cases",
+    "119 scope rows",
+    "390px no page overflow",
+    "no JS errors"
+  ],
+  "scope": "plan document only; product release acceptance not executed"
+}

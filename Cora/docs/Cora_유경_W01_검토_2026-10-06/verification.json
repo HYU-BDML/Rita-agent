@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-06",
+  "baseline": "801c49a",
+  "student_patch": "b00aeca",
+  "unit": {
+    "file": "tests/cora-inputs.test.ts",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "new_tests_claimed": 0
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "browser": {
+    "passed": 3,
+    "failed": 0,
+    "fixture": "intercepted synthetic HTTP"
+  },
+  "real_provider_calls": 0,
+  "original_119_ledger_sha256": "6dc812e7a72d0200bdb940df87e148ccf2812996b8d48bf141e965c7d76b5273",
+  "server_3226": "stopped",
+  "full_product_regression_rerun": false
+}

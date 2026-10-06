@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Owner invites existing accounts as editor (one brand) and reviewer through UI; self and unknown emails refused",
+    "Pending invitation grants no access; another account cannot accept it",
+    "Accepted editor sees only the granted brand; other brand stays hidden; own library unchanged",
+    "Editor opens shared work with notice, owner-only controls hidden, saves v2 onto the owner project",
+    "Stale save 409, moving to an ungranted brand refused, editor review request and delete refused",
+    "Reviewer cannot open work; outsider cannot remove members; cross-origin POST rejected",
+    "Owner removes editor through UI; open and save are refused immediately afterwards"
+  ],
+  "errors": [],
+  "passed": true
+}

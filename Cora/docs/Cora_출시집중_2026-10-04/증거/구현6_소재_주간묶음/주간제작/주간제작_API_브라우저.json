@@ -1,0 +1,58 @@
+{
+  "results": [
+    {
+      "name": "current accepted editor only; pending, reviewer, stranger, no-client and CSRF/unknown actions denied",
+      "passed": true
+    },
+    {
+      "name": "initial scoped load hides editable fields until response, avoiding loss from late initialization",
+      "passed": true
+    },
+    {
+      "name": "manual source stores date/no-link and escapes instruction-like body; failed internal URL creates nothing",
+      "passed": true
+    },
+    {
+      "name": "five source-backed candidates show age, no-link and repeated-source caveat; no invented trends",
+      "passed": true
+    },
+    {
+      "name": "select three with reason/editor/weekly deadlines, save then reload retains preparation and history",
+      "passed": true
+    },
+    {
+      "name": "empty date remains render-safe; stale plan and forged output link reject without overwriting",
+      "passed": true
+    },
+    {
+      "name": "create from saved slot opens normal card editor with current brand and complete evidence",
+      "passed": true
+    },
+    {
+      "name": "retry reuses output, project changes are live in plan, owner/editor export remains isolated",
+      "passed": true
+    },
+    {
+      "name": "next-week clone clears links, shifts dates, warns overlap and leaves previous ready version intact",
+      "passed": true
+    },
+    {
+      "name": "navigation dismissal preserves manual unsaved input; responsive week plan is error-free",
+      "passed": true
+    },
+    {
+      "name": "late draft reply after customer switch cannot reopen old customer project",
+      "passed": true
+    },
+    {
+      "name": "foreign source/pool/plan IDs and grant revocation refuse reads and generation without extra outputs",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "actualAI": 0,
+  "actualMeta": 0,
+  "actualSNS": 0,
+  "externalMessages": 0,
+  "syntheticOnly": true
+}

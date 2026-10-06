@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "UI scene duration and Korean subtitle persist in saved project",
+    "Editor exports actual UTF-8 Korean SRT before rendering",
+    "Authenticated browser renders and downloads unequal-duration MP4 with subtitles",
+    "ffprobe confirms exact total duration and subtitle track; ffmpeg recovers Korean timed text",
+    "Rendered SRT matches editor text; anonymous, other-user and arbitrary-format requests rejected",
+    "Render metadata matches timeline; other-user download rejected",
+    "Asset library downloads the original rendered subtitle even after editor text changes"
+  ],
+  "errors": [],
+  "passed": true
+}

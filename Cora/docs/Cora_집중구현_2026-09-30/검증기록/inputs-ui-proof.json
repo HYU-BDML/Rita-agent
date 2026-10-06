@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "PDF uploaded from the mounted import view opens an editable card draft that saves as v1",
+    "Link page saved from the mounted editor is public, escaped and script-free",
+    "API key created in the mounted panel lists the owner project, and revoking it returns 401",
+    "Help and API docs are public; legacy operator API remains blocked"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,175 @@
+
+> trend-hub@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.26
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+(node:66852) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66851) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66874) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66869) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66859) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66857) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66870) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66867) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66875) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66853) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66861) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66865) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66872) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66863) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66868) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66873) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66858) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66862) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66871) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66855) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66877) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66866) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (0/14) ...
+   Generating static pages (3/14) 
+(node:66921) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (6/14) 
+   Generating static pages (10/14) 
+ ✓ Generating static pages (14/14)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                   Size  First Load JS
+┌ ƒ /                                        168 B         106 kB
+├ ○ /_not-found                              999 B         104 kB
+├ ○ /api-docs                                318 B         103 kB
+├ ƒ /api/archive                             318 B         103 kB
+├ ƒ /api/attach                              318 B         103 kB
+├ ƒ /api/brief                               318 B         103 kB
+├ ƒ /api/cora/account                        318 B         103 kB
+├ ƒ /api/cora/ad-creative                    318 B         103 kB
+├ ƒ /api/cora/apikeys                        318 B         103 kB
+├ ƒ /api/cora/billing                        318 B         103 kB
+├ ƒ /api/cora/brands                         318 B         103 kB
+├ ƒ /api/cora/client-accounts                318 B         103 kB
+├ ƒ /api/cora/clients                        318 B         103 kB
+├ ƒ /api/cora/connect/instagram              318 B         103 kB
+├ ƒ /api/cora/connect/instagram/callback     318 B         103 kB
+├ ƒ /api/cora/contact                        318 B         103 kB
+├ ƒ /api/cora/content-list                   318 B         103 kB
+├ ƒ /api/cora/export-svg                     318 B         103 kB
+├ ƒ /api/cora/generate                       318 B         103 kB
+├ ƒ /api/cora/ideas                          318 B         103 kB
+├ ƒ /api/cora/import                         318 B         103 kB
+├ ƒ /api/cora/integrations                   318 B         103 kB
+├ ƒ /api/cora/library                        318 B         103 kB
+├ ƒ /api/cora/linkpage                       318 B         103 kB
+├ ƒ /api/cora/loop                           318 B         103 kB
+├ ƒ /api/cora/ops-analytics                  318 B         103 kB
+├ ƒ /api/cora/ops-calendar                   318 B         103 kB
+├ ƒ /api/cora/ops-insights                   318 B         103 kB
+├ ƒ /api/cora/ops-recipes                    318 B         103 kB
+├ ƒ /api/cora/ops-report                     318 B         103 kB
+├ ƒ /api/cora/ops-threads                    318 B         103 kB
+├ ƒ /api/cora/platform-design                318 B         103 kB
+├ ƒ /api/cora/platform-knowledge             318 B         103 kB
+├ ƒ /api/cora/platform-reference             318 B         103 kB
+├ ƒ /api/cora/platform-referral              318 B         103 kB
+├ ƒ /api/cora/platform-script                318 B         103 kB
+├ ƒ /api/cora/platform-style                 318 B         103 kB
+├ ƒ /api/cora/projects                       318 B         103 kB
+├ ƒ /api/cora/projects/[id]                  318 B         103 kB
+├ ƒ /api/cora/publications                   318 B         103 kB
+├ ƒ /api/cora/publications/simulation        318 B         103 kB
+├ ƒ /api/cora/recovery                       318 B         103 kB
+├ ƒ /api/cora/reviews                        318 B         103 kB
+├ ƒ /api/cora/revisions                      318 B         103 kB
+├ ƒ /api/cora/scheduler                      318 B         103 kB
+├ ƒ /api/cora/session                        318 B         103 kB
+├ ƒ /api/cora/settings                       318 B         103 kB
+├ ƒ /api/cora/team                           318 B         103 kB
+├ ƒ /api/cora/video                          318 B         103 kB
+├ ƒ /api/cora/video-audio                    318 B         103 kB
+├ ƒ /api/cora/video-audio/[id]               318 B         103 kB
+├ ƒ /api/cora/video-clips                    318 B         103 kB
+├ ƒ /api/cora/video-clips/[id]               318 B         103 kB
+├ ƒ /api/cora/video-motion                   318 B         103 kB
+├ ƒ /api/cora/video-narration                318 B         103 kB
+├ ƒ /api/cora/video-shorts                   318 B         103 kB
+├ ƒ /api/cora/video-sources                  318 B         103 kB
+├ ƒ /api/cora/video-sources/[id]             318 B         103 kB
+├ ƒ /api/cora/video-sources/[id]/chunk       318 B         103 kB
+├ ƒ /api/cora/video-sources/[id]/complete    318 B         103 kB
+├ ƒ /api/cora/video-sources/[id]/srt         318 B         103 kB
+├ ƒ /api/cora/video-templates                318 B         103 kB
+├ ƒ /api/cora/video-templates/[id]           318 B         103 kB
+├ ƒ /api/cora/video-templates/[id]/apply     318 B         103 kB
+├ ƒ /api/cora/video/[id]                     318 B         103 kB
+├ ƒ /api/cora/weekly                         318 B         103 kB
+├ ƒ /api/cora/workbench                      318 B         103 kB
+├ ƒ /api/cron/discover                       318 B         103 kB
+├ ƒ /api/cron/track                          318 B         103 kB
+├ ƒ /api/discover                            318 B         103 kB
+├ ƒ /api/produce                             318 B         103 kB
+├ ƒ /api/renormalize                         318 B         103 kB
+├ ƒ /api/review                              318 B         103 kB
+├ ƒ /api/schedule                            318 B         103 kB
+├ ƒ /api/tracking                            318 B         103 kB
+├ ƒ /api/v1/platform-assets                  318 B         103 kB
+├ ƒ /api/v1/platform-project                 318 B         103 kB
+├ ƒ /api/v1/projects                         318 B         103 kB
+├ ƒ /candidates/[id]                       12.2 kB         118 kB
+├ ƒ /characters                              129 B         111 kB
+├ ƒ /explore                                 129 B         111 kB
+├ ƒ /grammars                              5.18 kB         111 kB
+├ ƒ /grammars/[id]                           168 B         106 kB
+├ ○ /help                                    163 B         107 kB
+├ ƒ /issues                                  127 B         111 kB
+├ ƒ /l/[slug]                                318 B         103 kB
+├ ƒ /l/[slug]/click                          318 B         103 kB
+├ ƒ /library                               1.57 kB         108 kB
+├ ƒ /memes                                   129 B         111 kB
+├ ƒ /runs                                  1.09 kB         107 kB
+├ ƒ /settings                              2.79 kB         109 kB
+├ ƒ /settings/tracking                     2.77 kB         109 kB
+└ ƒ /studio                                77.1 kB         184 kB
++ First Load JS shared by all               103 kB
+  ├ chunks/1dd7b6f3-713746c2e6281148.js    54.2 kB
+  ├ chunks/4412-58b681b22e8625dd.js        46.6 kB
+  └ other shared chunks (total)            1.94 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

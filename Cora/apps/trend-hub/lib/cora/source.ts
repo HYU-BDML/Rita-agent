@@ -1,7 +1,10 @@
 import { lookup } from 'node:dns/promises';
 import https from 'node:https';
-export function publicIPv4(ip:string){const p=ip.split('.').map(Number);return p.length===4&&p.every(n=>Number.isInteger(n)&&n>=0&&n<=255)&&![0,10,127].includes(p[0])&&!(p[0]===169&&p[1]===254)&&!(p[0]===172&&p[1]>=16&&p[1]<=31)&&!(p[0]===192&&p[1]===168)&&!(p[0]===100&&p[1]>=64&&p[1]<=127)&&p[0]<224;}
-export async function fetchPublic(url:string,depth=0):Promise<{title:string;text:string;url:string}>{
+export function publicIPv4(ip:string){
+ if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip))return false;const p=ip.split('.').map(Number);
+ return p.every(n=>n>=0&&n<=255)&&![0,10,127].includes(p[0])&&!(p[0]===169&&p[1]===254)&&!(p[0]===172&&p[1]>=16&&p[1]<=31)&&!(p[0]===192&&(p[1]===168||(p[1]===0&&(p[2]===0||p[2]===2))))&&!(p[0]===198&&(p[1]===18||p[1]===19||(p[1]===51&&p[2]===100)))&&!(p[0]===203&&p[1]===0&&p[2]===113)&&!(p[0]===100&&p[1]>=64&&p[1]<=127)&&p[0]<224;
+}
+export async function fetchPublic(url:string,depth=0):Promise<{title:string;text:string;url:string;truncated?:boolean}>{
  const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||(u.port&&u.port!=='443')||depth>3)throw new Error('공개 HTTPS 주소만 가져올 수 있습니다.');
  const resolved=await lookup(u.hostname,{all:true,family:4});if(!resolved.length||resolved.some(a=>!publicIPv4(a.address)))throw new Error('내부 네트워크 주소는 가져올 수 없습니다.');
  const result=await new Promise<{status:number;location?:string;content:string}>((resolve,reject)=>{
@@ -15,6 +18,6 @@ export async function fetchPublic(url:string,depth=0):Promise<{title:string;text
  const decode=(s:string)=>s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ');
  const title=decode(result.content.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g,' ')||u.hostname).trim();
  const main=result.content.match(/<(?:article|main)\b[^>]*>([\s\S]*?)<\/(?:article|main)>/i)?.[1]||result.content;
- const text=decode(main.replace(/<(script|style|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<\/(p|div|h[1-6]|li|section)>/gi,'\n').replace(/<[^>]+>/g,' ').replace(/[ \t]+/g,' ').replace(/\n\s*\n/g,'\n')).trim().slice(0,16000);
- if(text.length<30)throw new Error('추출한 본문이 부족합니다. 직접 입력해 주세요.');return{title,text,url:u.href};
+ const text=decode(main.replace(/<(script|style|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<\/(p|div|h[1-6]|li|section)>/gi,'\n').replace(/<[^>]+>/g,' ').replace(/[ \t]+/g,' ').replace(/\n\s*\n/g,'\n')).trim();
+ if(text.length<30)throw new Error('추출한 본문이 부족합니다. 직접 입력해 주세요.');return{title,text:text.slice(0,16000),url:u.href,truncated:text.length>16000};
 }

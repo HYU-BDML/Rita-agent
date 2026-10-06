@@ -1,0 +1,29 @@
+{
+  "checks": [
+    "90 s source video uploaded in chunks with a 30-line subtitle file",
+    "Rule-based plan (no AI) for the how-to purpose picks a segment overlapping the how-to passage",
+    "Real AI plan for the funny purpose returned 2 snapped segments within 12–20 s (first 30~44.8 s; funny passage 30~44.8 s)",
+    "Selected segment rendered as a 1080x1920 short with blurred background, hook card, burned subtitles and uploaded background music; downloaded file verified with ffprobe"
+  ],
+  "errors": [],
+  "aiCalls": 1,
+  "passed": true,
+  "ruleCandidates": [
+    [
+      60,
+      77.8
+    ],
+    [
+      30,
+      47.8
+    ]
+  ],
+  "aiFirst": {
+    "start": 30,
+    "end": 44.8,
+    "titles": [
+      "대박 반전 황당",
+      "0번째 이야기"
+    ]
+  }
+}

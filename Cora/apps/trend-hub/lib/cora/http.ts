@@ -9,7 +9,7 @@ export function sameOrigin(req: NextRequest) {
   // Next may normalize req.url to localhost; the browser's Host is the actual target.
   try { const parsed = new URL(origin); return ['http:', 'https:'].includes(parsed.protocol) && parsed.host === req.headers.get('host'); } catch { return false; }
 }
-export async function body(req: NextRequest) {
+export async function body(req: Request) {
   if (!req.headers.get('content-type')?.includes('application/json')) throw new Error('JSON 요청이 필요합니다.');
   // Bound the stream itself, not just the caller-controlled Content-Length header.
   const reader = req.body?.getReader(); if (!reader) throw new Error('요청이 비어 있습니다.');

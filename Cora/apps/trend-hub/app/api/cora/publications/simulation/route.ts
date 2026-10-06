@@ -1,0 +1,7 @@
+import {NextRequest} from 'next/server';
+import {store} from '@/lib/cora/store';
+import {body,json,sameOrigin,user} from '@/lib/cora/http';
+import {localSimulation} from '@/lib/cora/publishing/queue';
+export const runtime='nodejs';export const dynamic='force-dynamic';
+export function GET(req:NextRequest){const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);const id=req.nextUrl.searchParams.get('id');try{return json(id?{events:store().publicationQueue.history(u.id,id),mode:'simulation'}:{jobs:store().publicationQueue.list(u.id),mode:'simulation'});}catch{return json({error:'모의 작업을 찾을 수 없습니다.'},404);}}
+export async function POST(req:NextRequest){if(!sameOrigin(req))return json({error:'허용되지 않은 요청입니다.'},403);const u=user(req);if(!u)return json({error:'로그인이 필요합니다.'},401);try{const b=await body(req);if(typeof b.id!=='string'||!b.id||b.id.length>80)throw new Error('작업 식별자가 필요합니다.');const q=store().publicationQueue;if(b.action==='enqueue')return json({id:q.enqueue(u.id,b.id),mode:'simulation'},201);if(b.action==='tick'){await q.tick(u.id,b.id,localSimulation);return json({jobs:q.list(u.id),mode:'simulation'});}if(b.action==='cancel')return json({cancelled:q.cancel(u.id,b.id),mode:'simulation'});throw new Error('지원하지 않는 모의 작업입니다.');}catch(e){const message=(e as Error).message;return json({error:message==='NOT_FOUND'?'모의 작업을 찾을 수 없습니다.':message},message==='NOT_FOUND'?404:400);}}

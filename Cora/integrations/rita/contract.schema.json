@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cora.local/integrations/rita/contract.schema.json",
+  "title": "Cora agent task envelope",
+  "description": "One unit of work handed between Cora and a Rita agent. The hand-written validator in apps/trend-hub/lib/cora/platform/rita-contract.ts enforces this schema plus the cross-field rules listed under x-crossFieldRules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "taskId", "agent", "status", "createdAt", "updatedAt", "input", "output", "cost", "provenance", "approval"],
+  "properties": {
+    "schemaVersion": { "const": "cora.agent-task/1" },
+    "taskId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,80}$" },
+    "agent": { "enum": ["card", "blog", "script", "video", "publish-sim", "diagnose"] },
+    "status": { "enum": ["queued", "running", "needs_approval", "succeeded", "failed", "cancelled"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "input": {
+      "type": "object", "additionalProperties": false, "required": ["brand", "instruction", "refs"],
+      "properties": {
+        "brand": { "type": "string", "maxLength": 80 },
+        "instruction": { "type": "string", "maxLength": 5000 },
+        "refs": { "type": "array", "maxItems": 50, "items": { "type": "object", "additionalProperties": false, "required": ["kind", "ref"], "properties": { "kind": { "type": "string", "minLength": 1, "maxLength": 40 }, "ref": { "type": "string", "minLength": 1, "maxLength": 1500 } } } }
+      }
+    },
+    "output": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "ref", "summary"], "properties": { "kind": { "type": "string", "minLength": 1, "maxLength": 40 }, "ref": { "type": "string", "minLength": 1, "maxLength": 200 }, "summary": { "type": "string", "maxLength": 2000 } } }
+      ]
+    },
+    "cost": {
+      "type": "object", "additionalProperties": false, "required": ["credits", "feature", "ledgerEntryId", "provider", "model"],
+      "properties": {
+        "credits": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "feature": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 },
+        "ledgerEntryId": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 },
+        "provider": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 },
+        "model": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 }
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false, "required": ["origin", "sources", "humanEdited"],
+      "properties": {
+        "origin": { "enum": ["llmgw", "source-outline", "human", "simulated"] },
+        "humanEdited": { "type": "boolean" },
+        "sources": { "type": "array", "maxItems": 50, "items": { "type": "object", "additionalProperties": false, "required": ["kind", "ref"], "properties": { "kind": { "enum": ["url", "note", "file", "upload", "work-item"] }, "ref": { "type": "string", "minLength": 1, "maxLength": 1500 }, "fetchedAt": { "type": "string", "format": "date-time" } } } }
+      }
+    },
+    "approval": {
+      "type": "object", "additionalProperties": false, "required": ["required", "state"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "state": { "enum": ["not_required", "pending", "approved", "rejected"] },
+        "approver": { "type": "string", "minLength": 1 },
+        "decidedAt": { "type": "string", "format": "date-time" },
+        "comment": { "type": "string", "maxLength": 3000 }
+      }
+    },
+    "error": { "type": "object", "additionalProperties": false, "required": ["code", "message"], "properties": { "code": { "type": "string", "minLength": 1, "maxLength": 60 }, "message": { "type": "string", "minLength": 1, "maxLength": 1000 } } }
+  },
+  "x-crossFieldRules": [
+    "status=succeeded requires a non-null output",
+    "status=failed requires error",
+    "updatedAt is not earlier than createdAt",
+    "approval.required=true forbids state not_required; approval.required=false requires state not_required",
+    "approval.state approved or rejected requires approver and decidedAt",
+    "provenance.sources of kind url require fetchedAt",
+    "agent=publish-sim requires provenance.origin=simulated and approval.required=true (Cora publishes nothing to real accounts)",
+    "status=succeeded with approval.required=true requires approval.state=approved"
+  ]
+}

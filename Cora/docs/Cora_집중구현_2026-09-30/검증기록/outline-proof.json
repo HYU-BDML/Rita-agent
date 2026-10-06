@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "AI outline created as draft through the UI (1 gateway call)",
+    "Body generation refused before approval, without an AI call",
+    "Edited outline approved once; duplicate approval 409; other account 404",
+    "Two simultaneous body requests produce exactly one blog (1 gateway call); the body records the approved edited outline; a third request 409",
+    "UI opens the written body from the outline (verified in a separate UI-only run on the same account after reload; no extra AI calls)"
+  ],
+  "errors": [],
+  "aiCalls": 2,
+  "passed": true,
+  "note": "First run passed the four API/UI checks with 2 real cora_test calls and stopped at the last UI step because the script did not reload after an API-side write. The script now reloads; the last step was verified separately without AI.",
+  "failure_first_run": "TimeoutError: locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: '만든 본문 열기' })\n"
+}

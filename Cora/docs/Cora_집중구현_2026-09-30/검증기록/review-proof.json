@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Owner shared saved version with an existing separate account through UI",
+    "Reviewer saw actual snapshot cards and approved with a recorded comment",
+    "Sharing does not grant project access or owner self-approval",
+    "New version invalidates prior approval while old snapshot remains unchanged",
+    "New version can receive a separate change request",
+    "Owner revokes server access to shared snapshot"
+  ],
+  "errors": [],
+  "passed": true
+}

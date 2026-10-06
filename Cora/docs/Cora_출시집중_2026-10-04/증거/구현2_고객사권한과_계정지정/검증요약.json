@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-04",
+  "code_commit": "7389d42",
+  "title": "고객사별 팀 권한·검토 사본 보호·Instagram 계정 지정 로컬 구현",
+  "note": "선택한 고객사에만 팀 권한을 부여하고 소유자가 연결 계정을 직접 지정합니다. 카드/검토/계정 메타데이터의 회수·충돌·토큰 비노출을 확인했습니다. 자산·광고·성과 권한 통합, 임시저장 복구, 데이터 복원, 실제 Meta 연결·게시·독립 검수는 남습니다.",
+  "unit_tests": {
+    "total": 518,
+    "passed": 517,
+    "failed": 0,
+    "skipped": 1
+  },
+  "browser_api_checks": 18,
+  "client_access_checks": 8,
+  "focused_regression_checks": 10,
+  "server_mode_checks": 0,
+  "prior_server_mode_checks": 3,
+  "actual_AI": 0,
+  "actual_Meta": 0,
+  "actual_SNS": 0,
+  "external_messages": 0,
+  "independent_review": "not performed",
+  "launch_complete": false,
+  "synthetic_only": true,
+  "original_user_database_access": false,
+  "test_server_stopped": true,
+  "heartbeat_resumed": false,
+  "typecheck": "passed",
+  "production_build": "passed",
+  "long_term_ledger_changed": false
+}

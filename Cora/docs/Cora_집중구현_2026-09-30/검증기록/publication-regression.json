@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Brand saved and reapplied after reload",
+    "Content edit invalidates personal review status on server",
+    "Brand/status filter and review notes persist",
+    "Copy saved under a new ID without modifying original",
+    "Delete and JSON restoration work; restored content resets review provenance",
+    "Card add and delete work",
+    "Another account cannot see brand presets or delete the project"
+  ],
+  "errors": [],
+  "passed": true
+}

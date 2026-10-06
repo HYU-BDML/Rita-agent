@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "mode": "missing",
+      "passed": true,
+      "video": 404,
+      "clients": 401
+    },
+    {
+      "mode": "invalid",
+      "passed": true,
+      "video": 404,
+      "clients": 401
+    },
+    {
+      "mode": "labs",
+      "passed": true,
+      "video": 401,
+      "clients": 401
+    }
+  ],
+  "actualAI": 0,
+  "actualSNS": 0
+}

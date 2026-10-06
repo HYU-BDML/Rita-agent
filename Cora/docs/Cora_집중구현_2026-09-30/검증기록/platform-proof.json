@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "Three accounts signed up (A, B through the /studio UI; C through the session API)",
+    "Knowledge: note and .md file saved per account; other account sees none and cannot delete; 5001-char note, 200KB+1 file, .exe, http link and https://127.0.0.1 link refused; cross-origin 403; delete works",
+    "Style statistics computed locally without AI (sentences 8, median length 13)",
+    "Script import gave 3 cards with unchanged text; saved as a project (POST) and updated (PUT, v2)",
+    "Referral: A and B each +30 credits once; repeat claim, self code, unknown code and an account that already saved a project are refused",
+    "MCP child process (stdio): initialize, tools/list (3 tools), list_projects/get_project/list_assets return the key owner project; another key gets 404; a bad key gets 401 as a tool error"
+  ],
+  "errors": [],
+  "skipped": [
+    "live link fetch (SSRF blocks the local /help page)",
+    "design/reference/style-learn routes (call generateText)"
+  ],
+  "uiMounted": false,
+  "passed": true
+}

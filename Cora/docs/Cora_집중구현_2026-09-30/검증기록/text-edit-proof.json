@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "UI edits the existing asset without duplicate and preserves source",
+    "Stale UI save returns conflict while retaining unsaved editor text and newer server content"
+  ],
+  "passed": true
+}

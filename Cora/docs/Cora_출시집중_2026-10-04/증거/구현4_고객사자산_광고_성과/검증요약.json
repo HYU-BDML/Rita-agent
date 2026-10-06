@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-04",
+  "code_commit": "229a87fdcfc2da7afc8366391f994ac783b1d603",
+  "unit_tests": {
+    "total": 545,
+    "passed": 544,
+    "failed": 0,
+    "skipped": 1
+  },
+  "new_client_content_unit_tests": 13,
+  "browser_api_checks": 39,
+  "client_content_checks": 17,
+  "recovery_regression_checks": 12,
+  "focused_regression_checks": 10,
+  "typecheck": "passed",
+  "production_build": "passed",
+  "runtime_node": "24.14.0",
+  "actual_AI": 0,
+  "actual_Meta": 0,
+  "actual_SNS": 0,
+  "external_messages": 0,
+  "production_data_access": false,
+  "independent_review": "not performed",
+  "launch_complete": false,
+  "backup_scope": "database-only",
+  "test_server": "stopped",
+  "automation": "paused",
+  "source_ledger_sha256": "6dc812e7a72d0200bdb940df87e148ccf2812996b8d48bf141e965c7d76b5273"
+}

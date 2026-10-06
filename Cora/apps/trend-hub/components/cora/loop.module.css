@@ -1,0 +1,16 @@
+.loop button{cursor:pointer;border:1px solid #d7e0d3;background:#fffefa;border-radius:8px;padding:9px 14px;font:inherit;font-size:13px;color:#205b4a;min-height:40px;margin:4px 6px 4px 0}
+.loop button:hover:not(:disabled){background:#eaf0e3}
+.loop button:disabled{opacity:.5;cursor:not-allowed}
+.loop button:focus-visible{outline:3px solid #e6ac7c;outline-offset:2px}
+.loop .primary{background:#205b4a;color:#fff;border-color:#205b4a}
+.loop .primary:hover:not(:disabled){background:#164734}
+.loop label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}
+.loop fieldset{border:1px solid #e4e9de;border-radius:8px;padding:8px 12px;margin:10px 0}
+.loop fieldset label{display:inline-flex;align-items:center;gap:4px;font-weight:400;margin:4px 10px 4px 0}
+.loop table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;display:block;overflow-x:auto}
+.loop th,.loop td{border-bottom:1px solid #e4e9de;padding:6px 8px;text-align:left;vertical-align:top}
+.loop th{background:#f3f6ef;font-weight:600;white-space:nowrap}
+.loop h3{margin-top:4px}
+.metricRow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.metricRow label{margin:0}
+.metricRow input{width:84px}

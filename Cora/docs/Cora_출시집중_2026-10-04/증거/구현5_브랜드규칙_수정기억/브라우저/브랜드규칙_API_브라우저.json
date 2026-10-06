@@ -1,0 +1,50 @@
+{
+  "results": [
+    {
+      "name": "history is scoped to current accepted editor grants; reviewer and foreign clients rejected",
+      "passed": true
+    },
+    {
+      "name": "client saves record immutable evidence, version, actor and revision reason with CAS",
+      "passed": true
+    },
+    {
+      "name": "owner sees history and can restore old rules as a new version, editor gets read-only history",
+      "passed": true
+    },
+    {
+      "name": "scoped ad account profile ignores stale rule overrides and retains manual caption evidence",
+      "passed": true
+    },
+    {
+      "name": "ordinary source outline attaches common rule version before save; editor UI preserves snapshots",
+      "passed": true
+    },
+    {
+      "name": "injected general/card and ad generators use identical captured rules; no gateway call",
+      "passed": true
+    },
+    {
+      "name": "rule changes do not overwrite old results; editor warns on older version and forbidden text",
+      "passed": true
+    },
+    {
+      "name": "API overwrites forged snapshot evidence with actual historical values while retaining the historical version",
+      "passed": true
+    },
+    {
+      "name": "shared history revoke, account export isolation and cross-origin mutation rejection",
+      "passed": true
+    },
+    {
+      "name": "mobile history and brand reference remain within viewport and error-free",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "actualAI": 0,
+  "actualMeta": 0,
+  "actualSNS": 0,
+  "externalMessages": 0,
+  "syntheticOnly": true
+}

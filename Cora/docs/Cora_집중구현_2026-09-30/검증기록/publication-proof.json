@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "UI saves approved snapshot and converts Korean local time to UTC; explicitly no live sending",
+    "Repeated preparation returns same job without duplicate",
+    "Other account cannot access preparation; sending action is unavailable",
+    "Editing source requires re-review and preserves prepared caption",
+    "Owner cancels prepared job through UI"
+  ],
+  "errors": [],
+  "passed": true
+}

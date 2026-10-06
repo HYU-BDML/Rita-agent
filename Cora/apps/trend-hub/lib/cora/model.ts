@@ -1,12 +1,26 @@
+import {validateBrandRules,type BrandRules} from './brand-rules';
 import { deckFromCards } from '../producers/deck';
 
 export interface Brief { brand: string; audience: string; goal: string; material: string; sourceUrl: string; accent: string }
 export interface Idea { id: string; title: string; description: string; structure: string }
-export interface Slide { id: string; headline: string; body: string; image?: string }
+/** Per-card text and photo settings. Every field is optional so older saved projects stay valid. */
+export interface SlideStyle { align?:'left'|'center'|'right'; emphasis?:string; letterSpacing?:number; lineHeight?:number; imageFit?:'cover'|'contain'; imagePosition?:'top'|'center'|'bottom'; imageBrightness?:number }
+export const LINE_HEIGHTS=[1.3,1.45,1.55,1.75,2] as const;
+/**
+ * Free-form elements drawn on top of a card (coordinates in the 1080px-wide canvas, top-left origin).
+ * Static cards support text, image, logo and shape layers. Video elements are NOT layers: they belong to
+ * the video batch (per-scene motion/clip settings) and are intentionally not part of this type.
+ */
+export type LayerType='text'|'image'|'logo'|'shape';
+export interface Layer { id:string; type:LayerType; x:number; y:number; w:number; h:number; z:number; rotation?:number; opacity?:number; locked?:boolean; hidden?:boolean;
+  text?:string; fontSize?:number; color?:string; weight?:400|500|600|700|800; align?:'left'|'center'|'right';
+  src?:string; fill?:string; radius?:number }
+export const MAX_LAYERS=12;
+export interface Slide { id: string; headline: string; body: string; image?: string; seconds?:number; subtitle?:string; keyword?:string; style?:SlideStyle; layers?:Layer[] }
 export type WorkStatus = 'draft' | 'review' | 'ready';
 export interface Design { ratio: '4:5'|'1:1'|'9:16'; template:'editorial'|'minimal'|'bold'; font:'sans'|'serif'; textScale:number }
 export const defaultDesign:Design={ratio:'4:5',template:'editorial',font:'sans',textScale:1};
-export interface Draft { design?:Design; brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline' | 'llmgw'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
+export interface Draft { brandRules?:BrandRules; clientId?:string; design?:Design; brief: Brief; idea: string; slides: Slide[]; caption: string; origin: 'source-outline' | 'llmgw'; postedUrl: string; workStatus?: WorkStatus; reviewNotes?: string }
 export interface Project extends Draft { id: string; version: number; createdAt: string; updatedAt: string }
 export const blankBrief: Brief = { brand: '', audience: '', goal: '저장하고 다시 보는 콘텐츠', material: '', sourceUrl: '', accent: '#205b4a' };
 export const sampleBrief: Brief = { ...blankBrief, brand: '모퉁이 책방', audience: '퇴근 후 조용한 시간을 찾는 직장인', material: '모퉁이 책방은 독립출판물을 소개하는 작은 동네 책방입니다.\n매주 목요일 저녁 7시에 함께 책을 읽는 모임을 엽니다.\n책 모임은 책방의 예약 페이지에서 신청할 수 있습니다.\n책을 읽은 뒤 마음에 남은 문장을 나누는 시간을 갖습니다.', goal: '책 모임을 소개하고 참여를 안내하기' };
@@ -36,6 +50,53 @@ export function outline(b: Brief, idea: Idea): Draft {
 export function rendererContract(d: Draft) {
   return deckFromCards(d.slides.map((s, i) => ({ no: i + 1, kind: i === 0 ? '표지' : i === d.slides.length - 1 ? '마지막장' : '본문', headline: s.headline, body: s.body })), { template: 'explain_box', style: 'gogumafarm', account: d.brief.brand, kicker: '순서' });
 }
+export function validateStyle(value:unknown):SlideStyle{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');
+ const v=value as Record<string,unknown>,out:SlideStyle={};
+ const oneOf=<T extends string>(k:string,allowed:readonly T[])=>{if(v[k]===undefined)return;if(!allowed.includes(v[k] as T))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');return v[k] as T;};
+ const num=(k:string,ok:(n:number)=>boolean)=>{if(v[k]===undefined)return;const n=v[k];if(typeof n!=='number'||!Number.isFinite(n)||!ok(n))throw new Error('카드 문자·이미지 설정을 확인해 주세요.');return n;};
+ const align=oneOf('align',['left','center','right'] as const);if(align)out.align=align;
+ if(v.emphasis!==undefined){if(typeof v.emphasis!=='string'||v.emphasis.length>40)throw new Error('강조할 단어는 40자 이내입니다.');if(v.emphasis.trim())out.emphasis=v.emphasis.trim();}
+ const ls=num('letterSpacing',n=>Number.isInteger(n)&&n>=-2&&n<=8);if(ls!==undefined)out.letterSpacing=ls;
+ const lh=num('lineHeight',n=>(LINE_HEIGHTS as readonly number[]).includes(n));if(lh!==undefined)out.lineHeight=lh;
+ const fit=oneOf('imageFit',['cover','contain'] as const);if(fit)out.imageFit=fit;
+ const pos=oneOf('imagePosition',['top','center','bottom'] as const);if(pos)out.imagePosition=pos;
+ const br=num('imageBrightness',n=>n>=0.5&&n<=1.5);if(br!==undefined)out.imageBrightness=Math.round(br*100)/100;
+ return out;
+}
+const LAYER_ERR='요소 설정을 확인해 주세요.';
+const IMAGE_SRC=/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+/** Strict layer validation. Unknown types are refused; unknown keys are dropped so only known fields are stored. */
+export function validateLayers(value:unknown):Layer[]{
+ if(!Array.isArray(value)||value.length>MAX_LAYERS)throw new Error(`요소는 ${MAX_LAYERS}개 이하여야 합니다.`);
+ const ids=new Set<string>();
+ return value.map(raw=>{
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error(LAYER_ERR);
+  const v=raw as Record<string,unknown>;
+  if(typeof v.type!=='string'||!['text','image','logo','shape'].includes(v.type))throw new Error('지원하지 않는 요소 종류입니다.');
+  if(typeof v.id!=='string'||!v.id||v.id.length>80||ids.has(v.id))throw new Error('요소 번호가 비었거나 중복되었습니다.');ids.add(v.id);
+  const num=(k:string,lo:number,hi:number,int=false)=>{const n=v[k];if(typeof n!=='number'||!Number.isFinite(n)||n<lo||n>hi||(int&&!Number.isInteger(n)))throw new Error(LAYER_ERR);return n;};
+  const opt=(k:string,lo:number,hi:number,int=false)=>v[k]===undefined?undefined:num(k,lo,hi,int);
+  const hex=(k:string)=>{const c=v[k];if(typeof c!=='string'||!/^#[\da-f]{6}$/i.test(c))throw new Error(LAYER_ERR);return c;};
+  const flag=(k:string)=>{if(v[k]===undefined)return undefined;if(typeof v[k]!=='boolean')throw new Error(LAYER_ERR);return v[k] as boolean;};
+  const type=v.type as LayerType;
+  const l:Layer={id:v.id,type,x:num('x',-1080,3240),y:num('y',-1920,3840),w:num('w',1,4320),h:num('h',1,4320),z:num('z',0,999,true)};
+  const rot=opt('rotation',-360,360);if(rot!==undefined)l.rotation=rot;
+  const op=opt('opacity',0,1);if(op!==undefined)l.opacity=op;
+  const lk=flag('locked');if(lk!==undefined)l.locked=lk;const hd=flag('hidden');if(hd!==undefined)l.hidden=hd;
+  if(type==='text'){
+   if(typeof v.text!=='string'||v.text.length>300)throw new Error('요소 문구는 300자 이내입니다.');l.text=v.text;
+   l.fontSize=num('fontSize',8,400);l.color=hex('color');
+   if(![400,500,600,700,800].includes(v.weight as number))throw new Error(LAYER_ERR);l.weight=v.weight as Layer['weight'];
+   if(!['left','center','right'].includes(v.align as string))throw new Error(LAYER_ERR);l.align=v.align as Layer['align'];
+  }else if(type==='shape'){
+   l.fill=hex('fill');l.radius=num('radius',0,2000);
+  }else{
+   if(typeof v.src!=='string'||v.src.length>400000||!IMAGE_SRC.test(v.src))throw new Error('사진 크기 또는 형식을 확인해 주세요.');l.src=v.src;
+  }
+  return l;
+ });
+}
 export function validateDraft(value: unknown): Draft {
   const v = value as Partial<Draft>;
   const str = (x: unknown, max: number, label: string) => { if (typeof x !== 'string' || x.length > max) throw new Error(`${label} 형식을 확인해 주세요.`); return x; };
@@ -50,11 +111,18 @@ export function validateDraft(value: unknown): Draft {
     const slide: Slide = { id: str(s.id, 80, '카드 번호'), headline: str(s.headline, 80, '제목'), body: str(s.body, 500, '본문') };
     if (!slide.id || ids.has(slide.id)) throw new Error('중복된 카드 번호입니다.'); ids.add(slide.id);
     if (s.image) { if (typeof s.image !== 'string' || s.image.length > 400000 || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s.image)) throw new Error('사진 크기 또는 형식을 확인해 주세요.'); slide.image = s.image; }
+    if(s.seconds!==undefined){if(!Number.isInteger(s.seconds)||s.seconds<1||s.seconds>10)throw new Error('장면 길이는 1~10초입니다.');slide.seconds=s.seconds;}
+    if(s.subtitle!==undefined)slide.subtitle=str(s.subtitle,200,'장면 자막');
+    if(s.keyword!==undefined&&s.keyword!==''){const k=str(s.keyword,30,'강조 단어').trim();if(k&&!(slide.subtitle??'').includes(k))throw new Error('영상 강조 단어는 그 장면 자막에 들어 있어야 합니다.');if(k)slide.keyword=k;}
+    if(s.style!==undefined)slide.style=validateStyle(s.style);
+    if(s.layers!==undefined)slide.layers=validateLayers(s.layers);
     return slide;
   });
   if (v.workStatus !== undefined && !['draft','review','ready'].includes(v.workStatus)) throw new Error('작업 상태를 확인해 주세요.');
   const design={...defaultDesign,...v.design};if(!['4:5','1:1','9:16'].includes(design.ratio)||!['editorial','minimal','bold'].includes(design.template)||!['sans','serif'].includes(design.font)||![.85,1,1.15].includes(design.textScale))throw new Error('디자인 설정을 확인해 주세요.');
-  return { design, workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: v.origin==='llmgw'?'llmgw':'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
+  if(v.clientId!==undefined&&(typeof v.clientId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(v.clientId)))throw new Error('고객사 ID를 확인해 주세요.');
+  const brandRules=v.brandRules===undefined?undefined:validateBrandRules(v.brandRules);if(brandRules&&brandRules.clientId!==v.clientId)throw new Error('브랜드 규칙과 고객사 ID가 다릅니다.');
+  return { ...(brandRules?{brandRules}:{}), ...(v.clientId?{clientId:v.clientId}:{}), design, workStatus: v.workStatus ?? 'draft', reviewNotes: str(v.reviewNotes ?? '', 3000, '검토 메모'), brief, slides, idea: str(v.idea, 200, '소재'), caption: str(v.caption, 5000, '캡션'), origin: v.origin==='llmgw'?'llmgw':'source-outline', postedUrl: str(v.postedUrl ?? '', 1500, '게시 링크') };
 }
 
 export interface BrandProfile { id:string; name:string; audience:string; goal:string; accent:string; notes:string }
@@ -67,5 +135,5 @@ export function validateBrand(value: unknown): Omit<BrandProfile,'id'> {
 }
 // Restoring or copying never imports ownership, approval or publication provenance.
 export function importDraft(value:unknown):Draft {
- const d=validateDraft(value);return {...d,workStatus:'draft',postedUrl:'',slides:d.slides.map(s=>({...s,id:crypto.randomUUID()}))};
+ const {clientId:discarded,brandRules:discardedRules,...d}=validateDraft(value);void discarded;void discardedRules;return {...d,workStatus:'draft',postedUrl:'',slides:d.slides.map(s=>({...s,id:crypto.randomUUID()}))};
 }

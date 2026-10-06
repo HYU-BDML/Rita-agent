@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "Signed up, ran the example flow and saved version 1 through the UI",
+    "PUT with 4 layers (text, text, shape, image) is accepted and returned by GET; a card without layers has no layers key",
+    "Video type, 13 layers, bad color, 301-character text and an external image URL are all refused with HTTP 400",
+    "Studio card preview draws the layers on top of the card in z order (shape, low, top, image) with text escaped; layer ids in preview: sh,low,top,im",
+    "GET /api/cora/revisions lists versions [2,1] with slide count and caption preview",
+    "Restore of version 1 returns the old body (caption 버전 1 캡션, no layers) and saves nothing: project stays at version 2",
+    "Stale currentVersion gives 409; saving the restored draft creates version 3 and history keeps all 3 versions",
+    "A second signed-in user gets 404 for history, restore and SVG export of the first user's project; a signed-out request gets 401",
+    "Figma export ZIP has 6 card SVGs + frames.svg (6880px wide, 80px gaps) + README.txt; text stays <text>, no <path>, ids unique"
+  ],
+  "errors": [],
+  "uiMounting": "pending: LayerPanel (components/cora/editor-layers.tsx) and HistoryPanel (components/cora/editor-history.tsx) are not mounted in studio.tsx; proof drives the same APIs and helpers the panels call",
+  "passed": true,
+  "zipEntries": [
+    "cards/card-01.svg",
+    "cards/card-02.svg",
+    "cards/card-03.svg",
+    "cards/card-04.svg",
+    "cards/card-05.svg",
+    "cards/card-06.svg",
+    "frames.svg",
+    "README.txt"
+  ]
+}

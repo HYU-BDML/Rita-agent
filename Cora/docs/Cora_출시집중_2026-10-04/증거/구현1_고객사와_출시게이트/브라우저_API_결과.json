@@ -1,0 +1,85 @@
+{
+  "base": "http://127.0.0.1:3211",
+  "results": [
+    {
+      "name": "signup and four navigation entries",
+      "passed": true
+    },
+    {
+      "name": "duplicate client profiles in browser",
+      "passed": true,
+      "detail": {
+        "distinctIds": true,
+        "sameWorkspace": true
+      }
+    },
+    {
+      "name": "client-bound card editing and save without AI",
+      "passed": true
+    },
+    {
+      "name": "ID filter excludes same-name client",
+      "passed": true
+    },
+    {
+      "name": "unsaved navigation preserves draft and destructive client switch prompts",
+      "passed": true,
+      "detail": {
+        "reloadRecovery": "not implemented"
+      }
+    },
+    {
+      "name": "undo restores client binding shown by selector",
+      "passed": true
+    },
+    {
+      "name": "owner isolation, foreign binding, profile conflicts",
+      "passed": true
+    },
+    {
+      "name": "every preserved HTTP route denies both reads and writes",
+      "passed": true,
+      "detail": {
+        "deniedRoutePairs": 36,
+        "paidCalls": 0
+      }
+    },
+    {
+      "name": "all four work screens load without blocked lab requests",
+      "passed": true
+    },
+    {
+      "name": "390px screen navigation and editor fit",
+      "passed": true,
+      "detail": {
+        "width": 390,
+        "document": 390,
+        "targets": [
+          {
+            "text": "고객사",
+            "height": 44,
+            "font": "14px"
+          },
+          {
+            "text": "이번 주 제작",
+            "height": 44,
+            "font": "14px"
+          },
+          {
+            "text": "수정·승인",
+            "height": 44,
+            "font": "14px"
+          },
+          {
+            "text": "게시·성과",
+            "height": 44,
+            "font": "14px"
+          }
+        ]
+      }
+    }
+  ],
+  "actualAI": 0,
+  "actualSNS": 0,
+  "externalMessages": 0
+}

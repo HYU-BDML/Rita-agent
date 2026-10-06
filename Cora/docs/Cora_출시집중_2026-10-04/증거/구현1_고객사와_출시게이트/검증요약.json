@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-04",
+  "code_commit": "d519bbd",
+  "title": "첫 출시 화면·서버 차단·고객사 ID 기반 로컬 구현",
+  "note": "네 업무 메뉴와 보존 기능의 API·MCP·예약 실행 차단을 구현했습니다. 고객사·카드 작업을 고유 ID로 연결했습니다. 고객사별 팀/자산/계정 권한 통합과 임시저장 복구는 남습니다. 공개 배포·실제 SNS·독립 검수는 미실행입니다.",
+  "unit_tests": {
+    "total": 506,
+    "passed": 505,
+    "failed": 0,
+    "skipped": 1
+  },
+  "browser_api_checks": 10,
+  "server_mode_checks": 3,
+  "actual_AI": 0,
+  "actual_SNS": 0,
+  "independent_review": "not performed",
+  "launch_complete": false
+}

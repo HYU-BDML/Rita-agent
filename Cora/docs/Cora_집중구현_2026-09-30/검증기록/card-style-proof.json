@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Alignment, emphasis word, letter spacing and line height change the card preview",
+    "Uploaded photo fit and brightness change the card preview",
+    "Undo and redo step back and forth through edits; Ctrl+Z/Shift+Ctrl+Z work outside text fields and are left to the field inside them (real Mac Cmd+Z needs a manual check; automation did not deliver Meta+Z)",
+    "Settings are saved on the server and invalid settings are refused"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "All 11 legacy API paths and rendered candidate page fail closed without operator configuration",
+    "All legacy API paths reject anonymous and non-operator sessions",
+    "Configured operator can read legacy schedule with verified persistent Cora session",
+    "Cross-origin operator mutation rejected before handler execution",
+    "Forged session and middleware-subrequest header cannot bypass protection",
+    "Server-rendered legacy pages and Next data paths protected as well as APIs",
+    "Ordinary Cora workbench remains available to non-operator",
+    "Revoked operator session immediately loses legacy access"
+  ],
+  "passed": true
+}

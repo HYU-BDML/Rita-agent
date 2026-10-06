@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "UI scene duration and Korean subtitle persist in saved project",
+    "Authenticated browser renders and downloads unequal-duration MP4 with subtitles",
+    "ffprobe confirms exact total duration and subtitle track; ffmpeg recovers Korean timed text",
+    "Render metadata matches timeline; anonymous download rejected"
+  ],
+  "errors": [],
+  "passed": true
+}

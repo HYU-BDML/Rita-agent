@@ -1,0 +1,1197 @@
+[
+ {
+  "id": "R01",
+  "stage": 1,
+  "platform": "all",
+  "rule": "같은 소재로 후보를 여러 개 만들 때는 도입부 유형, 게시 형식(릴스·캐러셀·쇼츠), 전개 방식 가운데 최소 한 가지가 후보마다 서로 다르도록 만든다.",
+  "basis": "Instagram은 테스트 릴스를 새로운 장르, 스토리텔링 형식, 주제를 시험하는 용도로 안내한다. YouTube 도움말은 A/B 테스트에서 제목·썸네일 후보가 서로 지나치게 비슷하면 결과가 나오기까지 더 오래 걸린다고 설명한다.",
+  "notes": "프로그램은 후보마다 도입부 유형·형식·전개 방식 태그를 붙여 두 후보의 태그가 모두 같은지 검사할 수 있다. '최소 한 가지'라는 기준은 출처의 수치가 아니라 Cora 설계상의 선택이다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/blog/instagram-trial-reels",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official (2024-12-10)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://support.google.com/youtube/answer/16391400?hl=en-GB",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R02",
+  "stage": 1,
+  "platform": "all",
+  "rule": "후보마다 첫 3초(글 게시물은 첫 문장)에 시청자가 무엇을 얻는지 밝히는 도입부 문안을 최소 두 가지 만들어 사람이 고를 수 있게 한다.",
+  "basis": "TikTok 광고 공식 블로그는 클릭률 상위 영상의 63% 이상이 첫 3초 안에 핵심 메시지나 제품을 보여 줬다고 밝혔다. Instagram은 첫 3초 안에 넘긴 비율을 '건너뛰기 비율(skip rate)'로 따로 보여 주고, YouTube는 첫 몇 초 이후까지 본 비율을 'Stayed to watch'로 보여 준다.",
+  "notes": "TikTok 63% 수치는 광고(유료 집행) 영상 분석 결과이므로 일반 게시물에 그대로 적용된다는 근거는 없다. 프로그램은 후보마다 도입부 문안이 두 개 이상인지만 검사할 수 있다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://ads.tiktok.com/business/en-US/blog/9-creative-tips-to-drive-auction-ad-performance",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official (2020-10-21)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-adds-retention-insights-reels/758464/",
+    "publisher": "Social Media Today (Instagram 공지 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 기능 발표의 보도 (2025-08-24)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://support.google.com/youtube/answer/12220281?hl=en-ie&ref_topic=12221641&co=GENIE.Platform%3DDesktop",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R03",
+  "stage": 1,
+  "platform": "instagram",
+  "rule": "캐러셀 후보를 만들 때 두 번째 장은 첫 장을 보지 않은 사람에게 먼저 보일 수 있으므로, 두 번째 장만 읽어도 주제가 전달되는 문장으로 만든다.",
+  "basis": "Adam Mosseri는 캐러셀을 보고도 넘기지 않은 사람에게 그 캐러셀이 다시 노출될 수 있으며 이때 두 번째 장이 보인다고 말했다. 또한 사진이 여러 장이면 상호작용이 늘고 상호작용이 늘면 도달이 늘어난다고 설명했다.",
+  "notes": "Mosseri 원 영상을 직접 열지 못했고 보도 기사로 확인했다. 두 번째 장이 '자주' 다시 노출된다는 표현이며 항상 그렇다는 뜻은 아니다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://routenote.com/blog/instagram-carousels-perform-better-than-single-photos-according-to-the-head-of-instagram/",
+    "publisher": "RouteNote Blog (Mosseri 릴스 발언 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2024-10-18)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R04",
+  "stage": 1,
+  "platform": "all",
+  "rule": "다른 계정의 영상이나 다른 플랫폼 워터마크가 있는 소재를 그대로 쓰는 후보는 만들지 않고, 쓸 경우에는 자체 해설·분석·이야기를 더한 후보만 만든다.",
+  "basis": "Instagram은 2024년 4월 재게시물 대신 원본을 노출하고, 손대지 않은 콘텐츠를 반복 재게시하는 계정을 추천에서 제외하겠다고 발표했다. YouTube는 2026년 10월 다른 크리에이터 클립을 큰 변경 없이 올리는 채널의 추천 도달을 줄인다고 밝혔고, 화면 설명 수준의 음성 해설이나 템플릿 일괄 편집은 충분한 변경이 아니라고 했다.",
+  "notes": "TikTok의 For You 피드 적격 기준에도 비원본 콘텐츠 제한이 있다는 검색 결과를 봤지만 원문 페이지가 열리지 않아 출처에서 뺐다. 워터마크 여부는 이미지 판독으로 일부 자동 검사가 가능하나 원본성 판단은 사람이 한다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.tubefilter.com/2024/04/30/instagram-meta-threads-original-content-algorithm-bonus-program-monetization/amp/",
+    "publisher": "Tubefilter (Mosseri 발표 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 발표 보도 (2024-04-30)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/blog/tips-for-improving-your-reach",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official (2023-05-31)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.searchenginejournal.com/youtube-original-shorts-reposted-clips-reach/591774/",
+    "publisher": "Search Engine Journal (Rene Ritchie 발언 보도)",
+    "type": "press",
+    "popularity": "YouTube Creator Liaison 공식 발언 (2026-10-01)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R05",
+  "stage": 1,
+  "platform": "instagram",
+  "rule": "릴스 후보에는 시청자가 자기 이야기라고 느낄 공감 요소, 반전, 마지막 펀치라인 가운데 하나 이상을 넣어 만든다.",
+  "basis": "Instagram 크리에이터 페이지는 시청자가 '이건 내 얘기'라고 느끼는 콘텐츠를 만들고, 큰 반전이나 펀치라인, 플롯 트위스트로 끝내면 여러 번 보게 만들 수 있다고 안내한다.",
+  "notes": "공식 권고이지만 효과 크기를 밝힌 수치는 없다. 다시 보기는 Mosseri가 말한 시청 시간 신호와 연결되나, 그 연결은 Cora의 해석이다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/reels?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R06",
+  "stage": 1,
+  "platform": "all",
+  "rule": "같은 주제로 후보를 만들 때 도달 확대가 목적이면 릴스(짧은 영상) 후보를, 기존 팔로워의 저장·참여가 목적이면 캐러셀 후보를 함께 만든다.",
+  "basis": "Buffer가 5,200만 건 이상을 분석한 결과 Instagram 캐러셀의 도달 대비 참여율 중앙값은 6.90%로 릴스 3.31%보다 높았지만, 릴스의 도달은 캐러셀보다 36% 많았다. Metricool의 2,430만 건 분석에서는 캐러셀 저장 수가 단일 이미지의 9배였다.",
+  "notes": "두 연구 모두 자사 도구 이용 계정만 분석했고 인과 효과가 아니다. '릴스가 도달에 유리하다'는 수치는 Buffer 한 곳에서만 확인했다.",
+  "metric": "reach, saved, total_interactions",
+  "machineCheckable": true,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://buffer.com/resources/state-of-social-media-engagement-2026/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=52M+ posts (Buffer 이용 계정)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://metricool.com/press-release-instagram-study-2026/",
+    "publisher": "Metricool",
+    "type": "research",
+    "popularity": "n=24.3M posts, 375,000 accounts",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R07",
+  "stage": 1,
+  "platform": "tiktok",
+  "rule": "TikTok 크리에이터 보상 수익을 목표로 하는 계정이라면 TikTok 후보 가운데 최소 하나는 1분을 넘는 길이로 만든다.",
+  "basis": "TikTok은 Creativity Program Beta 발표에서 참여 크리에이터가 수익을 얻으려면 1분을 넘는 고품질 원본 콘텐츠를 만들어야 한다고 밝혔다. 자격은 18세 이상, 팔로워 1만 명, 최근 30일 실제 조회(authentic views) 10만 회 이상이다.",
+  "notes": "현재 이름인 Creator Rewards Program의 공식 지원 페이지는 열리지 않아 최신 조건(국가, 금액)은 확인 필요다. 수익 조건이지 추천 순위 조건이 아니다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://newsroom.tiktok.com/unlocking-even-more-opportunities-for-creators-with-the-creativity-program-beta?lang=en",
+    "publisher": "TikTok Newsroom",
+    "type": "official",
+    "popularity": "TikTok official (2023-02-20, 2023-11-06 갱신)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R08",
+  "stage": 2,
+  "platform": "all",
+  "rule": "사람이 후보를 고를 때 첫 3초(글 게시물은 첫 문장)만 보고 무엇에 관한 게시물인지 알 수 없으면 그 후보는 고르지 않거나 도입부를 고친 뒤 고른다.",
+  "basis": "TikTok은 클릭률 상위 영상의 63% 이상이 첫 3초에 핵심 메시지를 담았다고 밝혔고, Instagram은 첫 3초 안에 넘긴 비율을 건너뛰기 비율로 측정한다. 실무 가이드인 Hootsuite도 첫 3초 안의 강한 도입부를 권한다.",
+  "notes": "판단은 사람이 한다. 게시 뒤에는 건너뛰기 비율(R30)로 이 판단이 맞았는지 사후 점검한다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://ads.tiktok.com/business/en-US/blog/9-creative-tips-to-drive-auction-ad-performance",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-adds-retention-insights-reels/758464/",
+    "publisher": "Social Media Today (Instagram 공지 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 기능 발표 보도",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://blog.hootsuite.com/instagram-algorithm/",
+    "publisher": "Hootsuite",
+    "type": "practitioner",
+    "popularity": "unknown",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R09",
+  "stage": 2,
+  "platform": "instagram",
+  "rule": "릴스 후보가 저해상도이거나, 워터마크·테두리가 있거나, 소리가 없거나, 화면 대부분이 글자이거나, 이미 Instagram에 올라간 영상이면 선정에서 빼거나 고친다.",
+  "basis": "Instagram 공식 순위 설명은 저해상도, 워터마크, 무음, 테두리, 글자 위주 릴스와 이미 Instagram에 올라간 릴스를 덜 보이게 한다고 밝혔다. 크리에이터 FAQ도 제3자 워터마크가 도달에 영향을 줄 수 있으니 지우라고 안내한다.",
+  "notes": "해상도, 오디오 트랙 유무, 재업로드 여부(파일 해시 비교)는 자동 검사가 가능하다. 테두리·글자 비중·워터마크는 이미지 판독이 필요해 정확도 확인이 필요하다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://about.instagram.com/blog/announcements/instagram-ranking-explained",
+    "publisher": "Instagram (Meta)",
+    "type": "official",
+    "popularity": "Meta official (2023-05-31)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R10",
+  "stage": 2,
+  "platform": "all",
+  "rule": "짧은 영상 후보가 세로(9:16) 화면이 아니면 선정 전에 세로로 다시 편집한다.",
+  "basis": "TikTok은 세로로 찍은 영상의 6초 시청 완료율이 평균 25% 높다고 밝혔다. YouTube는 정사각형 또는 세로 비율의 3분 이하 영상을 쇼츠로 분류하고, Mosseri는 Instagram에 올라오는 사진·영상 대부분이 세로라서 프로필 격자를 세로형으로 바꿨다고 설명했다.",
+  "notes": "TikTok 25% 수치는 광고 영상 기준이다. Net Influencer 기사는 검색 결과 요약으로만 확인했고 본문을 직접 열지 않았다. 화면 비율은 파일 메타데이터로 자동 검사가 가능하다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://ads.tiktok.com/business/en-US/blog/9-creative-tips-to-drive-auction-ad-performance",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://support.google.com/youtube/answer/15424877?hl=en",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.netinfluencer.com/instagram-announces-3-minute-reels-and-vertical-grids/",
+    "publisher": "Net Influencer (Mosseri 발표 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 발표 보도 (2025-01)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R11",
+  "stage": 2,
+  "platform": "all",
+  "rule": "소리를 끄고 봐도 내용이 전달되도록 화면 글자나 자막이 들어간 후보를 우선 고른다.",
+  "basis": "TikTok 광고 가이드는 소리가 꺼져도 이야기가 전달되도록 자막이나 화면 글자를 넣으라고 권하고, 시청 완료율 상위 광고의 40%가 글자 오버레이를 썼다고 밝혔다. TikTok 뉴스룸이 소개한 상위 크리에이터도 자막이 메시지를 분명하게 전달한다고 말했다.",
+  "notes": "근거가 모두 TikTok이며, 광고 가이드 두 건은 같은 발행처라 독립 출처를 2개로 셌다. Instagram R09는 '화면 대부분이 글자'인 릴스를 덜 노출한다고 하므로 글자 양은 짧게 유지한다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://ads.tiktok.com/business/en/guides/what-is-ad-creative-guide",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://ads.tiktok.com/business/en-US/blog/9-creative-tips-to-drive-auction-ad-performance",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://newsroom.tiktok.com/scroll-stopping-tips-from-top-tiktok-creators?lang=en-GB",
+    "publisher": "TikTok Newsroom",
+    "type": "official",
+    "popularity": "TikTok official (2025-10-22)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R12",
+  "stage": 2,
+  "platform": "instagram",
+  "rule": "팔로워가 아닌 사람에게 퍼지는 것이 목표인 게시물은 지인에게 메시지로 보내고 싶을 만한 후보(실용 정보, 공감, 유머)를 우선 고른다.",
+  "basis": "Mosseri는 2025년 1월 가장 중요한 순위 신호가 시청 시간, 좋아요, 보내기(DM 공유)이며, 팔로워가 아닌 사람에게 보이는 콘텐츠에서는 보내기가 조금 더 중요하다고 말했다. Instagram 공식 순위 설명도 릴스에서 공유 가능성을 예측 항목으로 든다.",
+  "notes": "고르는 단계에서는 사람 판단이고, 게시 뒤에는 공유 수 나누기 도달로 사후 확인한다(R25).",
+  "metric": "shares, reach",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/",
+    "publisher": "Social Media Today (Mosseri 영상 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2025-01-22)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://about.instagram.com/blog/announcements/instagram-ranking-explained",
+    "publisher": "Instagram (Meta)",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R13",
+  "stage": 2,
+  "platform": "instagram",
+  "rule": "추천 노출(탐색 탭, 릴스 탭)을 노리는 릴스 후보는 길이가 3분 이하인지 확인하고, 넘으면 잘라서 고른다.",
+  "basis": "Instagram 크리에이터 FAQ는 팔로워가 아닌 사람에게 추천하는 영상이 3분 이하라고 밝혔고, Mosseri는 2025년 1월 3분 이하 릴스가 탐색 탭과 릴스 탭 추천에 나올 수 있다고 확인했다.",
+  "notes": "길이는 파일 메타데이터로 자동 검사한다. 3분은 추천 자격의 상한이며 최적 길이가 아니다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.threads.com/@mosseri/post/DE-fuy2yFZv?hl=en",
+    "publisher": "Adam Mosseri (Threads)",
+    "type": "official",
+    "popularity": "Instagram 대표 본인 게시물 (2025-01-18)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R14",
+  "stage": 2,
+  "platform": "youtube",
+  "rule": "1분을 넘는 쇼츠 후보에 저작권 관리(Content ID) 대상 음원이나 영상이 들어 있으면 그 후보는 고르지 않는다.",
+  "basis": "YouTube 도움말은 1분을 넘는 쇼츠에 Content ID 주장이 걸리면 주장 유형과 관계없이 전 세계에서 차단되고 수익화가 불가능하다고 밝힌다.",
+  "notes": "채널 자체에 대한 불이익은 없다고 도움말이 밝힌다. 음원 저작권 여부는 업로드 전에 자동으로 알기 어려워 사람이 확인한다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/15424877?hl=en",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R15",
+  "stage": 2,
+  "platform": "instagram",
+  "rule": "댓글을 늘리는 것이 목표인 게시물은 캡션에 질문이나 댓글을 요청하는 문장이 들어 있는 후보를 고른다.",
+  "basis": "Metricool이 2,430만 건을 분석한 결과 질문이 있는 게시물은 댓글이 36.70%, 댓글을 요청하는 문구가 있는 게시물은 202.78% 많았다. TikTok 광고 가이드도 짧고 직접적인 행동 요청 문구를 권한다.",
+  "notes": "Mosseri가 2025년 1월 밝힌 3대 순위 신호에 댓글은 들어 있지 않다. 따라서 댓글 증가가 도달 증가로 이어진다는 근거는 없다. 캡션에 물음표나 요청 문구가 있는지는 자동 검사가 가능하다.",
+  "metric": "comments, reach",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://metricool.com/press-release-instagram-study-2026/",
+    "publisher": "Metricool",
+    "type": "research",
+    "popularity": "n=24.3M posts, 375,000 accounts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://ads.tiktok.com/business/en-US/blog/9-creative-tips-to-drive-auction-ad-performance",
+    "publisher": "TikTok for Business",
+    "type": "official",
+    "popularity": "TikTok official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R16",
+  "stage": 3,
+  "platform": "all",
+  "rule": "게시 시각은 계정 인사이트의 팔로워 활동 시간대(Most active times)를 보고, 활동이 가장 많은 시간 직전에 올리도록 정한다.",
+  "basis": "Instagram 크리에이터 FAQ는 시청자가 깨어 있고 가장 활발할 때 올리고 인사이트로 그 습관을 파악하라고 안내한다. Mosseri는 게시 시각이 크게 중요하지 않다면서도 팔로워가 가장 많은 시간대가 오기 전에 올린다고 말했고, Buffer와 Later도 자기 계정 데이터로 시각을 정하라고 권한다.",
+  "notes": "Instagram 앱의 활동 시간대 정보는 팔로워 100명 이상부터 보인다는 실무 자료가 있으나 공식 원문은 확인 필요다. 이번에 읽은 Graph API 미디어 지표 문서에는 팔로워 활동 시간대 지표가 없어 CSV 수동 입력이 필요할 수 있다.",
+  "metric": "followers 활동 시간대 (앱 인사이트)",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.shopify.com/blog/time-post-instagram",
+    "publisher": "Shopify (Mosseri 영상 인용)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 인용",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=9.6M posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://later.com/blog/best-time-to-post-on-instagram/",
+    "publisher": "Later",
+    "type": "research",
+    "popularity": "n=6M+ posts",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R17",
+  "stage": 3,
+  "platform": "all",
+  "rule": "외부 연구의 '최적 게시 시각'은 고정 규칙으로 쓰지 않고, 계정 데이터가 쌓이기 전 몇 주 동안 여러 시간대에 나눠 올릴 때의 첫 후보로만 쓴다.",
+  "basis": "대형 연구끼리 결론이 다르다. Buffer(960만 건)는 Instagram 최적 시각을 목요일 오전 9시로, Later(600만 건 이상)는 오전 5시로, Hootsuite(100만 건 이상)는 요일마다 다른 시간대로 제시했고, Buffer는 몇 주에 걸쳐 체계적으로 실험하라고 권한다.",
+  "notes": "특정 요일·시각이 낫다는 주장은 연구마다 엇갈려 미확인으로 둔다. Buffer 연구의 참여율 분모는 팔로워 수이고 Later는 측정 지표를 '참여율'로만 밝혀 서로 비교할 수 없다. 몇 주 동안 시간대를 나눠 올리는 실험 설계 자체는 Buffer 권고에 근거한다.",
+  "metric": "reach, views, 게시 시각",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=9.6M posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://later.com/blog/best-time-to-post-on-instagram/",
+    "publisher": "Later",
+    "type": "research",
+    "popularity": "n=6M+ posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://blog.hootsuite.com/best-time-to-post-on-instagram/",
+    "publisher": "Hootsuite",
+    "type": "research",
+    "popularity": "n=1M+ posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://buffer.com/resources/best-time-to-post-on-tiktok/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=7.1M TikTok posts",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R18",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "Instagram 계정의 기본 게시 빈도를 한 달에 릴스 10개 이상, 즉 주 2~3개 이상으로 잡는다.",
+  "basis": "Instagram 크리에이터 FAQ는 순 팔로워 증가율이 가장 높은 크리에이터들이 평균적으로 한 달에 릴스를 10개 이상 올린다고 밝혔다. Buffer가 10만 계정의 200만 건 이상을 분석한 결과 주 3~5회 게시하면 팔로워 증가율이 두 배 넘게 높았다.",
+  "notes": "두 근거 모두 상관관계이며, 많이 올려서 성장했는지 성장한 계정이 많이 올리는지는 구분되지 않는다. Buffer도 빈도를 늘리다 품질이 떨어질 수 있다고 경고했다(R39 참조). 공식 FAQ의 문장은 팔로워 증가가 큰 크리에이터의 평균 게시량을 관찰한 것이며, 게시량을 늘리면 팔로워가 는다는 인과 주장은 하지 않는다.",
+  "metric": "게시 날짜",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/study-shows-posting-more-instagram-leads-to-more-reach/757633/",
+    "publisher": "Social Media Today (Buffer 연구 보도)",
+    "type": "research",
+    "popularity": "n=2M+ posts, 100,000 accounts (2025-08-13)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R19",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "해시태그는 게시물 주제와 직접 관련된 것만 5개 이하로 달고, 넓고 일반적인 해시태그를 길게 나열하지 않는다.",
+  "basis": "Instagram은 2025년 12월 게시물당 해시태그를 5개로 제한했다. Mosseri는 구체적인 해시태그 몇 개가 일반적인 해시태그를 길게 나열하는 것보다 성과가 좋고, 해시태그는 검색에 도움을 주지만 도달을 크게 늘리지는 않는다고 설명했다.",
+  "notes": "Metricool 연구는 해시태그가 1개 이상인 게시물의 조회가 평균보다 31.70% 적었다고 보고했으나 상관관계이며, 해시태그가 도달을 줄인다는 공식 근거는 없다. 개수는 캡션 문자열로 자동 검사한다. 해시태그 5개 제한은 보도로만 확인했고, 공식 FAQ는 주제와 관련된 해시태그가 도달에 도움이 된다고만 적었다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.techbuzz.ai/articles/instagram-caps-hashtags-at-five-to-combat-spam",
+    "publisher": "TechBuzz (Mosseri 발표 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 정책 보도 (2025-12-18)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R20",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "캡션 길이에는 규칙을 두지 않되, 사람들이 검색할 핵심 키워드는 캡션에 반드시 넣는다.",
+  "basis": "Mosseri는 2025년 8월 긴 캡션이 도달에 거의 영향을 주지 않는다고 답했다. Instagram 크리에이터 블로그는 팔로워와 비팔로워가 찾을 수 있도록 콘텐츠, 캡션, 소개, 해시태그에 관련 키워드를 넣으라고 안내한다.",
+  "notes": "Cora가 주제별 키워드 목록을 가지고 있으면 캡션에 그 키워드가 들어갔는지 자동 검사할 수 있다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-chief-says-longer-captions-dont-impact-post-reach/758462/",
+    "publisher": "Social Media Today (Mosseri Q&A 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2025-08)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/blog/tips-for-improving-your-reach",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R21",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "사진 게시물이나 캐러셀을 올릴 때 음악을 붙여 릴스 탭에도 노출될 자격을 갖추게 한다.",
+  "basis": "Mosseri는 2024년 10월 사진과 캐러셀에 음악을 넣으면 릴스 탭에 노출될 자격이 생긴다고 권했다.",
+  "notes": "원 영상을 직접 열지 못하고 보도로 확인했다. 이후 정책 변경 여부는 확인 필요다. 음악 첨부 여부는 이번에 읽은 Graph API 지표로는 확인할 수 없다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://routenote.com/blog/instagram-carousels-perform-better-than-single-photos-according-to-the-head-of-instagram/",
+    "publisher": "RouteNote Blog (Mosseri 릴스 발언 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2024-10-18)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R22",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "게시 후 7일 안에 달린 댓글에는 좋아요를 누르거나 직접 답글을 단다.",
+  "basis": "Instagram 크리에이터 FAQ는 릴스의 댓글에 처음 7일 안에 좋아요를 누르거나 진정성 있게 답하면 참여를 더 끌어낼 수 있다고 안내한다.",
+  "notes": "Graph API의 댓글 목록과 답글 여부로 7일 안 미응답 댓글 수를 셀 수 있으나, 답글 조회 권한 범위는 확인 필요다.",
+  "metric": "comments",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R23",
+  "stage": 3,
+  "platform": "youtube",
+  "rule": "YouTube 쇼츠는 3분 이하의 세로 또는 정사각형 영상으로 올리고, 긴 영상으로 분류되길 원하면 16:9 같은 가로 비율로 올린다.",
+  "basis": "YouTube 도움말은 2024년 10월 15일 이후 업로드된 3분 이하의 정사각형 또는 세로 영상을 쇼츠로 분류하며, 긴 영상으로 다루고 싶으면 16:9처럼 넓은 비율을 쓰라고 안내한다.",
+  "notes": "쇼츠 오디오 라이브러리 음원 대부분은 3분 쇼츠 안에서 90초까지만 쓸 수 있고 일부는 60초나 30초로 제한된다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/15424877?hl=en",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R24",
+  "stage": 3,
+  "platform": "instagram",
+  "rule": "계정에서 처음 시도하는 장르나 형식의 릴스는 일반 게시 대신 팔로워가 아닌 사람에게만 먼저 보이는 테스트 릴스(Trial reels)로 올린다.",
+  "basis": "Instagram은 2024년 12월 테스트 릴스를 내놓으며, 팔로워가 아닌 사람에게 먼저 보여 주고 약 24시간 뒤 조회·좋아요·댓글·공유 지표를 볼 수 있다고 밝혔다. 새로운 장르, 스토리텔링 형식, 주제를 시험하는 용도라고 설명한다.",
+  "notes": "두 페이지 모두 Instagram 발행이라 독립 출처를 1개로 셌다. 사용 자격(팔로워 수 조건)은 실무 자료에 따르면 프로페셔널 계정 기준 200명 이상이라고 하나 공식 원문으로는 확인하지 못했다. Graph API로 테스트 릴스를 올리거나 구분할 수 있는지는 확인 필요다.",
+  "metric": "views, likes, comments, shares",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/blog/instagram-trial-reels",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official (2024-12-10)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/create-engaging-content",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R25",
+  "stage": 4,
+  "platform": "instagram",
+  "rule": "게시물 성과는 총량 수치가 아니라 좋아요 수 나누기 도달, 공유 수 나누기 도달, 릴스 평균 시청 시간 세 가지로 비교한다.",
+  "basis": "Mosseri는 2025년 1월 가장 중요한 세 순위 신호가 시청 시간, 좋아요, 보내기라며 인사이트에서 평균 시청 시간, 도달 대비 좋아요, 도달 대비 보내기를 보라고 말했다. Instagram 공식 순위 설명도 릴스에서 끝까지 볼 가능성, 좋아요, 재공유 가능성을 예측한다고 밝힌다.",
+  "notes": "Graph API의 shares는 '보내기(DM 전송)'만이 아니라 공유 전체일 수 있어 Mosseri가 말한 sends와 같은지 확인 필요다. 실무 자료에 따르면 ig_reels_avg_watch_time은 밀리초 단위로 반환되므로 단위 확인이 필요하다. 앞의 두 출처는 Instagram 발행이고 API 문서는 지표 정의 근거로만 썼다.",
+  "metric": "likes, shares, reach, ig_reels_avg_watch_time",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/",
+    "publisher": "Social Media Today (Mosseri 영상 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2025-01-22)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://about.instagram.com/blog/announcements/instagram-ranking-explained",
+    "publisher": "Instagram (Meta)",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights",
+    "publisher": "Meta for Developers",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R26",
+  "stage": 4,
+  "platform": "instagram",
+  "rule": "비율 지표의 분모에는 반복 재생이 포함되는 조회수(views) 대신 고유 계정 수인 도달(reach)을 쓴다.",
+  "basis": "Meta API 문서는 reach를 게시물을 한 번 이상 본 고유 사용자 수로, views를 게시물이 재생되거나 표시된 총 횟수로 정의한다. Instagram은 2024년 8월 조회수를 모든 형식의 대표 지표로 바꾸면서 반복 조회도 센다고 밝혔다.",
+  "notes": "Meta 문서에 따르면 reach는 추정값이다. 2025년 4월 21일부터 impressions와 plays 지표는 모든 API 버전에서 지원이 끝나 과거 자료와 비교할 때 지표 이름이 다를 수 있다.",
+  "metric": "reach, views",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights",
+    "publisher": "Meta for Developers",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-updates-metrics-to-focus-creators-on-views/723645/",
+    "publisher": "Social Media Today (Instagram 발표 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 발표 보도 (2024-08-07)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R27",
+  "stage": 4,
+  "platform": "instagram",
+  "rule": "Graph API로 받은 수치는 최대 48시간 늦게 반영될 수 있으므로, 게시 후 48시간이 지나기 전의 수치로는 성과를 판정하지 않고 참고만 한다.",
+  "basis": "Meta의 Instagram 미디어 인사이트 문서는 views 지표 데이터가 최대 48시간 늦을 수 있고, 지표는 2년간 보관되며, 앨범의 개별 사진·영상에는 데이터가 없다고 밝힌다.",
+  "notes": "48시간 지연은 문서에서 views 등 일부 지표에 붙은 설명이며 모든 지표에 해당하는지는 확인 필요다. 매일 수집은 하되 판정용 값은 48시간 이후 값으로 정하는 방식이다.",
+  "metric": "게시 시각, 수집 시각",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights",
+    "publisher": "Meta for Developers",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R28",
+  "stage": 4,
+  "platform": "all",
+  "rule": "게시물끼리 비교할 때는 같은 경과 시간(예: 게시 후 24시간, 72시간, 7일)에 수집한 값끼리만 비교한다.",
+  "basis": "YouTube 분석은 '첫 24시간' 기간을 따로 제공해 이전 영상들과 같은 시점의 성과를 비교하게 한다. Instagram 테스트 릴스는 약 24시간 뒤 지표를 보여 주고 72시간 안의 조회를 기준으로 팔로워 공개 여부를 정하며, Metricool은 Instagram 조회 대부분이 게시 후 3일 안에 발생한다고 보고했다.",
+  "notes": "24시간, 72시간, 7일이라는 구체 시점 조합은 위 근거를 참고한 Cora의 선택이다. Instagram은 R27에 따라 48시간 이전 값의 지연 가능성을 함께 표시한다.",
+  "metric": "reach, views, likes, saved, shares, comments (시점별 스냅숏)",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.searchenginejournal.com/youtube-first-24-hours/392392/",
+    "publisher": "Search Engine Journal (YouTube 기능 보도)",
+    "type": "press",
+    "popularity": "YouTube 공식 기능 보도 (2021-01-13)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/blog/instagram-trial-reels",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://metricool.com/press-release-instagram-study-2026/",
+    "publisher": "Metricool",
+    "type": "research",
+    "popularity": "n=24.3M posts",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R29",
+  "stage": 4,
+  "platform": "all",
+  "rule": "새 게시물의 기준선은 같은 계정의 최근 10개 게시물 가운데 같은 형식이고 길이가 비슷한 것의 같은 시점 값으로 잡는다.",
+  "basis": "YouTube 도움말은 '일반적인 시청 유지율(typical retention)'을 비슷한 길이의 최근 영상 10개가 유지한 참여 수준으로 정의하고, 새 영상이 평균보다 나은지 보는 기준으로 쓰게 한다.",
+  "notes": "최근 10개 기준은 YouTube 긴 영상의 시청 유지율에 대한 공식 설계이며, Instagram·TikTok 게시물에 같은 개수를 쓰는 것은 Cora의 차용이다. 게시물이 10개 미만이면 기준선이 불안정하므로 확인 필요로 표시한다. 평균 대신 중앙값을 쓸지는 Cora 설계 사항이다.",
+  "metric": "reach, likes, saved, shares, comments, views, ig_reels_avg_watch_time",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/12942217?hl=en&co=YOUTUBE._YTVideoType%3Dvideo",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.searchenginejournal.com/youtube-typical-audience-retention/421700/",
+    "publisher": "Search Engine Journal (Creator Insider 인용)",
+    "type": "press",
+    "popularity": "YouTube 공식 기능 보도 (2021-10-01)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R30",
+  "stage": 4,
+  "platform": "instagram",
+  "rule": "릴스의 건너뛰기 비율(첫 3초 안에 넘긴 조회 비율)이 계정 기준선보다 높으면 그 게시물의 문제를 도입부 문제로 분류한다.",
+  "basis": "Instagram은 2025년 8월 기존 '조회율' 대신 첫 3초 안에 릴스를 넘긴 조회의 비율인 건너뛰기 비율과 시청 유지 그래프를 인사이트에 추가했다.",
+  "notes": "이번에 읽은 Graph API 미디어 지표 목록에는 건너뛰기 비율이 없어 앱 화면에서 수동으로 옮겨 적어야 한다. Instagram은 건너뛰기 비율의 공식 기준값을 발표하지 않았고, 실무 자료의 30~40% 같은 기준은 근거가 약해 쓰지 않는다. 2026-10-03 Meta 성과 API 문서에서 reels_skip_rate 지표를 확인했다. 계정 연결 뒤 자동 수집 대상이다.",
+  "metric": "skip rate (앱 인사이트)",
+  "machineCheckable": false,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-adds-retention-insights-reels/758464/",
+    "publisher": "Social Media Today (Instagram 공지 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 기능 발표 보도 (2025-08-24)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R31",
+  "stage": 4,
+  "platform": "all",
+  "rule": "시청 유지 그래프에서 시청자가 크게 줄어드는 시점(초)을 게시물마다 기록해 다음 편집 때 고칠 위치로 넘긴다.",
+  "basis": "Instagram은 시청 유지 그래프가 시청자의 관심을 붙잡거나 잃는 순간을 보여 주며 선이 평평할수록 참여가 높다고 설명한다. YouTube 도움말은 시청 유지가 약하면 영상 앞 30초를 편집하고 여러 스타일을 실험하라고 권한다.",
+  "notes": "Instagram 시청 유지 그래프는 이번에 읽은 Graph API 지표에 없어 수동 입력이 필요하다. YouTube의 '앞 30초' 권고는 긴 영상 기준이다.",
+  "metric": "retention curve (앱 화면)",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-adds-retention-insights-reels/758464/",
+    "publisher": "Social Media Today (Instagram 공지 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 기능 발표 보도",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://support.google.com/youtube/answer/12942217?hl=en&co=YOUTUBE._YTVideoType%3Dvideo",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R32",
+  "stage": 4,
+  "platform": "youtube",
+  "rule": "YouTube 쇼츠는 'Stayed to watch'(넘기지 않고 본 비율)로 도입부를 평가하고, 2025년 3월 31일 전후 조회수는 정의가 달라 직접 비교하지 않으며 기간을 넘는 비교에는 engaged views를 쓴다.",
+  "basis": "YouTube 도움말은 Stayed to watch를 쇼츠를 넘기지 않고 본 비율로, engaged views를 첫 몇 초를 넘겨 본 횟수로 정의한다. 2025년 3월 31일부터 쇼츠 조회수는 최소 시청 시간 없이 재생이 시작된 횟수로 바뀌었다.",
+  "notes": "두 출처 모두 YouTube 발표에 근거하므로 독립 출처를 1개로 셌다. YouTube는 engaged view로 인정하는 초 수를 공개하지 않는다.",
+  "metric": "views, engaged views, stayed to watch, average view duration",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/12220281?hl=en-ie&ref_topic=12221641&co=GENIE.Platform%3DDesktop",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://musically.com/2025/03/27/youtube-is-changing-the-way-it-counts-views-on-shorts/",
+    "publisher": "Music Ally (YouTube 지원 공지 보도)",
+    "type": "press",
+    "popularity": "YouTube 공식 공지 보도 (2025-03-27)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R33",
+  "stage": 4,
+  "platform": "youtube",
+  "rule": "쇼츠의 Stayed to watch 비율이 60% 미만이면 그 쇼츠의 도입부 유형을 다음 후보에서 줄일 대상으로 표시한다.",
+  "basis": "Paddy Galloway 팀이 33개 채널의 쇼츠 5,400개(조회 33억 회)를 분석한 결과, 당시 'viewed vs swiped away' 비율이 60% 미만인 쇼츠는 성과가 좋은 경우가 드물었고 상위 쇼츠는 대체로 70~90%였다.",
+  "notes": "출처 하나의 초기 연구이며 연구자 스스로 '평균은 속일 수 있다'고 단서를 달았다. 비율이 높다고 성과가 보장되지는 않는다고도 밝혔다. 2023년 자료라 지표 이름과 정의가 바뀐 지금 같은 기준이 맞는지는 확인 필요다.",
+  "metric": "stayed to watch",
+  "machineCheckable": true,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://threadreaderapp.com/thread/1646898356419981315.html",
+    "publisher": "Paddy Galloway (X 스레드)",
+    "type": "practitioner",
+    "popularity": "n=5,400 Shorts, 33 channels, 3.3B views (2023-04-14)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R34",
+  "stage": 4,
+  "platform": "tiktok",
+  "rule": "TikTok 게시물은 팔로워 수와 비교하지 말고 조회 대비 끝까지 본 비율, 공유 수, 좋아요 수 같은 행동 비율로 평가한다.",
+  "basis": "TikTok은 팔로워 수나 과거 인기 영상 여부가 추천 시스템의 직접 요인이 아니라고 밝혔다. 또한 긴 영상을 끝까지 보는 것처럼 강한 관심 신호에 더 큰 가중치를 준다고 설명했다.",
+  "notes": "두 글 모두 TikTok 발행이라 독립 출처를 1개로 셌다. 2020년 글이므로 현재 가중치는 확인 필요다. TikTok 분석 지표의 공식 정의 페이지는 이번에 열리지 않았다.",
+  "metric": "views, average watch time, watched full video, shares, likes",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you",
+    "publisher": "TikTok Newsroom",
+    "type": "official",
+    "popularity": "TikTok official (2020-06-18)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://newsroom.tiktok.com/en-us/learn-why-a-video-is-recommended-for-you",
+    "publisher": "TikTok Newsroom",
+    "type": "official",
+    "popularity": "TikTok official (2022-12-20)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R35",
+  "stage": 4,
+  "platform": "all",
+  "rule": "참여율은 분모를 도달로 고정해 계산하고, 외부 벤치마크와 비교할 때는 그 연구가 도달과 팔로워 가운데 무엇을 분모로 썼는지 먼저 맞춘다.",
+  "basis": "Buffer의 2026 참여 보고서는 참여율을 참여 수 나누기 도달로 정의했지만, 같은 회사의 게시 시각 연구는 참여 수 나누기 팔로워 수로 계산했다. Meta API는 도달을 고유 사용자 수로 정의한다.",
+  "notes": "플랫폼 순위 규칙이 아니라 측정 일관성 규칙이다. 도달을 분모로 고르는 선택은 R25의 Mosseri 권고(도달 대비 지표)와 맞춘 Cora 설계다.",
+  "metric": "likes, comments, saved, shares, reach, followers",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://buffer.com/resources/state-of-social-media-engagement-2026/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=52M+ posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "publisher": "Buffer",
+    "type": "research",
+    "popularity": "n=9.6M posts",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights",
+    "publisher": "Meta for Developers",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R36",
+  "stage": 4,
+  "platform": "instagram",
+  "rule": "탐색 탭 노출을 노리는 게시물은 저장 수와 공유 수를 도달로 나눈 값을 따로 추적한다.",
+  "basis": "Instagram 공식 순위 설명은 탐색 탭에서 좋아요, 저장, 공유 가능성을 중심으로 예측하며, 탐색 탭 게시물 대부분이 사용자가 팔로우하지 않는 계정에서 나온다고 밝힌다.",
+  "notes": "2023년 설명이며 2025년 Mosseri 발언(R25)은 저장을 3대 신호로 꼽지 않았다. 따라서 저장은 탐색 탭 관련 보조 지표로 다룬다.",
+  "metric": "saved, shares, reach",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://about.instagram.com/blog/announcements/instagram-ranking-explained",
+    "publisher": "Instagram (Meta)",
+    "type": "official",
+    "popularity": "Meta official (2023-05-31)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R37",
+  "stage": 5,
+  "platform": "instagram",
+  "rule": "테스트 릴스가 72시간 안에 비팔로워에게 좋은 반응을 얻으면 팔로워에게도 공개하고, 반응이 낮으면 같은 형식을 본 계정에 바로 올리지 않는다.",
+  "basis": "Instagram은 테스트 릴스를 처음 72시간 동안의 조회를 바탕으로 팔로워에게 자동 공개하는 설정을 제공하며, 이를 통해 콘텐츠의 가능성을 넓게 배포하기 전에 평가하라고 안내한다.",
+  "notes": "Instagram이 자동 공개에 쓰는 조회 기준값은 공개되지 않았다. '좋은 반응'의 기준은 R29 기준선과 비교해 Cora가 정한다.",
+  "metric": "views, likes, comments, shares",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://creators.instagram.com/blog/instagram-trial-reels",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official (2024-12-10)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R38",
+  "stage": 5,
+  "platform": "all",
+  "rule": "성과가 낮은 게시물을 지우고 같은 파일을 다시 올리지 않고, 도입부나 구성을 바꾼 개선 버전이나 다른 구상의 새 게시물을 만든다.",
+  "basis": "YouTube의 Rene Ritchie는 성과가 낮은 영상이나 쇼츠를 지우고 반복해서 다시 올리면 스팸으로 판단돼 채널이 표시될 수 있으니 개선된 새 영상을 올리라고 권했다. Todd Sherman도 재업로드는 스팸으로 보일 위험이 있다고 말했다.",
+  "notes": "근거는 YouTube 발언이다. Instagram도 이미 올라간 릴스를 덜 노출한다(R09)고 밝혔으므로 같은 원칙을 전 플랫폼에 쓴다. 같은 파일 재업로드 여부는 파일 해시로 자동 검사한다.",
+  "metric": "none",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://blog.youtube/culture-and-trends/renes-top-five-on-youtube-april-18-2024-edition/",
+    "publisher": "YouTube Official Blog",
+    "type": "official",
+    "popularity": "YouTube official (2024-04-18)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/youtube-advice-for-shorts-creators-hashtags-algorithm/691835/",
+    "publisher": "Social Media Today (YouTube 영상 보도)",
+    "type": "press",
+    "popularity": "YouTube 공식 발언 보도 (2023-08-24)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R39",
+  "stage": 5,
+  "platform": "all",
+  "rule": "게시 빈도를 늘린 뒤 게시물당 비율 지표(R25)가 기준선 아래로 계속 떨어지면, 빈도를 이전 수준으로 줄이고 게시물 하나의 완성도를 높이는 쪽으로 바꾼다.",
+  "basis": "YouTube의 Todd Sherman은 게시량을 늘려도 불이익은 없지만 품질이 낮은 영상을 많이 올리기보다 더 나은 영상을 적게 만드는 데 힘을 쓰는 편이 낫다고 말했다. Buffer도 빈도 연구에서 많이 올린다고 항상 좋은 것은 아니며 품질이 성과에 중요하다고 단서를 달았다.",
+  "notes": "'계속 떨어지면'의 기간(예: 연속 몇 주)은 출처에 없는 Cora 설계값이다.",
+  "metric": "likes, shares, reach, ig_reels_avg_watch_time, 게시 날짜",
+  "machineCheckable": true,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/youtube-advice-for-shorts-creators-hashtags-algorithm/691835/",
+    "publisher": "Social Media Today (YouTube 영상 보도)",
+    "type": "press",
+    "popularity": "YouTube 공식 발언 보도 (2023-08-24)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.socialmediatoday.com/news/study-shows-posting-more-instagram-leads-to-more-reach/757633/",
+    "publisher": "Social Media Today (Buffer 연구 보도)",
+    "type": "research",
+    "popularity": "n=2M+ posts, 100,000 accounts",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R40",
+  "stage": 5,
+  "platform": "instagram",
+  "rule": "목표가 팔로워 밖 확산이면 공유 수 나누기 도달이 높았던 주제·형식을 늘리고, 목표가 기존 팔로워 반응이면 좋아요 수 나누기 도달이 높았던 주제·형식을 늘린다.",
+  "basis": "Mosseri는 2025년 1월 좋아요는 팔로워에게 보이는 콘텐츠에서, 보내기는 팔로워가 아닌 사람에게 보이는 콘텐츠에서 조금 더 중요하다고 말했다.",
+  "notes": "Mosseri는 '조금 더(slightly)'라고 표현했으므로 두 지표 가운데 하나만 보라는 뜻은 아니다. 주제·형식 태그별로 비율을 묶어야 자동 판단이 가능하다.",
+  "metric": "likes, shares, reach",
+  "machineCheckable": true,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/",
+    "publisher": "Social Media Today (Mosseri 영상 보도)",
+    "type": "press",
+    "popularity": "Instagram 대표 공식 발언 (2025-01-22)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R41",
+  "stage": 5,
+  "platform": "all",
+  "rule": "다음에 만들 주제는 게시물 하나의 결과가 아니라 여러 게시물에 걸쳐 반복되는 패턴(주제, 형식, 계절)을 보고 정한다.",
+  "basis": "YouTube 도움말은 어떤 영상이 더 인기 있는 패턴이 있는지, 시기별로 인기 콘텐츠가 달라지는지 살피라고 권한다. Instagram 크리에이터 블로그도 인사이트로 시간에 따른 결과를 추적해 패턴을 찾으라고 안내하고, YouTube의 Todd Sherman은 개별 영상의 부진이 채널 성패를 좌우하지 않는다고 말했다.",
+  "notes": "패턴으로 인정할 최소 게시물 수는 출처에 없다. Cora는 태그별 게시물 수를 함께 보여 줘 적은 표본으로 결론 내리지 않게 해야 한다.",
+  "metric": "reach, likes, shares, saved, views (주제·형식 태그별 집계)",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/12942217?hl=en&co=YOUTUBE._YTVideoType%3Dvideo",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/blog/tips-for-improving-your-reach",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://blog.youtube/culture-and-trends/renes-top-five-on-youtube-april-18-2024-edition/",
+    "publisher": "YouTube Official Blog",
+    "type": "official",
+    "popularity": "YouTube official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R42",
+  "stage": 5,
+  "platform": "all",
+  "rule": "다른 사람 콘텐츠를 재게시하는 형식이 계정의 주력이라면 그 형식을 중단하고 자체 해설·분석·이야기를 더한 원본 형식으로 바꾼다.",
+  "basis": "Instagram은 손대지 않은 콘텐츠를 반복 재게시하는 계정을 추천에서 제외하겠다고 2024년 4월 발표했다. YouTube는 2026년 10월 클립 재게시 위주 채널의 도달을 줄이되, 원본 콘텐츠로 바꾼 채널은 추천 시스템이 도달을 다시 평가한다고 밝혔다.",
+  "notes": "R04가 후보 생산 단계의 예방 규칙이라면 이 규칙은 이미 굳은 형식을 바꾸는 결정 규칙이다. YouTube의 재평가 기간은 공개되지 않았다.",
+  "metric": "none",
+  "machineCheckable": false,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://www.tubefilter.com/2024/04/30/instagram-meta-threads-original-content-algorithm-bonus-program-monetization/amp/",
+    "publisher": "Tubefilter (Mosseri 발표 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 발표 보도",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://www.searchenginejournal.com/youtube-original-shorts-reposted-clips-reach/591774/",
+    "publisher": "Search Engine Journal (Rene Ritchie 발언 보도)",
+    "type": "press",
+    "popularity": "YouTube 공식 발언 보도 (2026-10-01)",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://creators.instagram.com/faq?locale=en_US",
+    "publisher": "Instagram for Creators",
+    "type": "official",
+    "popularity": "Meta official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R43",
+  "stage": 5,
+  "platform": "youtube",
+  "rule": "YouTube 긴 영상의 제목·썸네일 후보를 비교할 때는 클릭률이 아니라 시청 시간 점유율이 가장 높은 후보를 채택한다.",
+  "basis": "YouTube 도움말은 제목·썸네일 A/B 테스트에서 클릭률보다 전체 시청 시간을 기준으로 최적화하며 시청 시간 점유율로 승자를 정한다고 밝힌다. 테스트는 2주 안에 끝나고 쇼츠에는 쓸 수 없다.",
+  "notes": "두 출처 모두 YouTube 발행이다. 쇼츠는 A/B 테스트 대상이 아니므로 쇼츠 후보 비교에는 R32의 Stayed to watch와 평균 시청 시간을 쓴다.",
+  "metric": "watch time share",
+  "machineCheckable": true,
+  "stability": "안정",
+  "sources": [
+   {
+    "url": "https://support.google.com/youtube/answer/16391400?hl=en-GB",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://blog.youtube/inside-youtube/on-youtubes-recommendation-system/",
+    "publisher": "YouTube Official Blog",
+    "type": "official",
+    "popularity": "YouTube official (2021-09-15)",
+    "accessed": "2026-10-03"
+   }
+  ]
+ },
+ {
+  "id": "R44",
+  "stage": 5,
+  "platform": "all",
+  "rule": "건너뛰기 비율이 높거나 시청 유지 급감 구간이 같은 위치에서 반복되면, 다음 후보에서는 그 구간(도입부나 전환 장면)의 편집 방식만 바꾸고 주제와 길이는 유지해 원인을 가린다.",
+  "basis": "Instagram은 시청 유지 정보로 각 릴스에서 배울 수 있다고 설명하고, YouTube 도움말은 시청 유지가 약하면 앞부분을 편집하고 여러 스타일을 실험하라고 권한다.",
+  "notes": "앞부분을 고치고 실험하라는 권고는 공식이지만, '한 요소만 바꾼다'는 원칙은 출처에 없는 Cora의 실험 설계 선택이므로 미확인으로 둔다.",
+  "metric": "skip rate, retention curve, stayed to watch",
+  "machineCheckable": true,
+  "stability": "미확인",
+  "sources": [
+   {
+    "url": "https://www.socialmediatoday.com/news/instagram-adds-retention-insights-reels/758464/",
+    "publisher": "Social Media Today (Instagram 공지 보도)",
+    "type": "press",
+    "popularity": "Instagram 공식 기능 발표 보도",
+    "accessed": "2026-10-03"
+   },
+   {
+    "url": "https://support.google.com/youtube/answer/12942217?hl=en&co=YOUTUBE._YTVideoType%3Dvideo",
+    "publisher": "YouTube Help",
+    "type": "official",
+    "popularity": "Google official",
+    "accessed": "2026-10-03"
+   }
+  ]
+ }
+]

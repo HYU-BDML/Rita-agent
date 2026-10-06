@@ -1,0 +1,67 @@
+﻿entity,field,type,definition,missing,condition,status
+sampling_members,frame_id,string,발견 표본틀 버전,필수,검색 결과는 전체 플랫폼 모집단이 아님,제안; 실제 DB 구현/자료 없음
+sampling_members,cell_id,string,플랫폼·테마·나이 구간 층,필수,콘텐츠 분류 코드북 버전 연결,제안; 실제 DB 구현/자료 없음
+sampling_members,discovery_route,string,검색/목록/모집 경로,필수,경로별 선택 편향 기록,제안; 실제 DB 구현/자료 없음
+sampling_members,query_parameters,json,검색어·기간·필터·정렬·페이지,경로상 미지원 기록,수집 및 저장 허용 조건 적용,제안; 실제 DB 구현/자료 없음
+sampling_members,discovered_at,datetime_utc,계정을 발견한 실제 시각,필수,과거 성과 시각으로 사용하지 않음,제안; 실제 DB 구현/자료 없음
+sampling_members,eligibility_status,enum,적격/제외/미확인,미확인 허용,제외 이유 별도,제안; 실제 DB 구현/자료 없음
+sampling_members,selection_seed,string,표본틀 내 추출 seed,수동 모집이면 not_applicable,플랫폼 발견 확률을 설명하지 않음,제안; 실제 DB 구현/자료 없음
+sampling_members,selection_rank,integer,본/예비 계정 추출 순서,미추출이면 null,초기 대체와 추적 탈락 분리,제안; 실제 DB 구현/자료 없음
+sampling_members,inception_cohort,boolean,진짜 시작부터 추적하는 코호트 여부,미확인이면 null,신규 여부 확인 근거 필요,제안; 실제 DB 구현/자료 없음
+creators,creator_id,string,연구용 가명 창작자 식별자,필수,교차 플랫폼 계정/군집 단위,제안; 실제 DB 구현/자료 없음
+creators,prior_experience,json,다른 계정 경험·기존 팬층·외부 유명세,미확인은 null,자기보고/검증 여부 구분,제안; 실제 DB 구현/자료 없음
+creators,goal_audience,json,목표·의도한 독자·약속한 문제,동의 없음/미응답 사유,과거 값은 당시 설문/기록만,제안; 실제 DB 구현/자료 없음
+creators,resources,json,제작 시간·기술·원자료·협업 역량,미응답 사유,변경 시 버전/시각 유지,제안; 실제 DB 구현/자료 없음
+accounts,account_id,string,플랫폼 포함 계정 고유키,필수,플랫폼 큰 정수도 문자열,제안; 실제 DB 구현/자료 없음
+accounts,creator_id,string,확인 가능한 소유 창작자 연결,공개 확인/동의 없으면 null,얼굴 비교로 동일인 추정하지 않음,제안; 실제 DB 구현/자료 없음
+accounts,platform,string,youtube/instagram/tiktok,필수,다른 모집 경로의 자료 합산 주의,제안; 실제 DB 구현/자료 없음
+accounts,first_visible_post_at,datetime_utc,현재 확인 가능한 최초 공개 게시 시각,미확보면 null,진짜 시작일과 다름,제안; 실제 DB 구현/자료 없음
+accounts,verified_start_at,datetime_utc,소유자/기록으로 확인한 실제 시작 시각,검증 불가면 null,최초 공개 게시와 확인 출처 저장,제안; 실제 DB 구현/자료 없음
+accounts,profile_snapshot,json,관측 당시 프로필·선언 테마,미지원/보관 제한 사유,현재 프로필을 과거 프로필로 쓰지 않음,제안; 실제 DB 구현/자료 없음
+accounts,account_state,enum,관측중/비공개/삭제/미게시/철회/오류,필수,상태를 사업 성공/실패로 자동 변환하지 않음,제안; 실제 DB 구현/자료 없음
+posts,post_id,string,플랫폼 포함 게시물 고유키,필수,중복 키·계정 재배정 여부 확인,제안; 실제 DB 구현/자료 없음
+posts,account_id,string,게시 계정,필수,소유자 변경/재게시 기록,제안; 실제 DB 구현/자료 없음
+posts,content_family_id,string,재게시·편집·교차 게시 동일 소재 가족,확인 불가면 null,학습/평가에 가족이 걸치지 않게 함,제안; 실제 DB 구현/자료 없음
+posts,published_at,datetime_utc,공개 게시 시각과 출처,미확보면 null,업로드/공개 전환/지역시각 구별,제안; 실제 DB 구현/자료 없음
+posts,sequence_visible,integer,보이는 게시물의 시간순 번호,미확보면 null,삭제한 이전 게시물이 없다는 뜻 아님,제안; 실제 DB 구현/자료 없음
+posts,format,string,릴스/쇼츠/일반 영상/카드 등,불명확하면 unknown,길이만으로 쇼츠 단정하지 않음,제안; 실제 DB 구현/자료 없음
+posts,language,json,실제 언어·복수언어·판정 방법,unknown 허용,지역 코드는 언어/국적이 아님,제안; 실제 DB 구현/자료 없음
+posts,source_url,string,원본 게시물 링크,표시/저장 제한 사유,출처 표시·현재 접근 상태 필요,제안; 실제 DB 구현/자료 없음
+posts,material_source_id,string,원고/원본 영상/허용 전사의 출처,자료 없으면 null,영상/자막 무단 다운로드를 기본 경로로 두지 않음,제안; 실제 DB 구현/자료 없음
+posts,commercial_context,json,협찬·부스팅·상업 표시와 근거,확인 불가면 unknown,무표시를 비상업으로 단정하지 않음,제안; 실제 DB 구현/자료 없음
+snapshots,snapshot_id,string,계정/게시 지표 관측 고유키,필수,중복·재시도 idempotency,제안; 실제 DB 구현/자료 없음
+snapshots,entity_id,string,계정 또는 게시물 ID,필수,대상 유형도 함께 기록,제안; 실제 DB 구현/자료 없음
+snapshots,collected_at,datetime_utc,실제 수집 시각,필수,API 자료 갱신 시각과 다름,제안; 실제 DB 구현/자료 없음
+snapshots,source_data_asof,datetime_utc,제공자가 명시한 자료 기준 시각,모르면 null,collected_at으로 임의 대체하지 않음,제안; 실제 DB 구현/자료 없음
+snapshots,freshness_status,enum,현재/지연/미확인,미확인 허용,목표 관측창과 실제 시점 구별,제안; 실제 DB 구현/자료 없음
+snapshots,elapsed_hours,number,게시 후 실제 수집 경과시간,게시 시각 없으면 null,정확한7일 성과를 자동 의미하지 않음,제안; 실제 DB 구현/자료 없음
+snapshots,metric_name,string,제공된 지표 원래 이름,필수,조회·도달·재생·완료율을 혼합하지 않음,제안; 실제 DB 구현/자료 없음
+snapshots,metric_value,number_or_string,원래 숫자 또는 정밀도 보존 값,지원 안 됨/비공개/실패 등의 null,값0과 결측 구분; 음의 순증도 가능,제안; 실제 DB 구현/자료 없음
+snapshots,metric_definition_version,string,제공자·정의·변경 시점,미확인이면 unknown,YouTube 등 집계 방식 변경 고려,제안; 실제 DB 구현/자료 없음
+snapshots,metric_window,json,누적/일별/기간·분모,미지원이면 unknown,과거 현재누적을 당시7일 수로 역산하지 않음,제안; 실제 DB 구현/자료 없음
+snapshots,precision_status,string,정확/반올림/내림/미확인,unknown 허용,YouTube 공개 구독자 작은 변화를 주의,제안; 실제 DB 구현/자료 없음
+content_features,feature_id,string,계산된 특징 식별자,필수,출처/권리 계보 연결,제안; 실제 DB 구현/자료 없음
+content_features,input_cutoff_at,datetime_utc,이 특징에 사용한 정보의 최종 시각,필수,미래 정보 누수 검증,제안; 실제 DB 구현/자료 없음
+content_features,modality_scope,string,제목/캡션/전사/이미지/영상 범위,필수,제목만으로 영상 전체 분석이라 하지 않음,제안; 실제 DB 구현/자료 없음
+content_features,model_code_version,string,모델·프롬프트·코드/토픽 버전,필수,학습 자료에서만 튜닝,제안; 실제 DB 구현/자료 없음
+content_features,value_and_evidence,json,특징값·근거 위치·불확실성,판단 불가 허용,조회수 보고 내용 라벨 붙이지 않음,제안; 실제 DB 구현/자료 없음
+annotations,annotator_id,string,가명 평가자 ID,필수,두 독립 평가와 조정 구별,제안; 실제 DB 구현/자료 없음
+annotations,codebook_version,string,구성개념·척도 버전,필수,변경 이력 유지,제안; 실제 DB 구현/자료 없음
+annotations,raw_label,json,독립 사람 코딩/모름/근거,판단 불가 허용,성과·모델·실험군 가림 여부 기록,제안; 실제 DB 구현/자료 없음
+annotations,adjudicated_label,json,불일치 조정 결과와 이유,조정 안 했으면 null,원래 평가를 덮어쓰지 않음,제안; 실제 DB 구현/자료 없음
+decision_events,decision_id,string,후보 선택 시점/회차,필수,기존 Cora 후보/주간 데이터와 대응,제안; 실제 DB 구현/자료 없음
+decision_events,candidate_set,json,노출한 후보 전체와 순서·모델 버전,과거 미기록이면 null,선택된 후보만 복원하지 않음,제안; 실제 DB 구현/자료 없음
+decision_events,information_cutoff_at,datetime_utc,당시 운영자가 알 수 있던 자료 시각,미기록이면 null,미래 지표로 과거 선택 설명 금지,제안; 실제 DB 구현/자료 없음
+decision_events,action_reason,json,선택/거절/수정/보류와 이유,미응답 이유,미게시 후보 성과를0으로 만들지 않음,제안; 실제 DB 구현/자료 없음
+decision_events,production_outcome,json,제작·게시·미게시·취소·사람 시간,아직 진행중 구별,성장 성과와 운영 결과 분리,제안; 실제 DB 구현/자료 없음
+source_items,source_id,string,원자료 취득 경로/계보 ID,필수,raw/특징/임베딩/모델까지 연결,제안; 실제 DB 구현/자료 없음
+source_items,retention_deadline,datetime_utc,제공자 조건에 따른 갱신/삭제 기한,조건 확인 전 unknown,장기 보관 권한 자동 부여하지 않음,제안; 실제 DB 구현/자료 없음
+rights_grants,purpose,string,연구/고객처리/공용학습/평가/사례/재사용/외부전송,필수,목적별 허용; 동의와 제공자 조건 둘 다,제안; 실제 DB 구현/자료 없음
+rights_grants,status,enum,승인/거절/미확인/만료,미확인 기본,미확인·만료 학습 제외,제안; 실제 DB 구현/자료 없음
+rights_grants,basis_restrictions,json,계약/동의/플랫폼 조건·범위·만료,확인 전 unknown,사용자 체크 하나로 제공자 조건 덮어쓰지 못함,제안; 실제 DB 구현/자료 없음
+research_runs,run_id,string,분석/특징/학습 실행 식별자,필수,실제 실행하지 않은 결과 생성 금지,제안; 실제 DB 구현/자료 없음
+research_runs,dataset_code_seed,json,데이터/코드/환경/seed 버전,필수,재현 가능하나 제한 자료는 배포하지 않음,제안; 실제 DB 구현/자료 없음
+split_memberships,split_and_role,string,train/validation/test/external와 단위,필수,기존 계정 미래와 새 계정 평가 구분,제안; 실제 DB 구현/자료 없음
+split_memberships,creator_family_time,json,창작자/가족/시간 누수 방지 키,필수,행 단위 무작위 분할만으로 평가하지 않음,제안; 실제 DB 구현/자료 없음
+experiment_assignments,experiment_unit,string,수용자/창작자 등 무작위 배정 단위,필수,플랫폼 계정 수와 독립 사람 수 구분,제안; 실제 DB 구현/자료 없음
+experiment_assignments,arm_time_seed,json,배정 조건·시각·seed·사전 결과,필수,탈락/미게시 보존; 실제 실험만 기록,제안; 실제 DB 구현/자료 없음

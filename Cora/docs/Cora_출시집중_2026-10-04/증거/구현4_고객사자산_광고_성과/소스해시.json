@@ -1,0 +1,22 @@
+{
+  "Cora/apps/trend-hub/app/api/cora/ad-creative/route.ts": "10122351212caba129f5ef1dbf6d6624e1aef21962f27e5030bb02b4fcb21c1e",
+  "Cora/apps/trend-hub/app/api/cora/generate/route.ts": "00b7d0a480391f52ed6d53ad3e2c1998aefe644e57e10af0d2a8b0b1ca2d5b62",
+  "Cora/apps/trend-hub/app/api/cora/library/route.ts": "1d95754723789f4ea4df921cd855dc89ca6ca4b91bb6f34268b7cddcf11887f0",
+  "Cora/apps/trend-hub/app/api/cora/ops-analytics/route.ts": "623ce9f33dd6d237e80e9c9c505a68a103cba3b7a26c79cbf042802122e4da04",
+  "Cora/apps/trend-hub/app/api/cora/ops-report/route.ts": "c7220fa6121e13d2bba53382450bf1948310edfd3b02012f816901c1ab342b69",
+  "Cora/apps/trend-hub/app/api/cora/workbench/route.ts": "2280ed7e094edff2e69a336394c3f187590e3e615cd9f5dd835d96d544f81813",
+  "Cora/apps/trend-hub/components/cora/ad-creative.tsx": "bd1926906aba0be72a9d4561e395538431323fc80b45dc968d435c2302a77765",
+  "Cora/apps/trend-hub/components/cora/library.tsx": "c54ea32dd523d353725f5b99052a419d97c906d0611f0920e0451054babe7c2b",
+  "Cora/apps/trend-hub/components/cora/studio.tsx": "83c3220ba465b39501ca81137ad158d8b2c3ba3930535e4fdba7aed9395138e5",
+  "Cora/apps/trend-hub/components/cora/workbench.tsx": "0c1d28d7ebcdf573141bbaaea04ff5b5f930b954b48cb5ac0a6aaf8cd03b369e",
+  "Cora/apps/trend-hub/lib/cora/ad-creative.ts": "72e60884f9029454f8ffed64eff99b01d0c1030d24c35a0f793c71b8a9bddb9a",
+  "Cora/apps/trend-hub/lib/cora/client-scope.ts": "13552f763fbdb555e67792a15b73d40c08c4bc1cdb57ec025793f284e266570b",
+  "Cora/apps/trend-hub/lib/cora/database-backup.ts": "04790acb2b30452bc1b8e70da40a95450952f56d9dbff152518708be1fd56766",
+  "Cora/apps/trend-hub/lib/cora/library.ts": "c7b4d704f5bd2382c5b749e93d29aa3d9546cc0bdbcfef57a8a6f20ce37bb9f7",
+  "Cora/apps/trend-hub/lib/cora/ops/report.ts": "ad28d736742208b806a38301488de27dd846df016617934875b12184aa17f732",
+  "Cora/apps/trend-hub/lib/cora/release.ts": "5dded5832dee431d731c60feb731a741d6eb3c0c32c13404f5c9a2680acffa5e",
+  "Cora/apps/trend-hub/lib/cora/store.ts": "2d84c97282a2d533203cb199655719ccc01dcd3bb04093556e9d3c2342b3964c",
+  "Cora/apps/trend-hub/scripts/cora-client-content-proof.mjs": "78ad50bc04095473d4601a7d83cf5b6d12b4998b744e9ba99f1f7c2061e57430",
+  "Cora/apps/trend-hub/tests/cora-client-content.test.ts": "ae574bb89b4fbc12505df247ee15aae0133077807d6fd909c5e31d2231c5211b",
+  "Cora/apps/trend-hub/tests/cora-release.test.ts": "63d10b37dbd247fd550f8e2d08ae7fd7fb1bee8fe28a005dffd6a91113e3658c"
+}

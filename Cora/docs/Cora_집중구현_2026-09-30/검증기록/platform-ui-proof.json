@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Settings view shows the knowledge panel (note saved) and the referral panel with a code",
+    "Signing up through the referral link credits the referrer once (attribution wired into signup)",
+    "Finished script imported from the mounted panel keeps every sentence and saves as v1",
+    "Design assist box is mounted in the editor (AI request not sent in this proof)"
+  ],
+  "errors": [],
+  "passed": true
+}

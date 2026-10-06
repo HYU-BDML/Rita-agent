@@ -1,0 +1,66 @@
+{
+  "checkedAt": "2026-10-04T02:53:44.330Z",
+  "checks": [
+    {
+      "name": "brief survives reload with explicit recovery",
+      "passed": true
+    },
+    {
+      "name": "cards, caption and design survive reload without browser storage",
+      "passed": true,
+      "detail": {
+        "browserStorageContent": false
+      }
+    },
+    {
+      "name": "an old autosave acknowledgement cannot claim latest edits are safe",
+      "passed": true
+    },
+    {
+      "name": "manual save retires recovery and preserves saved work",
+      "passed": true
+    },
+    {
+      "name": "failed manual save leaves a recoverable snapshot",
+      "passed": true
+    },
+    {
+      "name": "stale recovered version conflicts, saved content remains unchanged",
+      "passed": true
+    },
+    {
+      "name": "separate browser tabs keep distinct recoveries",
+      "passed": true
+    },
+    {
+      "name": "edits during a manual save remain in the editor and the recovery snapshot",
+      "passed": true
+    },
+    {
+      "name": "different user, stale browser actor and bad origin cannot access or save recovery",
+      "passed": true,
+      "detail": {
+        "staleActorRejected": true
+      }
+    },
+    {
+      "name": "logout checkpoints and a new login sees no former customer material",
+      "passed": true,
+      "detail": {
+        "undoHistoryReset": true
+      }
+    },
+    {
+      "name": "mobile recovery panel fits 390px viewport",
+      "passed": true
+    },
+    {
+      "name": "revoked client grants block recovery reads, writes and export at API boundary",
+      "passed": true
+    }
+  ],
+  "actual_AI": 0,
+  "actual_Meta": 0,
+  "actual_SNS": 0,
+  "pageErrors": []
+}
