@@ -19,6 +19,11 @@ DEFAULT_PRONOUNCE = {
     "IRB": "아이알비",
     "SNS": "에스엔에스",
     "PMF": "피엠에프",
+    "G*Power": "지파워",
+    "PLS-SEM": "피엘에스 에스이엠",
+    "SEM": "에스이엠",
+    "t검정": "티 검정",
+    "IRB": "아이알비",
 }
 
 _DIG = "영일이삼사오육칠팔구"
@@ -81,7 +86,8 @@ def speakable(text: str, pronounce: Dict[str, str] | None = None) -> str:
         if pct:
             unit = " 퍼센트포인트" if pct.lower() in ("%p", "퍼센트포인트") else " 퍼센트"
             return _num_str(intpart, frac) + unit
-        if not frac and 1 <= n <= 99 and after.lstrip().startswith(_NATIVE_COUNTERS) \
+        lim = 99 if after.lstrip().startswith("살") else 19     # 나이는 고유어(스물다섯 살), 그 밖은 19까지만
+        if not frac and 1 <= n <= lim and after.lstrip().startswith(_NATIVE_COUNTERS) \
                 and not after.lstrip().startswith(("시즌",)):
             return native(n) + " "
         return _num_str(intpart, frac) + (" " if after[:1] and after[:1] not in " .,!?만억조천" else "")
@@ -91,8 +97,10 @@ def speakable(text: str, pronounce: Dict[str, str] | None = None) -> str:
 
 
 def _norm(s: str) -> str:
-    # 영어 이름은 받아 적을 때 한글(랜던)로 나오므로 비교에서 뺀다. 한글(숫자 읽기 포함)만 비교한다.
-    s = speakable(s)
+    # 영어 이름·약어는 받아 적기에서 영문(PLS SEM)이나 한글(랜던)로 제각각 나오므로 양쪽에서 뺀다.
+    # 발음 사전도 쓰지 않고 숫자만 한글 읽기로 바꿔 한글끼리 비교한다.
+    s = re.sub(r"[A-Za-z][A-Za-z*\-]*", " ", s)
+    s = speakable(s)  # 영문을 뺀 뒤라 발음 사전은 영향이 없고, 숫자만 한글 읽기(세 명·이십이 퍼센트)로 바뀐다
     return re.sub(r"[^\uac00-\ud7a3]", "", s)
 
 

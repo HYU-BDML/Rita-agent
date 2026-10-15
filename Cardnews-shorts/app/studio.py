@@ -19,6 +19,8 @@ import sys
 import threading
 import time
 import traceback
+import urllib.error
+import urllib.request
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -32,13 +34,15 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import engine  # noqa: E402
+import script_ai  # noqa: E402
 
 APP_DIR = Path(__file__).resolve().parent
 DATA = Path(os.environ.get("PROJECTS_DIR", str(APP_DIR.parent / "data" / "projects"))).resolve()
 DATA.mkdir(parents=True, exist_ok=True)
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
 MAX_RENDERS = int(os.environ.get("MAX_RENDERS_PER_PROJECT", "30"))
-MAX_AI_IMAGES = int(os.environ.get("MAX_AI_IMAGES_PER_PROJECT", "30"))
+MAX_AI_IMAGES = int(os.environ.get("MAX_AI_IMAGES_PER_PROJECT", "60"))
+MAX_SCRIPTS = int(os.environ.get("MAX_SCRIPTS_PER_PROJECT", "40"))
 WORKERS = int(os.environ.get("RENDER_WORKERS", "2"))
 VERSION = "1.0.0"
 
@@ -110,7 +114,8 @@ def public_view(d: Path) -> dict:
         "video": f"/api/projects/{d.name}/video.mp4?t={int(out.stat().st_mtime)}" if out.exists() else None,
         "speech_issues": engine.speech_report(d, spec) if out.exists() else [],
         "voices": list(engine.VOICES),
-        "limits": {"renders": MAX_RENDERS, "ai_images": MAX_AI_IMAGES},
+        "limits": {"renders": MAX_RENDERS, "ai_images": MAX_AI_IMAGES, "scripts": MAX_SCRIPTS},
+        "scripts": list_scripts(d),
     }
 
 
@@ -165,6 +170,8 @@ async def update_project(pid: str, request: Request):
         for k in ("title", "owner"):
             if k in body:
                 spec[k] = str(body[k])[:80]
+        if "image_style" in body:
+            spec["image_style"] = str(body["image_style"])[:300]
         if body.get("template") in ("band", "full"):
             spec["template"] = body["template"]
         if "voice" in body and body["voice"] in engine.VOICES:
@@ -187,7 +194,9 @@ async def update_project(pid: str, request: Request):
                     if not (d / x).resolve().is_relative_to((d / "cards").resolve()):
                         raise HTTPException(400, "잘못된 이미지 경로입니다.")
                     extra.append(x)
-                scenes.append({"card": card, "extra": extra, "narration": str(sc.get("narration", ""))[:400]})
+                scenes.append({"card": card, "extra": extra, "narration": str(sc.get("narration", ""))[:400],
+                               "image_prompt": str(sc.get("image_prompt", ""))[:1500],
+                               "image_prompt_2": str(sc.get("image_prompt_2", ""))[:1500], "fit": bool(sc.get("fit"))})
             spec["scenes"] = scenes
         engine.save_project(d, spec)
     return public_view(d)
@@ -241,7 +250,8 @@ async def ai_image(pid: str, request: Request, x_fal_key: Optional[str] = Header
     def work():
         engine.use_key(x_fal_key)
         try:
-            return engine.generate_image(d, str(body.get("prompt", ""))[:1000], str(body.get("aspect", "9:16")))
+            style = engine.load_project(d).get("image_style", "")
+            return engine.generate_image(d, str(body.get("prompt", ""))[:1000], str(body.get("aspect", "9:16")), style)
         finally:
             engine.use_key(None)
     try:
@@ -324,6 +334,117 @@ def preview(pid: str, idx: int):
     buf = io.BytesIO()
     im.resize((540, 960)).save(buf, "JPEG", quality=85)
     return Response(buf.getvalue(), media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+
+# ── 대본(Gemini) ───────────────────────────────────────────
+def list_scripts(d: Path) -> list:
+    out = []
+    sd = d / "scripts"
+    if sd.exists():
+        for p in sorted(sd.glob("script_*.json"), reverse=True):
+            try:
+                j = json.loads(p.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            out.append({"id": p.stem, "at": j.get("at"), "topic": j["input"].get("topic"),
+                        "title": j["output"].get("title"), "scenes": len(j["output"].get("scenes", [])),
+                        "unverified": sum(1 for f in j["output"].get("facts", []) if not f.get("in_material")),
+                        "applied": j.get("applied", False)})
+    return out
+
+
+@app.post("/api/projects/{pid}/script")
+async def make_script(pid: str, request: Request):
+    d = pdir_of(pid)
+    body = await request.json()
+    st = read_state(d)
+    if st.get("scripts", 0) >= MAX_SCRIPTS:
+        raise HTTPException(429, f"대본 만들기는 프로젝트당 {MAX_SCRIPTS}번까지입니다.")
+    previous = None
+    if body.get("revise_from"):
+        p = d / "scripts" / (str(body["revise_from"]) + ".json")
+        if p.exists() and re.match(r"^script_[\w-]+$", str(body["revise_from"])):
+            previous = json.loads(p.read_text(encoding="utf-8"))["output"]
+            previous.pop("_meta", None)
+    inp = {"topic": str(body.get("topic", ""))[:300], "material": str(body.get("material", ""))[:20000],
+           "n_scenes": int(body.get("n_scenes", 5) or 5), "audience": str(body.get("audience", ""))[:300],
+           "instruction": str(body.get("instruction", ""))[:2000], "revise_from": body.get("revise_from")}
+    try:
+        out = await run_in_threadpool(script_ai.generate, inp["topic"], inp["material"], inp["n_scenes"],
+                                      inp["audience"], inp["instruction"], previous)
+    except script_ai.ScriptError as e:
+        raise HTTPException(400, str(e))
+    sd = d / "scripts"
+    sd.mkdir(exist_ok=True)
+    sid = f"script_{time.strftime('%Y%m%d-%H%M%S')}_{uuid.uuid4().hex[:4]}"
+    (sd / f"{sid}.json").write_text(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "input": inp,
+                                               "output": out}, ensure_ascii=False, indent=1), encoding="utf-8")
+    with lock_of(pid):
+        st = read_state(d)
+        st["scripts"] = st.get("scripts", 0) + 1
+        write_state(d, st)
+    return {"script_id": sid, "draft": out, **public_view(d)}
+
+
+@app.get("/api/projects/{pid}/scripts/{sid}")
+def get_script(pid: str, sid: str):
+    d = pdir_of(pid)
+    if not re.match(r"^script_[\w-]+$", sid):
+        raise HTTPException(404)
+    return json.loads(safe_rel(d, f"scripts/{sid}.json").read_text(encoding="utf-8"))
+
+
+@app.post("/api/projects/{pid}/scripts/{sid}/apply")
+def apply_script(pid: str, sid: str):
+    """대본 판을 프로젝트에 적용: 제목과 장별 내레이션·그림 설명. 이미 넣은 그림은 순서대로 그대로 둔다."""
+    d = pdir_of(pid)
+    if not re.match(r"^script_[\w-]+$", sid):
+        raise HTTPException(404)
+    sp = safe_rel(d, f"scripts/{sid}.json")
+    j = json.loads(sp.read_text(encoding="utf-8"))
+    out = j["output"]
+    with lock_of(pid):
+        spec = engine.load_project(d)
+        spec["title"] = out.get("title", spec.get("title", ""))[:80]
+        if out.get("visual_style"):
+            spec["image_style"] = out["visual_style"][:300]
+        scenes = spec.get("scenes", [])
+        for i, s in enumerate(out["scenes"][:12]):
+            if i < len(scenes):
+                scenes[i]["narration"] = s["narration"]
+                scenes[i]["image_prompt"] = s["image_prompt"]
+                scenes[i]["image_prompt_2"] = s.get("image_prompt_2", "")
+            else:
+                scenes.append({"card": "", "extra": [], "narration": s["narration"], "image_prompt": s["image_prompt"],
+                               "image_prompt_2": s.get("image_prompt_2", "")})
+        spec["scenes"] = scenes
+        spec["script_id"] = sid
+        engine.save_project(d, spec)
+        j["applied"] = True
+        sp.write_text(json.dumps(j, ensure_ascii=False, indent=1), encoding="utf-8")
+    return public_view(d)
+
+
+# ── fal.ai 키 확인(비용 없음) ───────────────────────────────
+@app.post("/api/check-fal-key")
+def check_fal_key(x_fal_key: Optional[str] = Header(None)):
+    k = (x_fal_key or "").strip()
+    if not k:
+        return {"ok": False, "message": "키를 붙여 넣어 주세요."}
+    req = urllib.request.Request(
+        "https://queue.fal.run/fal-ai/whisper/requests/00000000-0000-0000-0000-000000000000/status",
+        headers={"Authorization": "Key " + k})
+    try:
+        urllib.request.urlopen(req, timeout=15)
+        return {"ok": True, "message": "키가 확인됐습니다."}
+    except urllib.error.HTTPError as e:
+        if e.code == 404:          # 키는 맞고, 없는 작업 번호라 404 가 온다
+            return {"ok": True, "message": "키가 확인됐습니다."}
+        if e.code in (401, 403):
+            return {"ok": False, "message": "키가 맞지 않습니다. 복사할 때 앞뒤가 빠지지 않았는지 확인하세요."}
+        return {"ok": False, "message": f"확인하지 못했습니다(HTTP {e.code}). 잠시 뒤 다시 눌러 주세요."}
+    except Exception:
+        return {"ok": False, "message": "fal.ai 에 연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요."}
 
 
 # ── 영상 만들기 ─────────────────────────────────────────────

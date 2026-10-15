@@ -52,21 +52,30 @@ def font(weight: str, size: int) -> ImageFont.FreeTypeFont:
 _NUM_TOKEN = re.compile(r"\d[\d,.]*\s*(%p|%|퍼센트|만|천|억|조|년|명|개|배|일|초|분|시간|위|번|원|달러|살|곳|가지)*")
 
 
+# 강조 표시 *말* 은 별표 앞뒤가 글자·숫자가 아닐 때만 인정한다(G*Power 같은 이름 속 별표는 그대로 둔다)
+_MARK = re.compile(r"(?<![A-Za-z0-9])\*([^*\n]+?)\*(?![A-Za-z0-9])")
+
+
 def strip_marks(s: str) -> str:
-    return s.replace("*", "")
+    return _MARK.sub(r"\1", s)
 
 
 def styled_runs(text: str) -> List[Tuple[str, bool]]:
     """자막 한 줄을 (글자, 노란색 여부) 조각으로. *별표*로 감싼 말과 숫자는 노란색."""
     runs: List[Tuple[str, bool]] = []
-    parts = re.split(r"(\*[^*]+\*)", text)
-    for p in parts:
+    pos = 0
+    parts = []
+    for m in _MARK.finditer(text):
+        parts.append((text[pos:m.start()], False))
+        parts.append((m.group(1), True))
+        pos = m.end()
+    parts.append((text[pos:], False))
+    for p, marked in parts:
         if not p:
             continue
-        if p.startswith("*") and p.endswith("*") and len(p) > 2:
-            runs.append((p[1:-1], True))
+        if marked:
+            runs.append((p, True))
             continue
-        p = p.replace("*", "")
         last = 0
         for m in _NUM_TOKEN.finditer(p):
             if m.start() > last:
@@ -79,7 +88,7 @@ def styled_runs(text: str) -> List[Tuple[str, bool]]:
 
 
 def _vlen(s: str) -> float:
-    s = s.replace("*", "")
+    s = strip_marks(s)
     return sum(1.0 if ("가" <= c <= "힣" or c.isdigit()) else 0.55 for c in s)
 
 
@@ -212,8 +221,17 @@ class Shot:
     f1: Tuple[float, float]
 
 
+def flat_share(img: Image.Image) -> float:
+    """가장 많은 색 하나가 차지하는 비율. 카드뉴스(단색 배경) 0.77~0.89, 사진·AI 그림 0.07~0.10(시험 20장)."""
+    small = img.convert("RGB").resize((64, 64)).quantize(colors=16)
+    return max(c for c, _ in small.getcolors()) / 4096
+
+
 def is_card(img: Image.Image) -> bool:
-    return img.height / img.width < 1.5
+    """글자 카드면 잘리지 않게 전체를 보이고(fit), 사진이면 칸을 꽉 채운다(cover)."""
+    if img.height / img.width >= 1.5:
+        return False
+    return flat_share(img) >= 0.3
 
 
 CARD_MOVES = [  # 카드(글자 그림): 전체 → 위쪽(제목) 확대 → 다시 전체. 확대는 카드 가로 폭을 넘지 않는다.
@@ -255,7 +273,7 @@ def plan_shots(images: List[str], is_card_map: dict, total: float, cut_points: L
 class Frame:
     """한 장면의 그림 자원을 미리 준비해 두고, 시각 t 의 프레임을 그린다."""
 
-    def __init__(self, pdir: Path, template: str, title: str, images: List[str]):
+    def __init__(self, pdir: Path, template: str, title: str, images: List[str], force_fit: bool = False):
         self.t = TEMPLATES.get(template, TEMPLATES["band"])
         self.template = template if template in TEMPLATES else "band"
         x0, y0, x1, y1 = self.t["media"]
@@ -273,7 +291,9 @@ class Frame:
                 s = lim / max(im.size)
                 im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
             self.imgs[rel] = im
-            self.bgs[rel] = self._bg(im) if is_card(im) else None
+            # AI가 만든 그림은 배경이 단색인 일러스트라도 사진처럼 칸을 꽉 채운다
+            ai_made = Path(rel).name.startswith("ai_")
+            self.bgs[rel] = self._bg(im) if (force_fit or (not ai_made and is_card(im))) else None
         self.title = title_image(title)
         self.shade = top_shade() if self.template == "full" else None
         self._full_bg = {}

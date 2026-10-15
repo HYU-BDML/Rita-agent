@@ -21,6 +21,12 @@ services:
       - key: MAX_RENDERS_PER_PROJECT
         value: "30"
       - key: MAX_AI_IMAGES_PER_PROJECT
-        value: "30"
+        value: "60"
       - key: ALLOW_LOCAL_KEY
         value: "0"
+      - key: GEMINI_API_KEY # 대본 만들기(Gemini 3.1 Pro). 교수 계정 키, 학생 화면에는 보이지 않는다
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.1-pro-preview
+      - key: MAX_SCRIPTS_PER_PROJECT
+        value: "40"

@@ -37,7 +37,7 @@ from typing import Tuple
 # ── 화면 규격 ────────────────────────────────────────────────
 W, H = 1080, 1920
 FPS = 30
-LAYOUT_VERSION = "v7"          # 화면 배치를 바꾸면 올린다 → 장면 캐시가 전부 새로 만들어진다
+LAYOUT_VERSION = "v9"          # 화면 배치를 바꾸면 올린다 → 장면 캐시가 전부 새로 만들어진다
 
 
 FIRST_LEAD_S = 0.12                # 영상 첫 장면: 말이 0.15초 안에 시작한다(조사 9건 모두 0.36초 이내)
@@ -122,7 +122,7 @@ def estimate_seconds(text: str, speed: float = 1.0) -> float:
 
 
 def _visual_len(s: str) -> float:
-    s = s.replace("*", "")
+    s = compose.strip_marks(s)
     return sum(1.0 if ("가" <= c <= "힣" or c.isdigit()) else 0.55 for c in s)
 
 
@@ -158,7 +158,7 @@ def check_project(pdir: Path, spec: dict) -> Dict[str, list]:
         nar = (sc.get("narration") or "").strip()
         card = pdir / (sc.get("card") or "")
         if not sc.get("card") or not card.exists():
-            errors.append(f"{i}장: 카드 이미지가 없습니다.")
+            errors.append(f"{i}장: 그림이 없습니다. 그림을 올리거나 «AI 그림 만들기»를 누르세요.")
         else:
             try:
                 with Image.open(card) as im:
@@ -380,8 +380,8 @@ def preview_frame(pdir: Path, spec: dict, idx: int, sub_lines: Optional[List[str
     """비용 없는 배치 미리보기: 그 장면의 첫 컷과 첫 자막 구절."""
     sc = spec["scenes"][idx]
     imgs = scene_images(sc)
-    fr = compose.Frame(pdir, spec.get("template", "band"), spec.get("title", ""), imgs)
-    cards = {r: compose.is_card(fr.imgs[r]) for r in imgs}
+    fr = compose.Frame(pdir, spec.get("template", "band"), spec.get("title", ""), imgs, bool(sc.get("fit")))
+    cards = {r: fr.bgs[r] is not None for r in imgs}
     shots = compose.plan_shots(imgs, cards, 3.0, [])
     sents = split_sentences(sc.get("narration", ""))
     cap = None
@@ -396,7 +396,7 @@ def _scene_key(pdir: Path, sc: dict, spec: dict, idx: int, n: int) -> str:
     h = hashlib.sha1()
     for rel in scene_images(sc):
         h.update((pdir / rel).read_bytes())
-    h.update(json.dumps([LAYOUT_VERSION, spec.get("template", "band"), spec.get("title", ""),
+    h.update(json.dumps([LAYOUT_VERSION, bool(sc.get("fit")), spec.get("template", "band"), spec.get("title", ""),
                          spec.get("pronounce"), sc["narration"].strip(), spec["voice"], spec.get("speed", 1.0),
                          idx == 0], ensure_ascii=False).encode())
     return h.hexdigest()[:20]
@@ -442,8 +442,8 @@ def build_scene(pdir: Path, spec: dict, idx: int, log: Callable[[str], None]) ->
 
     log(f"{idx+1}장: 화면 그리는 중({total:.1f}초)")
     imgs = scene_images(sc)
-    fr = compose.Frame(pdir, spec.get("template", "band"), spec.get("title", ""), imgs)
-    cards = {r: compose.is_card(fr.imgs[r]) for r in imgs}
+    fr = compose.Frame(pdir, spec.get("template", "band"), spec.get("title", ""), imgs, bool(sc.get("fit")))
+    cards = {r: fr.bgs[r] is not None for r in imgs}
     shots = compose.plan_shots(imgs, cards, total, [a for a, _, _ in timeline])
     caps = [(a, b, compose.caption_image(x, fr.t["cap_size"])) for a, b, x in timeline]
 
@@ -528,12 +528,41 @@ def render(pdir: Path, log: Callable[[str], None] = print) -> Path:
 
 # ── 장면 이미지 생성(선택) ───────────────────────────────────
 IMAGE_MODEL = "fal-ai/nano-banana-pro"
-IMAGE_STYLE_GUARD = ("no text, no letters, no captions, no watermark, no logo. "
+IMAGE_STYLE_GUARD = ("full-bleed composition that fills the entire canvas edge to edge, no margins, no white space around, "
+                     "no frame, no inset picture, no poster or card mockup, no paper sheet on a background. "
+                     "single unified scene in one frame, no collage, no split screen, no panels, no borders. "
+                     "no text, no letters, no captions, no watermark, no logo. "
                      "High quality, sharp focus, natural lighting, vertical composition with the main subject "
                      "in the upper two-thirds and calm space at the bottom.")
 
 
-def generate_image(pdir: Path, prompt: str, aspect: str = "9:16") -> str:
+def trim_margins(data: bytes) -> bytes:
+    """AI 그림 둘레에 단색 여백(액자처럼 그려진 테두리)이 있으면 그림 부분만 잘라낸다.
+    잘라낸 부분이 원본의 50% 미만이면 손대지 않는다."""
+    import io
+    from PIL import ImageChops
+    im = Image.open(io.BytesIO(data)).convert("RGB")
+    w, h = im.size
+    corners = [im.getpixel((2, 2)), im.getpixel((w - 3, 2)), im.getpixel((2, h - 3)), im.getpixel((w - 3, h - 3))]
+    best = None
+    for c in corners:
+        diff = ImageChops.difference(im, Image.new("RGB", im.size, c)).convert("L").point(lambda v: 255 if v > 28 else 0)
+        box = diff.getbbox()
+        if box:
+            area = (box[2] - box[0]) * (box[3] - box[1])
+            if best is None or area < best[1]:
+                best = (box, area)
+    if not best:
+        return data
+    box, area = best
+    if area >= 0.88 * w * h or area < 0.5 * w * h:
+        return data
+    out = io.BytesIO()
+    im.crop(box).save(out, "PNG")
+    return out.getvalue()
+
+
+def generate_image(pdir: Path, prompt: str, aspect: str = "9:16", style: str = "") -> str:
     """학생 설명으로 장면 이미지를 만들어 cards/ 에 저장하고 프로젝트 상대 경로를 돌려준다.
     글자는 넣지 않게 한다(AI가 그린 한글은 깨지기 쉽다. 글자는 자막과 카드가 맡는다)."""
     prompt = (prompt or "").strip()
@@ -541,16 +570,17 @@ def generate_image(pdir: Path, prompt: str, aspect: str = "9:16") -> str:
         raise RenderError("이미지 설명을 다섯 글자 이상 적어 주세요.")
     if aspect not in ("9:16", "4:5", "1:1"):
         aspect = "9:16"
-    out = _fal(IMAGE_MODEL, {"prompt": prompt + "\n\n" + IMAGE_STYLE_GUARD, "aspect_ratio": aspect,
+    full = prompt + (f"\n\nVisual style (same for every image in this video): {style.strip()}" if style.strip() else "")
+    out = _fal(IMAGE_MODEL, {"prompt": full + "\n\n" + IMAGE_STYLE_GUARD, "aspect_ratio": aspect,
                              "num_images": 1, "output_format": "png", "resolution": "2K"}, timeout=300)
     url = out["images"][0]["url"]
-    data = _download(url)
+    data = trim_margins(_download(url))
     d = pdir / "cards"
     d.mkdir(exist_ok=True)
     name = f"ai_{time.strftime('%Y%m%d-%H%M%S')}_{hashlib.sha1(data).hexdigest()[:6]}.png"
     (d / name).write_bytes(data)
     log = pdir / "ai_images.jsonl"                  # 어떤 설명으로 만들었는지 남긴다(교수 확인·재현용)
     with log.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"file": f"cards/{name}", "prompt": prompt, "aspect": aspect, "model": IMAGE_MODEL,
+        f.write(json.dumps({"file": f"cards/{name}", "prompt": prompt, "style": style, "aspect": aspect, "model": IMAGE_MODEL,
                             "at": time.strftime("%Y-%m-%d %H:%M:%S")}, ensure_ascii=False) + "\n")
     return f"cards/{name}"

@@ -20,7 +20,7 @@ main{max-width:1080px;margin:0 auto;padding:18px 16px 80px}
 .panel .hint{color:var(--sub);font-size:13px;margin:0 0 12px}
 .step{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;margin-right:6px;vertical-align:1px}
 label{font-size:13px;color:var(--sub);display:block;margin-bottom:4px}
-input[type=text],textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff;color:var(--ink)}
+input[type=text],input[type=password],textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff;color:var(--ink)}
 textarea{resize:vertical;min-height:92px}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--brand-soft);border-color:var(--brand)}
 .row{display:flex;gap:12px;flex-wrap:wrap}
@@ -38,6 +38,9 @@ button.danger{color:var(--err)}
 .scene .no{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:2px 8px;border-radius:20px}
 .scene .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);margin-top:4px;gap:8px;flex-wrap:wrap}
 .scene .tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.keysteps{margin:0 0 12px;padding-left:20px;font-size:14px}.keysteps li{margin-bottom:6px}
+.script-scene{border-left:3px solid var(--brand-soft);padding:6px 10px;margin:6px 0;font-size:14px}
+.fact-bad{color:var(--warn)}
 .extras{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .extras .ex{position:relative;width:54px;height:72px;border-radius:6px;overflow:hidden;background:#222}
 .extras .ex img{width:100%;height:100%;object-fit:cover}
@@ -85,13 +88,20 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 
 <div id="editor" style="display:none">
   <section class="panel" id="keyPanel">
-    <h2>fal.ai 키</h2>
-    <p class="hint">음성·발음 검사·AI 그림은 각자의 fal.ai 계정으로 만들고, 비용도 그 계정에서 나갑니다. <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener">fal.ai 키 만들기</a>에서 키를 만들어 붙여 넣으세요. 키는 이 브라우저에만 저장되고, 서버는 영상을 만드는 동안에만 쓰며 파일로 남기지 않습니다.</p>
+    <h2>fal.ai 키 넣기 <span class="pill" id="keyBadge">키 없음</span></h2>
+    <p class="hint">음성·발음 검사·AI 그림은 각자의 fal.ai 계정으로 만들고 비용도 그 계정에서 나갑니다. 대본 만들기(Gemini)는 수업에서 부담하므로 키가 필요 없습니다.</p>
+    <ol class="keysteps">
+      <li><b>가입</b> · <a class="pill" href="https://fal.ai/login" target="_blank" rel="noopener">fal.ai 열기</a> 구글 또는 GitHub 계정으로 로그인합니다.</li>
+      <li><b>크레딧 확인</b> · <a class="pill" href="https://fal.ai/dashboard/billing" target="_blank" rel="noopener">Billing 열기</a> 잔액(Credits)이 0이면 충전합니다. 잔액이 없으면 키가 맞아도 만들기가 실패합니다. 5장짜리 숏츠 한 편(AI 그림 10장)은 약 $1.6이 듭니다(그림 장당 $0.15, 음성 1,000자당 $0.1, 2026-10-16 fal.ai 요금표 기준). 직접 만든 그림을 올리면 그림 비용은 들지 않습니다.</li>
+      <li><b>키 만들기</b> · <a class="pill" href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener">Keys 열기</a> <b>Create Key</b> → 이름 입력(예: shorts) → 권한 <b>API</b> → 만들어진 키를 바로 복사합니다. 이 창을 닫으면 키를 다시 볼 수 없습니다.</li>
+      <li><b>붙여 넣고 확인</b> · 아래 칸에 붙여 넣고 «키 확인»을 누릅니다(비용 없음).</li>
+    </ol>
     <div class="row" style="align-items:center">
       <div style="flex:3 1 320px"><input type="password" id="falKey" placeholder="fal.ai API 키 붙여 넣기" autocomplete="off"></div>
-      <div style="flex:1 1 160px"><button class="small" id="btnKeyShow">보기</button> <button class="small danger" id="btnKeyDel">지우기</button></div>
+      <div style="flex:1 1 220px"><button class="small primary" id="btnKeyCheck">키 확인</button> <button class="small" id="btnKeyShow">보기</button> <button class="small danger" id="btnKeyDel">지우기</button></div>
     </div>
     <div id="keyState" class="hint" style="margin-top:6px"></div>
+    <p class="hint" style="margin-top:6px">키는 이 브라우저에만 저장되고, 서버는 영상을 만드는 동안에만 쓰며 파일로 남기지 않습니다. 다른 사람에게 키를 보내지 마세요.</p>
   </section>
 
   <section class="panel">
@@ -109,18 +119,38 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
   </section>
 
   <section class="panel">
+    <h2><span class="step">0</span>AI로 대본 만들기(선택)</h2>
+    <p class="hint">주제와 참고 자료를 넣으면 AI(Gemini)가 상단 제목, 장별 내레이션, 장면 그림 설명을 씁니다. 참고 자료에 있는 사실만 쓰게 하고, 자료에 없는 숫자는 «확인 필요»로 표시합니다. 만든 대본은 판마다 저장되어 언제든 다시 적용할 수 있습니다.</p>
+    <div class="row">
+      <div style="flex:2 1 300px"><label>주제</label><input type="text" id="scTopic" placeholder="예: 졸업논문 설문, 표본 수는 어떻게 정할까"></div>
+      <div><label>보는 사람</label><input type="text" id="scAudience" placeholder="예: 졸업논문을 준비하는 대학원생"></div>
+      <div style="flex:0 1 120px"><label>장 수</label><select id="scN"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div>
+    </div>
+    <label style="margin-top:10px">참고 자료(기사·논문 요약·조사 메모를 붙여 넣기, 출처 포함)</label>
+    <textarea id="scMaterial" style="min-height:120px" placeholder="여기에 붙여 넣은 내용 안의 사실·숫자만 대본에 씁니다."></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="btnScript">대본 만들기</button><span class="hint" id="scStatus" style="margin:0;align-self:center"></span></div>
+    <div id="scDraft" style="display:none;margin-top:14px"></div>
+    <details style="margin-top:12px"><summary>저장된 대본 판 <span id="scCount"></span></summary><div id="scList" style="margin-top:8px"></div></details>
+  </section>
+
+  <section class="panel">
     <h2><span class="step">1</span>장면 이미지 넣기</h2>
     <p class="hint">이미지 한 장이 한 장면이 됩니다(3~12장). 카드뉴스 이미지(4:5·1:1)와 직접 만든 사진·AI 이미지 모두 쓸 수 있습니다. 나노바나나 등에서 만든 그림은 글자 없이 만들어 오세요.</p>
     <div class="drop" id="drop">
       이미지를 여기에 끌어다 놓거나 <button class="small" id="btnPick">파일 고르기</button>
       <input type="file" id="filePick" accept="image/png,image/jpeg,image/webp" multiple hidden>
-      <div style="margin-top:8px"><button class="small" id="btnAiNew">AI로 장면 이미지 만들기</button></div>
+      <div style="margin-top:8px"><button class="small" id="btnAiNew">AI로 장면 이미지 만들기</button>
+        <button class="small" id="btnAiFill">그림 없는 장 한꺼번에 AI 그림 만들기</button>
+        <label style="display:inline;font-size:13px;margin-left:6px"><input type="checkbox" id="fillTwo" checked> 장면당 2장(넓은 장면 + 가까운 장면, 화면이 더 자주 바뀜)</label></div>
+      <div class="hint" id="fillStatus" style="margin-top:6px"></div>
+      <div style="margin-top:10px;text-align:left"><label>그림 화풍(모든 AI 그림에 똑같이 붙습니다 · 영어로 쓰면 더 정확합니다)</label>
+        <input type="text" id="imageStyle" placeholder="예: soft flat editorial illustration, muted pastel palette, clean lines"></div>
     </div>
   </section>
 
   <section class="panel">
     <h2><span class="step">2</span>장마다 내레이션 쓰기</h2>
-    <p class="hint">한 장에 1~2문장(40~110자)이 알맞습니다. 쓴 문장이 그대로 자막이 되고 AI 목소리가 읽습니다. 숫자는 자동으로 노란색이 되고, 강조할 말은 <code>*별표*</code>로 감싸면 노란색이 됩니다. 장면마다 그림을 2~3장 넣으면 화면이 2~3초마다 바뀌어 더 잘 봅니다.</p>
+    <p class="hint">한 장에 1~2문장(40~90자), 전체 300자 안팎(약 50초)이 알맞습니다. 쓴 문장이 그대로 자막이 되고 AI 목소리가 읽습니다. 숫자는 자동으로 노란색이 되고, 강조할 말은 <code>*별표*</code>로 감싸면 노란색이 됩니다. 장면마다 그림을 2~3장 넣으면 화면이 2~3초마다 바뀌어 더 잘 봅니다.</p>
     <div id="scenes"></div>
     <div id="emptyScenes" class="msg warn" style="display:none">아직 장면이 없습니다. 1단계에서 이미지를 넣으세요.</div>
   </section>
@@ -215,8 +245,11 @@ function estSec(t){const n=[...(t||"")].reduce((a,c)=>a+((c>="가"&&c<="힣")?1:
 // ── fal.ai 키(이 브라우저에만 저장)
 function getKey(){try{return localStorage.getItem("fal_key")||""}catch(_){return $("#falKey").value||""}}
 function keyHeaders(h={}){const k=getKey()||$("#falKey").value.trim(); if(k) h["X-Fal-Key"]=k; return h}
-function showKeyState(){const k=getKey(); $("#keyState").textContent = k? `저장된 키: ${k.slice(0,4)}…${k.slice(-4)} (이 브라우저)` : "키가 없습니다. 영상 만들기와 AI 그림에는 키가 필요합니다.";}
+function showKeyState(){const k=getKey(); $("#keyState").textContent = k? `저장된 키: ${k.slice(0,4)}…${k.slice(-4)} (이 브라우저) · «키 확인»으로 맞는지 확인하세요` : "키가 없습니다. 영상 만들기와 AI 그림에는 키가 필요합니다."; $("#keyBadge").textContent=k?"키 저장됨":"키 없음";}
 $("#falKey").addEventListener("input",()=>{try{localStorage.setItem("fal_key",$("#falKey").value.trim())}catch(_){} showKeyState()});
+$("#btnKeyCheck").onclick=async()=>{const k=$("#falKey").value.trim(); try{localStorage.setItem("fal_key",k)}catch(_){}
+  $("#keyState").textContent="확인 중…"; const r=await api("/api/check-fal-key",{method:"POST",headers:{"X-Fal-Key":k}});
+  $("#keyState").textContent=r.message; $("#keyBadge").textContent=r.ok?"키 확인됨":"키 오류"; $("#keyBadge").style.background=r.ok?"var(--ok-bg)":"var(--err-bg)"; $("#keyBadge").style.color=r.ok?"var(--ok)":"var(--err)";};
 $("#btnKeyShow").onclick=()=>{const i=$("#falKey");i.type=i.type==="password"?"text":"password"};
 $("#btnKeyDel").onclick=()=>{try{localStorage.removeItem("fal_key")}catch(_){} $("#falKey").value="";showKeyState()};
 
@@ -243,7 +276,7 @@ async function load(){
   const p = VIEW.project;
   remember(PID, p.title);
   $("#falKey").value=getKey(); showKeyState();
-  $("#owner").value=p.owner||""; $("#title").value=p.title||""; $("#template").value=p.template||"band";
+  $("#owner").value=p.owner||""; $("#title").value=p.title||""; $("#template").value=p.template||"band"; $("#imageStyle").value=p.image_style||"";
   $("#voice").innerHTML = VIEW.voices.map(v=>`<option ${v===p.voice?"selected":""}>${v}</option>`).join("");
   $("#speed").value=p.speed||1; $("#speedVal").textContent="×"+(+$("#speed").value).toFixed(2);
   $("#bgmVol").value=(p.bgm&&p.bgm.volume)||0.12; $("#bgmVolVal").textContent=Math.round($("#bgmVol").value*100)+"%";
@@ -260,10 +293,11 @@ function renderScenes(){
     const cls = n>160?"over":(n>110?"long":"");
     const ex=(s.extra||[]);
     return `<div class="scene" data-i="${i}">
-      <div class="thumb">${s.card?`<img src="/api/projects/${PID}/preview/${i}.jpg?v=${encodeURIComponent(s.card+ex.join())}_${Date.now()%100000}" loading="lazy" alt="${i+1}장 미리보기">`:""}<span class="no">${i+1}장</span></div>
+      <div class="thumb">${s.card?`<img src="/api/projects/${PID}/preview/${i}.jpg?v=${encodeURIComponent(s.card+ex.join())}_${Date.now()%100000}" loading="lazy" alt="${i+1}장 미리보기">`:`<div style="color:#bbb;font-size:13px;padding:40px 10px;text-align:center">그림 없음<br><button class="small" data-a="ai" style="margin-top:8px">AI 그림 만들기</button></div>`}<span class="no">${i+1}장</span></div>
       <div>
         <textarea data-k="narration" placeholder="${i===0?"예: 1936년, 한 잡지가 *240만 명*에게 물었습니다. 결과는 완전히 틀렸습니다.":"이 장에서 말할 내용을 1~2문장으로 쓰세요"}">${esc(s.narration)}</textarea>
-        <div class="meta"><span class="count ${cls}">${n}자 · 약 ${sec}초</span><span>그림 ${1+ex.length}장 · 화면이 번갈아 바뀝니다</span></div>
+        <div class="meta"><span class="count ${cls}">${n}자 · 약 ${sec}초</span><span>그림 ${(s.card?1:0)+ex.length}장 · <label style="display:inline;font-size:12px"><input type="checkbox" data-k="fit" ${s.fit?"checked":""}> 그림 전체 보이기(잘림 없이)</label></span></div>
+        ${s.image_prompt?`<div class="hint" style="margin:4px 0 0">그림 설명(AI 대본): ${esc(s.image_prompt)}</div>`:""}
         <div class="extras">${ex.map((x,k)=>`<span class="ex"><img src="/api/projects/${PID}/file/${x}" alt="추가 이미지 ${k+1}"><button class="small" data-a="exdel" data-k2="${k}" title="빼기">✕</button></span>`).join("")}
           ${ex.length<3?`<button class="small" data-a="exadd">+ 그림 추가</button><button class="small" data-a="exai">+ AI 그림 추가</button>`:""}</div>
         <div class="tools">
@@ -305,13 +339,13 @@ function renderResult(){
   const b = VIEW.project.bgm||{};
   $("#bgmState").textContent = b.file? ("올린 음악: "+(b.name||"배경음악")) : "배경음악 없음";
 }
-function renderAll(){renderScenes();renderChecks();renderResult();}
+function renderAll(){renderScenes();renderChecks();renderResult();renderScripts();}
 
 // 저장(입력 멈추고 0.7초 뒤)
 function collect(){
   const p=VIEW.project;
   const pr={}; $("#pronounce").value.split("\n").forEach(l=>{const i=l.indexOf("=");if(i>0){const k=l.slice(0,i).trim(),v=l.slice(i+1).trim();if(k&&v)pr[k]=v}});
-  return {owner:$("#owner").value,title:$("#title").value,template:$("#template").value,voice:$("#voice").value,speed:+$("#speed").value,bgm_volume:+$("#bgmVol").value,pronounce:pr,scenes:p.scenes};
+  return {owner:$("#owner").value,title:$("#title").value,template:$("#template").value,image_style:$("#imageStyle").value,voice:$("#voice").value,speed:+$("#speed").value,bgm_volume:+$("#bgmVol").value,pronounce:pr,scenes:p.scenes};
 }
 function queueSave(redrawScenes=false){
   $("#savedState").textContent="저장 중…";
@@ -326,7 +360,7 @@ function queueSave(redrawScenes=false){
 }
 function refreshThumb(ta){const box=ta.closest(".scene");if(!box)return;const i=+box.dataset.i;const img=box.querySelector("img");if(img)img.src=`/api/projects/${PID}/preview/${i}.jpg?t=${Date.now()}`}
 
-["#owner","#pronounce"].forEach(s=>$(s).addEventListener("input",()=>queueSave()));
+["#owner","#pronounce","#imageStyle"].forEach(s=>$(s).addEventListener("input",()=>queueSave()));
 $("#title").addEventListener("input",()=>queueSave(true));
 $("#voice").onchange=()=>queueSave();
 $("#template").onchange=()=>queueSave(true);
@@ -344,6 +378,7 @@ $("#scenes").addEventListener("input",e=>{
 });
 $("#scenes").addEventListener("change",e=>{
   const box=e.target.closest(".scene"); if(!box) return; const i=+box.dataset.i;
+  if(e.target.dataset.k==="fit"){VIEW.project.scenes[i].fit=e.target.checked;queueSave(true)}
 });
 $("#scenes").addEventListener("click",async e=>{
   const a=e.target.dataset.a; if(!a) return; const i=+e.target.closest(".scene").dataset.i; const sc=VIEW.project.scenes;
@@ -379,8 +414,30 @@ drop.addEventListener("drop",e=>{uploadMode={mode:"new",scene:-1};upload(e.dataT
 
 // AI 이미지
 let aiMode="replace";
-function openAi(idx,mode){aiTarget=idx;aiMode=mode||"replace";$("#aiStatus").textContent="";$("#aiModal").classList.add("on");$("#aiPrompt").focus()}
+function openAi(idx,mode){aiTarget=idx;aiMode=mode||"replace";
+  const sp=(idx!==null&&VIEW.project.scenes[idx])?(VIEW.project.scenes[idx].image_prompt||""):"";
+  if(sp) $("#aiPrompt").value=sp;   // AI 대본이 제안한 그림 설명을 미리 채운다(고쳐 써도 된다)
+  $("#aiStatus").textContent="";$("#aiModal").classList.add("on");$("#aiPrompt").focus()}
 $("#btnAiNew").onclick=()=>openAi(null,"new");
+$("#btnAiFill").onclick=async()=>{
+  const two=$("#fillTwo").checked; const jobs=[];
+  VIEW.project.scenes.forEach((x,i)=>{
+    const base=(x.image_prompt||"").trim()||(x.narration||"").trim();
+    if(!x.card) jobs.push({i,mode:"replace",prompt:base});
+    if(two && !(x.extra||[]).length) jobs.push({i,mode:"extra",prompt:(x.image_prompt_2||"").trim()||(base+", different angle, close-up detail shot, same visual style")});
+  });
+  if(!jobs.length){toast("모든 장에 그림이 있습니다");return}
+  if(!keyHeaders()["X-Fal-Key"]){toast("먼저 맨 위에 fal.ai 키를 넣어 주세요",4000);return}
+  if(!confirm(`AI 그림 ${jobs.length}장을 만듭니다(장당 30초 안팎, 장당 약 $0.15 · 합계 약 $${(jobs.length*0.15).toFixed(2)}, fal.ai 계정에서 결제). 진행할까요?`)) return;
+  $("#btnAiFill").disabled=true; let failed=false;
+  for(let k=0;k<jobs.length;k++){
+    const jb=jobs[k]; $("#fillStatus").textContent=`${jb.i+1}장 그림 만드는 중 (${k+1}/${jobs.length})…`;
+    try{ VIEW=await api(`/api/projects/${PID}/ai-image`,{method:"POST",headers:keyHeaders({"Content-Type":"application/json"}),body:JSON.stringify({prompt:jb.prompt,aspect:$("#template").value==="full"?"9:16":"1:1",scene_index:jb.i,mode:jb.mode})}); renderAll(); }
+    catch(e){ $("#fillStatus").textContent=`${jb.i+1}장 실패: ${e.message}`; failed=true; break; }
+  }
+  if(!failed) $("#fillStatus").textContent="그림을 모두 넣었습니다. 미리보기를 확인하세요.";
+  $("#btnAiFill").disabled=false;
+};
 $("#aiCancel").onclick=()=>$("#aiModal").classList.remove("on");
 $("#aiGo").onclick=async()=>{
   const prompt=$("#aiPrompt").value.trim(); if(prompt.length<5){$("#aiStatus").textContent="설명을 조금 더 자세히 적어 주세요.";return}
@@ -390,6 +447,35 @@ $("#aiGo").onclick=async()=>{
     renderAll(); $("#aiModal").classList.remove("on"); toast("이미지를 넣었습니다. 미리보기를 확인하세요.");
   }catch(e){$("#aiStatus").textContent=e.message} finally{$("#aiGo").disabled=false}
 };
+
+// AI 대본
+function draftHtml(sid,o){
+  const facts=(o.facts||[]);
+  return `<div class="msg ok"><b>${esc(o.title)}</b> · ${o.scenes.length}장 · ${esc((o._meta||{}).model||"")}</div>`+
+    o.scenes.map((x,i)=>`<div class="script-scene"><b>${i+1}장</b> ${esc(x.narration)}<div class="hint" style="margin:2px 0 0">그림: ${esc(x.image_prompt)}</div></div>`).join("")+
+    (facts.length?`<div style="margin-top:8px"><b style="font-size:14px">대본에 쓴 사실·숫자</b>`+facts.map(f=>`<div class="${f.in_material?"":"fact-bad"}" style="font-size:13px">${f.in_material?"✓ 참고 자료에 있음":"⚠ 확인 필요"} · ${esc(f.claim)}${f.note?" — "+esc(f.note):""}</div>`).join("")+`</div>`:"")+
+    `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="primary small" data-sid="${sid}" data-act="apply">이 대본 적용</button>
+     <input type="text" id="revInstr" placeholder="고칠 점(예: 더 짧게, 2장 숫자 비교 추가)" style="flex:1 1 240px"><button class="small" data-sid="${sid}" data-act="revise">이 대본 고치기</button></div>`;
+}
+function renderScripts(){
+  const l=VIEW.scripts||[]; $("#scCount").textContent=l.length?`(${l.length})`:"";
+  $("#scList").innerHTML=l.map(x=>`<div style="margin:4px 0;font-size:14px">${esc(x.at)} · ${esc(x.title)} · ${x.scenes}장 ${x.unverified?`<span class="fact-bad">확인 필요 ${x.unverified}건</span>`:""} ${x.applied?'<span class="pill">적용함</span>':""} <button class="small" data-sid="${x.id}" data-act="view">보기</button></div>`).join("")||'<span class="hint">아직 없습니다.</span>';
+}
+async function makeScript(extra={}){
+  $("#btnScript").disabled=true; $("#scStatus").textContent="AI가 대본을 쓰는 중입니다(20~60초)…";
+  try{
+    const r=await api(`/api/projects/${PID}/script`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:$("#scTopic").value,audience:$("#scAudience").value,material:$("#scMaterial").value,n_scenes:+$("#scN").value,...extra})});
+    VIEW=r; $("#scDraft").style.display="block"; $("#scDraft").innerHTML=draftHtml(r.script_id,r.draft); renderScripts(); $("#scStatus").textContent="초안이 나왔습니다. 읽어 보고 «이 대본 적용»을 누르세요.";
+  }catch(e){$("#scStatus").textContent=e.message} finally{$("#btnScript").disabled=false}
+}
+$("#btnScript").onclick=()=>makeScript();
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return; const sid=b.dataset.sid;
+  if(b.dataset.act==="apply"){ if(VIEW.project.scenes.some(x=>(x.narration||"").trim()) && !confirm("지금 쓴 내레이션과 제목이 이 대본으로 바뀝니다(이전 판은 자동 저장되어 있습니다). 적용할까요?")) return;
+    clearTimeout(saveTimer); VIEW=await api(`/api/projects/${PID}/scripts/${sid}/apply`,{method:"POST"}); $("#title").value=VIEW.project.title; $("#imageStyle").value=VIEW.project.image_style||""; renderAll(); renderScripts(); toast("대본을 적용했습니다. 그림이 없는 장은 «AI 그림 만들기»를 누르세요.",4000);}
+  if(b.dataset.act==="revise"){ makeScript({revise_from:sid,instruction:($("#revInstr")||{}).value||""}); }
+  if(b.dataset.act==="view"){ const j=await api(`/api/projects/${PID}/scripts/${sid}`); $("#scDraft").style.display="block"; $("#scDraft").innerHTML=draftHtml(sid,j.output); $("#scTopic").value=j.input.topic||""; $("#scMaterial").value=j.input.material||""; $("#scAudience").value=j.input.audience||""; $("#scDraft").scrollIntoView({behavior:"smooth",block:"center"}); }
+});
 
 // 배경음악
 $("#btnBgm").onclick=()=>$("#bgmPick").click();
