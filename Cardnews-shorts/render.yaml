@@ -12,7 +12,7 @@ services:
       mountPath: /data      # 학생 프로젝트(소스)가 여기 쌓인다. 없으면 재시작 때 사라진다
       sizeGB: 20
     envVars:
-      - key: FAL_KEY        # 음성(ElevenLabs)·받아 적기(Whisper)·AI 이미지(나노바나나 프로)
+      - key: FAL_KEY        # 선택. 비우면 학생이 화면에서 자기 키를 넣는다(서버 기본 키)
         sync: false         # 대시보드에서 직접 넣는다. 저장소에 두지 않는다
       - key: ADMIN_TOKEN    # 교수·조교 화면(/admin) 열쇠
         sync: false
@@ -22,3 +22,5 @@ services:
         value: "30"
       - key: MAX_AI_IMAGES_PER_PROJECT
         value: "30"
+      - key: ALLOW_LOCAL_KEY
+        value: "0"

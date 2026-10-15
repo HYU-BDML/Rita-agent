@@ -16,3 +16,4 @@ ENV PORT=8080
 ENV PROJECTS_DIR=/data/projects
 EXPOSE 8080
 CMD ["python", "app/studio.py"]
+ENV ALLOW_LOCAL_KEY=0

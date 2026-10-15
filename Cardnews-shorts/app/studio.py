@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from PIL import Image
 
@@ -231,14 +232,20 @@ async def upload_images(pid: str, files: list[UploadFile] = File(...), scene: in
 
 
 @app.post("/api/projects/{pid}/ai-image")
-async def ai_image(pid: str, request: Request):
+async def ai_image(pid: str, request: Request, x_fal_key: Optional[str] = Header(None)):
     d = pdir_of(pid)
     body = await request.json()
     st = read_state(d)
     if st.get("ai_images", 0) >= MAX_AI_IMAGES:
         raise HTTPException(429, f"AI 이미지는 프로젝트당 {MAX_AI_IMAGES}장까지 만들 수 있습니다.")
+    def work():
+        engine.use_key(x_fal_key)
+        try:
+            return engine.generate_image(d, str(body.get("prompt", ""))[:1000], str(body.get("aspect", "9:16")))
+        finally:
+            engine.use_key(None)
     try:
-        rel = engine.generate_image(d, str(body.get("prompt", ""))[:1000], str(body.get("aspect", "9:16")))
+        rel = await run_in_threadpool(work)
     except engine.RenderError as e:
         raise HTTPException(400, str(e))
     with lock_of(pid):
@@ -320,8 +327,9 @@ def preview(pid: str, idx: int):
 
 
 # ── 영상 만들기 ─────────────────────────────────────────────
-def _run_render(pid: str) -> None:
+def _run_render(pid: str, key: Optional[str]) -> None:
     d = DATA / pid
+    engine.use_key(key)
     st = read_state(d)
 
     def log(msg: str) -> None:
@@ -340,11 +348,13 @@ def _run_render(pid: str) -> None:
         except Exception as e:  # 예상 못 한 오류도 학생 화면에 남긴다
             traceback.print_exc()
             st.update(status="error", error=f"알 수 없는 오류({type(e).__name__}). 조교에게 프로젝트 주소를 알려 주세요.")
+        finally:
+            engine.use_key(None)
         write_state(d, st)
 
 
 @app.post("/api/projects/{pid}/render")
-def start_render(pid: str):
+def start_render(pid: str, x_fal_key: Optional[str] = Header(None)):
     d = pdir_of(pid)
     st = read_state(d)
     if st.get("status") in ("queued", "running"):
@@ -358,7 +368,11 @@ def start_render(pid: str):
     st.update(status="queued", renders=st.get("renders", 0) + 1, error=None,
               log=[time.strftime("%H:%M:%S ") + "순서를 기다리는 중"])
     write_state(d, st)
-    pool.submit(_run_render, pid)
+    if not (x_fal_key or "").strip() and not os.environ.get("FAL_KEY") and os.environ.get("ALLOW_LOCAL_KEY", "1") != "1":
+        st.update(status="idle", renders=st.get("renders", 1) - 1, log=[])
+        write_state(d, st)
+        raise HTTPException(400, "fal.ai API 키를 화면 맨 위 «fal.ai 키» 칸에 넣어 주세요.")
+    pool.submit(_run_render, pid, x_fal_key)
     return public_view(d)
 
 

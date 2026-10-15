@@ -84,6 +84,16 @@ details summary{cursor:pointer;color:var(--sub);font-size:14px}
 </section>
 
 <div id="editor" style="display:none">
+  <section class="panel" id="keyPanel">
+    <h2>fal.ai 키</h2>
+    <p class="hint">음성·발음 검사·AI 그림은 각자의 fal.ai 계정으로 만들고, 비용도 그 계정에서 나갑니다. <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener">fal.ai 키 만들기</a>에서 키를 만들어 붙여 넣으세요. 키는 이 브라우저에만 저장되고, 서버는 영상을 만드는 동안에만 쓰며 파일로 남기지 않습니다.</p>
+    <div class="row" style="align-items:center">
+      <div style="flex:3 1 320px"><input type="password" id="falKey" placeholder="fal.ai API 키 붙여 넣기" autocomplete="off"></div>
+      <div style="flex:1 1 160px"><button class="small" id="btnKeyShow">보기</button> <button class="small danger" id="btnKeyDel">지우기</button></div>
+    </div>
+    <div id="keyState" class="hint" style="margin-top:6px"></div>
+  </section>
+
   <section class="panel">
     <div class="row">
       <div><label>학번·이름</label><input type="text" id="owner"></div>
@@ -202,6 +212,14 @@ function myList(){try{return JSON.parse(localStorage.getItem("shorts_projects")|
 function remember(id,title){try{const l=myList().filter(x=>x.id!==id);l.unshift({id,title,at:new Date().toISOString().slice(0,16).replace("T"," ")});localStorage.setItem("shorts_projects",JSON.stringify(l.slice(0,30)))}catch(_){}}
 function estSec(t){const n=[...(t||"")].reduce((a,c)=>a+((c>="가"&&c<="힣")?1:(/\d/.test(c)?1.4:(/[A-Za-z]/.test(c)?0.5:0))),0);return n/6.2}
 
+// ── fal.ai 키(이 브라우저에만 저장)
+function getKey(){try{return localStorage.getItem("fal_key")||""}catch(_){return $("#falKey").value||""}}
+function keyHeaders(h={}){const k=getKey()||$("#falKey").value.trim(); if(k) h["X-Fal-Key"]=k; return h}
+function showKeyState(){const k=getKey(); $("#keyState").textContent = k? `저장된 키: ${k.slice(0,4)}…${k.slice(-4)} (이 브라우저)` : "키가 없습니다. 영상 만들기와 AI 그림에는 키가 필요합니다.";}
+$("#falKey").addEventListener("input",()=>{try{localStorage.setItem("fal_key",$("#falKey").value.trim())}catch(_){} showKeyState()});
+$("#btnKeyShow").onclick=()=>{const i=$("#falKey");i.type=i.type==="password"?"text":"password"};
+$("#btnKeyDel").onclick=()=>{try{localStorage.removeItem("fal_key")}catch(_){} $("#falKey").value="";showKeyState()};
+
 // ── 시작 화면
 function showStart(){
   $("#startPanel").style.display="block"; $("#editor").style.display="none";
@@ -224,6 +242,7 @@ async function load(){
   $("#selfLink").textContent = link; $("#selfLink").href = link;
   const p = VIEW.project;
   remember(PID, p.title);
+  $("#falKey").value=getKey(); showKeyState();
   $("#owner").value=p.owner||""; $("#title").value=p.title||""; $("#template").value=p.template||"band";
   $("#voice").innerHTML = VIEW.voices.map(v=>`<option ${v===p.voice?"selected":""}>${v}</option>`).join("");
   $("#speed").value=p.speed||1; $("#speedVal").textContent="×"+(+$("#speed").value).toFixed(2);
@@ -367,7 +386,7 @@ $("#aiGo").onclick=async()=>{
   const prompt=$("#aiPrompt").value.trim(); if(prompt.length<5){$("#aiStatus").textContent="설명을 조금 더 자세히 적어 주세요.";return}
   $("#aiGo").disabled=true; $("#aiStatus").textContent="만드는 중입니다(30초 안팎)…";
   try{
-    VIEW = await api(`/api/projects/${PID}/ai-image`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,aspect:$("#aiAspect").value,scene_index:aiTarget,mode:aiMode})});
+    VIEW = await api(`/api/projects/${PID}/ai-image`,{method:"POST",headers:keyHeaders({"Content-Type":"application/json"}),body:JSON.stringify({prompt,aspect:$("#aiAspect").value,scene_index:aiTarget,mode:aiMode})});
     renderAll(); $("#aiModal").classList.remove("on"); toast("이미지를 넣었습니다. 미리보기를 확인하세요.");
   }catch(e){$("#aiStatus").textContent=e.message} finally{$("#aiGo").disabled=false}
 };
@@ -384,7 +403,8 @@ $("#btnRender").onclick=async()=>{
   clearTimeout(saveTimer);
   try{
     await api(`/api/projects/${PID}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(collect())});
-    VIEW = await api(`/api/projects/${PID}/render`,{method:"POST"}); renderAll(); startPoll();
+    if(!keyHeaders()["X-Fal-Key"] && !confirm("fal.ai 키가 없습니다. 서버에 기본 키가 없으면 실패합니다. 그래도 만들까요?")) return;
+    VIEW = await api(`/api/projects/${PID}/render`,{method:"POST",headers:keyHeaders()}); renderAll(); startPoll();
   }catch(e){toast(e.message,6000)}
 };
 function startPoll(){clearInterval(pollTimer);pollTimer=setInterval(async()=>{

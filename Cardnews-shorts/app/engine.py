@@ -21,7 +21,9 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
@@ -200,16 +202,24 @@ def check_project(pdir: Path, spec: dict) -> Dict[str, list]:
 
 
 # ── 음성 ────────────────────────────────────────────────────
+_ctx = threading.local()
+
+
+def use_key(key: Optional[str]) -> None:
+    """이 작업(스레드)에서 쓸 사용자의 fal.ai 키. 파일·로그에 남기지 않는다."""
+    _ctx.key = (key or "").strip() or None
+
+
 def _fal_key() -> str:
-    k = os.environ.get("FAL_KEY", "").strip()
+    k = getattr(_ctx, "key", None) or os.environ.get("FAL_KEY", "").strip()
     if not k:
         env = Path.home() / ".config" / "llmgw" / ".env"     # 로컬 개발용(키는 코드에 두지 않는다)
-        if env.exists():
+        if env.exists() and os.environ.get("ALLOW_LOCAL_KEY", "1") == "1":
             for line in env.read_text(encoding="utf-8").splitlines():
                 if line.startswith("FAL_KEY="):
                     k = line.split("=", 1)[1].strip()
     if not k:
-        raise RenderError("서버에 음성 생성 키(FAL_KEY)가 설정되지 않았습니다. 담당 조교에게 알려 주세요.")
+        raise RenderError("fal.ai API 키가 없습니다. 화면 맨 위 «fal.ai 키» 칸에 본인 키를 넣어 주세요.")
     return k
 
 
@@ -222,6 +232,11 @@ def _fal(model: str, payload: dict, timeout: int = 180) -> dict:
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                raise RenderError("fal.ai 키가 맞지 않거나 사용할 수 없는 상태입니다(잔액·권한 확인).")
+            last = e
+            time.sleep(2 * (attempt + 1))
         except Exception as e:      # 일시 오류는 다시 시도한다
             last = e
             time.sleep(2 * (attempt + 1))
