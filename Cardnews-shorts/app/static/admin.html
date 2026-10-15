@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏츠 스튜디오 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+body{margin:0;background:#f6f6f8;color:#16161a;font-family:Pretendard,-apple-system,sans-serif;font-size:14px}
+header{background:#111827;color:#fff;padding:16px}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.panel{background:#fff;border:1px solid #e3e4ea;border-radius:12px;padding:16px;margin-bottom:14px}
+input{border:1px solid #e3e4ea;border-radius:8px;padding:8px 10px;font:inherit}
+button{font:inherit;border:1px solid #e3e4ea;border-radius:8px;background:#fff;padding:7px 12px;cursor:pointer}
+button.primary{background:#2f54eb;color:#fff;border-color:#2f54eb}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px;border-bottom:1px solid #eee;vertical-align:top}
+th{color:#5f6270;font-weight:600;font-size:13px}
+.hint{color:#5f6270;font-size:13px}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header><b>숏츠 스튜디오 관리(교수·조교)</b></header>
+<main>
+<div class="panel">
+  <label class="hint">관리 열쇠(ADMIN_TOKEN)</label><br>
+  <input type="password" id="tok" style="width:280px"> <button class="primary" id="go">목록 보기</button>
+  <span id="msg" class="hint"></span>
+</div>
+<div class="panel">
+  <b>소스 올려서 고치기</b>
+  <p class="hint">학생 프로젝트의 «소스 받기» 압축 파일에서 project.json 을 고친 뒤 올리면, 원래 학생 작업은 그대로 두고 새 프로젝트로 열립니다. 고친 장면만 새로 만들어집니다. 웹 화면에서 바로 고치려면 목록의 «열기»를 누르세요(학생 작업을 직접 바꿉니다).</p>
+  <input type="file" id="zip" accept=".zip"> <button id="imp">올리기</button>
+</div>
+<div class="panel wrap"><table id="tbl"><thead><tr>
+  <th>고친 시각</th><th>학번·이름</th><th>제목</th><th>장</th><th>길이</th><th>상태</th><th>만들기·AI</th><th></th></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+function tok(){return $("#tok").value||sessionStorage.getItem("adm")||""}
+function esc(s){return (s??"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+async function list(){
+  sessionStorage.setItem("adm",tok());
+  const r=await fetch("/api/admin/projects",{headers:{"X-Admin-Token":tok()}});
+  if(!r.ok){$("#msg").textContent="열쇠가 맞지 않습니다("+r.status+")";return}
+  const d=await r.json(); $("#msg").textContent=`프로젝트 ${d.projects.length}개`;
+  $("#tbl tbody").innerHTML=d.projects.map(p=>`<tr><td>${esc(p.updated_at)}</td><td>${esc(p.owner)}</td><td>${esc(p.title)}</td>
+   <td>${p.scenes}</td><td>${p.seconds?p.seconds+"초":"-"}</td><td>${esc(p.status)}</td><td>${p.renders} · ${p.ai_images}</td>
+   <td><a href="/?p=${p.id}" target="_blank">열기</a> · ${p.has_video?`<a href="/api/projects/${p.id}/video.mp4" target="_blank">영상</a> · `:""}<a href="/api/projects/${p.id}/source.zip">소스 받기</a></td></tr>`).join("");
+}
+$("#go").onclick=list;
+$("#imp").onclick=async()=>{const f=$("#zip").files[0];if(!f)return;const fd=new FormData();fd.append("file",f);
+  const r=await fetch("/api/admin/import",{method:"POST",headers:{"X-Admin-Token":tok()},body:fd});const d=await r.json().catch(()=>({}));
+  if(!r.ok){alert(d.detail||("실패 "+r.status));return} window.open("/?p="+d.id,"_blank"); list();};
+if(sessionStorage.getItem("adm")){$("#tok").value=sessionStorage.getItem("adm");list()}
+</script>
+</body>
+</html>
